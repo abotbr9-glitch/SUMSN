@@ -1,3 +1,4 @@
+require('dotenv').config(); // تفعيل قراءة ملف البيئة .env
 const express = require('express');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
@@ -6,10 +7,8 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// 1. الاتصال بقاعدة بيانات MongoDB (يمكنك استبدال الرابط برابط حسابك على MongoDB Atlas أو استخدام قاعدة محلية)
-const MONGO_URI = 'mongodb://127.0.0.1:27017/sumsn_db'; // قاعدة بيانات محلية باسم sumsn_db
-
-mongoose.connect(MONGO_URI)
+// 1. الاتصال بقاعدة بيانات MongoDB Atlas عبر الرابط الموجود في ملف .env
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ تم الاتصال بقاعدة بيانات MongoDB بنجاح'))
     .catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err));
 
@@ -26,12 +25,12 @@ const shipmentSchema = new mongoose.Schema({
 
 const Shipment = mongoose.model('Shipment', shipmentSchema);
 
-// إعداد خدمة البريد
+// إعداد خدمة البريد باستخدام البيانات المأخوذة من ملف .env
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'YOUR_EMAIL@gmail.com',
-        pass: 'YOUR_APP_PASSWORD'
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -111,7 +110,7 @@ app.post('/api/send-policy', async (req, res) => {
     const { email, senderName, carrier, price } = req.body;
 
     const mailOptions = {
-        from: '"منصة SUMSN للشحن" <YOUR_EMAIL@gmail.com>',
+        from: `"منصة SUMSN للشحن" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'تم إصدار بوليصة الشحن الخاصة بك',
         text: `أهلاً ${senderName}، تم إصدار بوليصتك بنجاح عبر شركة ${carrier} بقيمة ${price} ريال.`
@@ -126,4 +125,5 @@ app.post('/api/send-policy', async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('السيرفر يعمل على http://localhost:3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`السيرفر يعمل على http://localhost:${PORT}`));
