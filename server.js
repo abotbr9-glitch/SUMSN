@@ -1,18 +1,19 @@
-require('dotenv').config(); // تفعيل قراءة ملف البيئة .env
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 const app = express();
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('public')); // تشغيل تصميم موقعك الأساسي من مجلد public
 
-// 1. الاتصال بقاعدة بيانات MongoDB Atlas عبر الرابط الموجود في ملف .env
+// 1. الاتصال بقاعدة البيانات
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ تم الاتصال بقاعدة بيانات MongoDB بنجاح'))
     .catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err));
 
-// 2. تصميم شكل البيانات (Schema) في قاعدة البيانات
+// 2. نموذج البيانات
 const shipmentSchema = new mongoose.Schema({
     fromCity: String,
     toCity: String,
@@ -25,7 +26,7 @@ const shipmentSchema = new mongoose.Schema({
 
 const Shipment = mongoose.model('Shipment', shipmentSchema);
 
-// إعداد خدمة البريد باستخدام البيانات المأخوذة من ملف .env
+// 3. إعداد خدمة البريد
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -34,12 +35,68 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// API: جلب الإحصائيات والعمليات المسجلة من قاعدة البيانات مباشرة
+// ==========================================
+// 🏠 صفحات نتيجة الدفع (النجاح والإلغاء)
+// ==========================================
+app.get('/payment-success', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>تم الدفع بنجاح</title>
+            <style>
+                body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+                .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
+                h1 { color: #28a745; }
+                a { display: inline-block; margin-top: 20px; padding: 10px 25px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>🎉 تم الدفع بنجاح!</h1>
+                <p>شكراً لك، تم استلام المبلغ وإصدار البوليصة بنجاح.</p>
+                <a href="/">العودة للموقع الرئيسي</a>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+app.get('/payment-cancel', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>تم إلغاء الدفع</title>
+            <style>
+                body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; }
+                .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
+                h1 { color: #dc3545; }
+                a { display: inline-block; margin-top: 20px; padding: 10px 25px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>❌ تم إلغاء عملية الدفع</h1>
+                <p>لم يتم خصم أي مبلغ.</p>
+                <a href="/">العودة للموقع الرئيسي</a>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+// ==========================================
+// 🔌 APIs النظام
+// ==========================================
+
+// جلب الإحصائيات
 app.get('/api/dashboard-stats', async (req, res) => {
     try {
         const shipments = await Shipment.find();
         const totalOperations = shipments.length;
-        
         let totalPrice = 0;
         let maxCost = 0;
 
@@ -50,22 +107,15 @@ app.get('/api/dashboard-stats', async (req, res) => {
 
         const avgCost = totalOperations > 0 ? Math.round(totalPrice / totalOperations) : 0;
 
-        res.json({
-            success: true,
-            totalOperations,
-            avgCost,
-            maxCost,
-            shipments
-        });
+        res.json({ success: true, totalOperations, avgCost, maxCost, shipments });
     } catch (error) {
         res.status(500).json({ success: false, message: 'خطأ في جلب البيانات' });
     }
 });
 
-// API: حساب أسعار الشحن وحفظها تلقائياً في MongoDB
+// حساب أسعار الشحن
 app.post('/api/shipping-rates', async (req, res) => {
     const { origin_city, destination_city, weight } = req.body;
-    
     let baseProviderCost = 24; 
     let additionalWeightFee = 0;
     const maxBaseWeight = 15;
@@ -85,7 +135,6 @@ app.post('/api/shipping-rates', async (req, res) => {
     ];
 
     try {
-        // حفظ كل شركة مقترحة في قاعدة البيانات كعملية جديدة
         for (let rate of rates) {
             const newShipment = new Shipment({
                 fromCity: origin_city,
@@ -97,15 +146,66 @@ app.post('/api/shipping-rates', async (req, res) => {
             });
             await newShipment.save();
         }
-
         res.json({ success: true, rates });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ success: false, message: 'فشل حفظ العمليات في قاعدة البيانات' });
     }
 });
 
-// API: إرسال البوليصة عبر الإيميل
+// إنشاء فاتورة PayLink
+app.post('/api/create-paylink-invoice', async (req, res) => {
+    try {
+        const { amount, customerName, customerEmail, customerPhone, carrier } = req.body;
+
+        const authResponse = await axios.post('https://restapi.paylink.sa/api/auth', {
+            apiId: process.env.PAYLINK_API_ID,
+            secretKey: process.env.PAYLINK_SECRET_KEY,
+            persistToken: false
+        }, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const token = authResponse.data?.id_token;
+
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'فشل جلب توكن المصادقة من بيلينك' });
+        }
+
+        const paylinkData = {
+            orderNumber: "INV-" + Date.now(),
+            amount: parseFloat(amount),
+            callBackUrl: "http://localhost:3000/payment-success",
+            cancelUrl: "http://localhost:3000/payment-cancel",
+            clientName: customerName || "عميلنا العزيز",
+            clientEmail: customerEmail,
+            clientMobile: customerPhone || "0500000000",
+            products: [{ title: `بوليصة شحن عبر ${carrier || 'شركة الشحن'}`, price: parseFloat(amount), qty: 1 }],
+            meta: { carrier, email: customerEmail, name: customerName }
+        };
+
+        const invoiceResponse = await axios.post('https://restapi.paylink.sa/api/addInvoice', paylinkData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (invoiceResponse.data && (invoiceResponse.data.url || invoiceResponse.data.invoiceUrl)) {
+            res.json({ success: true, paymentUrl: invoiceResponse.data.url || invoiceResponse.data.invoiceUrl });
+        } else {
+            res.status(400).json({ success: false, message: 'فشل في إنشاء فاتورة الدفع من بيلينك' });
+        }
+
+    } catch (error) {
+        console.error('❌ تفاصيل خطأ PayLink:', error.response ? error.response.data : error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: 'حدث خطأ أثناء الاتصال ببوابة الدفع: ' + (error.response?.data?.message || error.message) 
+        });
+    }
+});
+
+// إرسال البوليصة يدوياً
 app.post('/api/send-policy', async (req, res) => {
     const { email, senderName, carrier, price } = req.body;
 
@@ -120,8 +220,39 @@ app.post('/api/send-policy', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.json({ success: true, message: 'تم إرسال البوليصة للإيميل بنجاح!' });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ success: false, message: 'فشل إرسال الإيميل' });
+    }
+});
+
+// Webhook الخاص بـ Moyasar (مستقر ومحتفظ به)
+app.post('/api/moyasar-webhook', async (req, res) => {
+    try {
+        const paymentData = req.body;
+
+        if (paymentData && paymentData.type === 'payment.paid') {
+            const payment = paymentData.data;
+            const customerEmail = payment.metadata?.email;
+            const customerName = payment.metadata?.name || 'عميلنا العزيز';
+            const carrier = payment.metadata?.carrier || 'شركة الشحن المختارة';
+            const price = payment.amount / 100;
+
+            if (customerEmail) {
+                const mailOptions = {
+                    from: `"منصة SUMSN للشحن" <${process.env.EMAIL_USER}>`,
+                    to: customerEmail,
+                    subject: 'تم تأكيد الدفع وإصدار بوليصة الشحن الخاصة بك',
+                    text: `أهلاً ${customerName}، تم استلام مبلغ ${price} ريال بنجاح، وتم إصدار بوليصتك عبر شركة ${carrier}.`
+                };
+
+                await transporter.sendMail(mailOptions);
+                console.log(`✅ تم إرسال البوليصة تلقائياً إلى: ${customerEmail}`);
+            }
+        }
+
+        res.status(200).json({ received: true });
+    } catch (error) {
+        console.error('❌ خطأ في معالجة الـ Webhook:', error);
+        res.status(500).json({ received: false, error: error.message });
     }
 });
 
