@@ -474,6 +474,20 @@
                 <label>الوزن (كجم):</label>
                 <input type="number" id="weight" value="5" min="0.1" max="500" step="0.1" oninput="calculateWeightPriceDetails()">
             </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>طول الكرتون (سم):</label>
+                    <input type="number" id="quoteBoxLength" value="30" min="1" step="1">
+                </div>
+                <div class="input-group">
+                    <label>عرض الكرتون (سم):</label>
+                    <input type="number" id="quoteBoxWidth" value="30" min="1" step="1">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>ارتفاع الكرتون (سم):</label>
+                <input type="number" id="quoteBoxHeight" value="30" min="1" step="1">
+            </div>
             <div id="weightNoticeBox" style="background: rgba(243, 156, 18, 0.1); border-right: 4px solid #f39c12; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; display: none; color: #b45309;">
                 ⚠️ الحد الأساسي المسموح 15 كجم، ويتم احتساب <strong>2 ريال إضافية</strong> لكل كيلوجرام إضافي فوقها.
                 <div style="margin-top: 4px; font-weight: bold;" id="extraWeightCostText">رسوم الوزن الزائد: 0 ريال</div>
@@ -560,6 +574,24 @@
             <div class="input-group">
                 <label>الوزن النهائي للشحنة (كجم):</label>
                 <input type="number" id="modalWeight" min="0.1" max="500" step="0.1" oninput="updateModalTotals()">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="input-group">
+                <label>طول الكرتون (سم):</label>
+                <input type="number" id="boxLength" min="1" step="1" value="30">
+            </div>
+            <div class="input-group">
+                <label>عرض الكرتون (سم):</label>
+                <input type="number" id="boxWidth" min="1" step="1" value="30">
+            </div>
+        </div>
+
+        <div class="form-row" style="grid-template-columns: 1fr;">
+            <div class="input-group">
+                <label>ارتفاع الكرتون (سم):</label>
+                <input type="number" id="boxHeight" min="1" step="1" value="30">
             </div>
         </div>
 
@@ -667,9 +699,17 @@
         const origin_city = document.getElementById('fromCity').value.trim();
         const destination_city = document.getElementById('toCity').value.trim();
         let weight = parseFloat(document.getElementById('weight').value) || 1;
+        const boxLength = parseFloat(document.getElementById('quoteBoxLength').value);
+        const boxWidth = parseFloat(document.getElementById('quoteBoxWidth').value);
+        const boxHeight = parseFloat(document.getElementById('quoteBoxHeight').value);
 
         if (!origin_city || !destination_city) {
             alert('الرجاء إدخال مدينتي الإرسال والوصول.');
+            return;
+        }
+
+        if (!boxLength || !boxWidth || !boxHeight) {
+            alert('الرجاء إدخال أبعاد الكرتون بشكل صحيح.');
             return;
         }
 
@@ -677,7 +717,7 @@
             const response = await fetch('/api/shipping-rates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ origin_city, destination_city, weight })
+                body: JSON.stringify({ origin_city, destination_city, weight, boxLength, boxWidth, boxHeight })
             });
 
             const result = await response.json();
@@ -697,7 +737,11 @@
                         carrier: rate.carrier,
                         basePrice: parseFloat(rate.price),
                         price: finalDisplayPrice,
-                        delivery_time: rate.deliveryTime
+                        delivery_time: rate.deliveryTime,
+                        deliveryOptionId: rate.deliveryOptionId,
+                        boxLength: boxLength,
+                        boxWidth: boxWidth,
+                        boxHeight: boxHeight
                     });
                 });
 
@@ -737,10 +781,13 @@
         }
     }
 
-    function openOrderModal(from, to, weight, carrier, basePrice) {
-        selectedOrderData = { from, to, weight, carrier, basePrice };
+    function openOrderModal(from, to, weight, carrier, basePrice, deliveryOptionId, boxLength, boxWidth, boxHeight) {
+        selectedOrderData = { from, to, weight, carrier, basePrice, deliveryOptionId, boxLength, boxWidth, boxHeight };
         document.getElementById('modalCarrierTitle').innerText = `إصدار بوليصة الشحن عبر شركة (${carrier})`;
         document.getElementById('modalWeight').value = weight;
+        document.getElementById('boxLength').value = boxLength;
+        document.getElementById('boxWidth').value = boxWidth;
+        document.getElementById('boxHeight').value = boxHeight;
         document.getElementById('shipmentContents').value = '';
         document.getElementById('shipmentContentType').selectedIndex = 0;
         document.getElementById('customerEmail').value = '';
@@ -779,6 +826,9 @@
         const receiverAddress = document.getElementById('receiverNationalAddress').value.trim();
         
         const finalWeight = parseFloat(document.getElementById('modalWeight').value) || selectedOrderData.weight;
+        const boxLength = parseFloat(document.getElementById('boxLength').value);
+        const boxWidth = parseFloat(document.getElementById('boxWidth').value);
+        const boxHeight = parseFloat(document.getElementById('boxHeight').value);
 
         if (!email || !email.includes('@')) {
             alert('الرجاء إدخال بريد إلكتروني صحيح.');
@@ -787,6 +837,11 @@
 
         if (!contentsDesc || !senderName || !senderCity || !senderPhone || !senderAddress || !receiverName || !receiverCity || !receiverPhone || !receiverAddress) {
             alert('الرجاء تعبئة جميع بيانات المحتوى، المدن، المرسل، والمستلم بدقة.');
+            return;
+        }
+
+        if (!boxLength || !boxWidth || !boxHeight) {
+            alert('الرجاء إدخال طول وعرض وارتفاع الكرتون بشكل صحيح.');
             return;
         }
 
@@ -810,8 +865,12 @@
                     receiverPhone: receiverPhone,
                     receiverAddress: receiverAddress,
                     carrier: selectedOrderData.carrier,
+                    deliveryOptionId: selectedOrderData.deliveryOptionId,
                     totalPrice: finalTotalToCustomer,
-                    weight: finalWeight
+                    weight: finalWeight,
+                    boxLength: boxLength,
+                    boxWidth: boxWidth,
+                    boxHeight: boxHeight
                 })
             });
 
@@ -844,7 +903,7 @@
                     </td>
                     <td class="price-tag">${log.price} ريال</td>
                     <td>
-                        <button class="select-carrier-btn" onclick="openOrderModal('${log.fromCity}', '${log.toCity}', ${log.weight}, '${log.carrier}', ${log.basePrice})">
+                        <button class="select-carrier-btn" onclick="openOrderModal('${log.fromCity}', '${log.toCity}', ${log.weight}, '${log.carrier}', ${log.basePrice}, '${log.deliveryOptionId}', ${log.boxLength}, ${log.boxWidth}, ${log.boxHeight})">
                             إصدار البوليصة والدفع 🚀
                         </button>
                     </td>
