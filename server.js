@@ -10,7 +10,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
+app.get('/', (req, res) => {
+    res.redirect('/index.html');
+});
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/sumsn_db';
 const EMAIL_USER = process.env.EMAIL_USER;
