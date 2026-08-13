@@ -878,6 +878,33 @@ app.post('/api/create-shipment', async (req, res) => {
         const finalPrice = customerPrice(providerCost, body.weight);
         const carrierName = getCarrierDisplayName(selected);
 
+        const accountInfo = await shippingRequest(
+            'accountInfo',
+            undefined,
+            'GET'
+        );
+        const remainingCredit = number(
+            accountInfo.remainingCredit ??
+            accountInfo.data?.remainingCredit,
+            NaN
+        );
+        const remainingFreeShipments = number(
+            accountInfo.remainingFreeShipments ??
+            accountInfo.data?.remainingFreeShipments,
+            0
+        );
+
+        if (
+            Number.isFinite(remainingCredit) &&
+            remainingFreeShipments <= 0 &&
+            remainingCredit < providerCost
+        ) {
+            const balanceError = new Error('INSUFFICIENT_SHIPPING_BALANCE');
+            balanceError.requiredCredit = providerCost;
+            balanceError.remainingCredit = remainingCredit;
+            throw balanceError;
+        }
+
         const requestId = String(body.requestId || '')
             .replace(/[^A-Za-z0-9-]/g, '')
             .slice(0, 64);
@@ -1027,6 +1054,8 @@ app.post('/api/create-shipment', async (req, res) => {
 
         if (error.message === 'INVALID_NATIONAL_ADDRESS') {
             message = 'تعذر التحقق من أحد العنوانين المختصرين. تأكد من صحتهما وحاول مجددًا.';
+        } else if (error.message === 'INSUFFICIENT_SHIPPING_BALANCE') {
+            message = 'رصيد حساب الشحن غير كافٍ لإصدار البوليصة.';
         } else if (
             providerMessage.includes('credit') ||
             providerMessage.includes('balance') ||
