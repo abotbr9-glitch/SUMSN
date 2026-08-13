@@ -57,8 +57,9 @@ const SUMSN_MARKUP = 10;
 const INCLUDED_WEIGHT_KG = 30;
 const EXTRA_KG_PRICE = 3;
 
-// يبقى معطلًا حتى اكتمال اختبار عنوان الاستلام يدويًا داخل OTO.
-const ALLOW_LIVE_SHIPMENTS = false;
+// معطل افتراضيًا، ولا يعمل إلا عند تفعيل المفتاح صراحةً في بيئة الاستضافة.
+const ALLOW_LIVE_SHIPMENTS =
+    process.env.ALLOW_LIVE_SHIPMENTS === 'true';
 
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
