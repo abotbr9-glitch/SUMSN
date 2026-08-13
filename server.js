@@ -85,7 +85,7 @@ mongoose
 
 /*
 |--------------------------------------------------------------------------
-| نموذج الشحنات المصدرة فعلياً
+| نموذج الشحنات الفعلية
 |--------------------------------------------------------------------------
 */
 
@@ -130,9 +130,7 @@ const Shipment =
 
 /*
 |--------------------------------------------------------------------------
-| نموذج سجل الاستعلامات
-|--------------------------------------------------------------------------
-| هذا هو المهم للعدادات
+| سجل عمليات الاستعلام - هذا هو المهم للعدادات
 |--------------------------------------------------------------------------
 */
 
@@ -236,12 +234,6 @@ function cleanPublicText(value) {
         .trim();
 }
 
-/*
-|--------------------------------------------------------------------------
-| أسماء شركات الشحن
-|--------------------------------------------------------------------------
-*/
-
 function normalizeCarrierCode(value) {
     if (!value) {
         return '';
@@ -252,51 +244,16 @@ function normalizeCarrierCode(value) {
         .toLowerCase()
         .replace(/[\s_-]/g, '');
 
-    if (normalized.includes('smsa')) {
-        return 'SMSA';
-    }
-
-    if (normalized.includes('aramex')) {
-        return 'Aramex';
-    }
-
-    if (normalized.includes('redbox')) {
-        return 'RedBox';
-    }
-
-    if (
-        normalized.includes('spl') ||
-        normalized.includes('saudipost')
-    ) {
-        return 'SPL';
-    }
-
-    if (normalized.includes('dhl')) {
-        return 'DHL';
-    }
-
-    if (normalized.includes('naqel')) {
-        return 'ناقل';
-    }
-
-    if (normalized.includes('imile')) {
-        return 'iMile';
-    }
-
-    if (
-        normalized.includes('jt') ||
-        normalized.includes('j&t')
-    ) {
-        return 'J&T Express';
-    }
-
-    if (normalized.includes('aymakan')) {
-        return 'Aymakan';
-    }
-
-    if (normalized.includes('ups')) {
-        return 'UPS';
-    }
+    if (normalized.includes('smsa')) return 'SMSA';
+    if (normalized.includes('aramex')) return 'Aramex';
+    if (normalized.includes('redbox')) return 'RedBox';
+    if (normalized.includes('spl') || normalized.includes('saudipost')) return 'SPL';
+    if (normalized.includes('dhl')) return 'DHL';
+    if (normalized.includes('naqel')) return 'ناقل';
+    if (normalized.includes('imile')) return 'iMile';
+    if (normalized.includes('jt') || normalized.includes('j&t')) return 'J&T Express';
+    if (normalized.includes('aymakan')) return 'Aymakan';
+    if (normalized.includes('ups')) return 'UPS';
 
     return '';
 }
@@ -317,21 +274,15 @@ function looksTechnicalName(value) {
 }
 
 function getCarrierDisplayName(company) {
-    const optionName =
-        cleanPublicText(company?.deliveryOptionName);
-
-    const optionMapped =
-        normalizeCarrierCode(optionName);
+    const optionName = cleanPublicText(company?.deliveryOptionName);
+    const optionMapped = normalizeCarrierCode(optionName);
 
     if (optionMapped) {
         return optionMapped;
     }
 
-    const companyName =
-        cleanPublicText(company?.deliveryCompanyName);
-
-    const companyMapped =
-        normalizeCarrierCode(companyName);
+    const companyName = cleanPublicText(company?.deliveryCompanyName);
+    const companyMapped = normalizeCarrierCode(companyName);
 
     if (companyMapped) {
         return companyMapped;
@@ -424,7 +375,10 @@ async function shippingRequest(path, body, method = 'POST') {
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: method === 'GET' ? undefined : JSON.stringify(body)
+            body:
+                method === 'GET'
+                    ? undefined
+                    : JSON.stringify(body)
         }
     );
 
@@ -489,8 +443,6 @@ function quotePayload(
 |--------------------------------------------------------------------------
 | إحصائيات العدادات
 |--------------------------------------------------------------------------
-| تعتمد على عمليات الاستعلام المخزنة في SearchLog
-|--------------------------------------------------------------------------
 */
 
 app.get('/api/dashboard-stats', async (req, res) => {
@@ -538,8 +490,6 @@ app.get('/api/dashboard-stats', async (req, res) => {
 /*
 |--------------------------------------------------------------------------
 | استعلام أسعار الشحن
-|--------------------------------------------------------------------------
-| العميل يستلم السعر النهائي فقط
 |--------------------------------------------------------------------------
 */
 

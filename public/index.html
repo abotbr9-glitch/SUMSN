@@ -12,24 +12,25 @@
 
     <style>
         :root {
-            --bg-main: #0b1220;
-            --bg-card: #111827;
-            --bg-soft: #0f172a;
-            --bg-input: #0b1324;
+            --bg-main: #f7fafc;
+            --bg-card: #ffffff;
+            --bg-soft: #f8fbff;
+            --input-bg: #ffffff;
 
             --primary: #1d4ed8;
-            --primary-2: #0ea5e9;
+            --primary-light: #0ea5e9;
             --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%);
 
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
 
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
 
-            --border: rgba(148, 163, 184, 0.18);
-            --shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+            --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
+            --shadow-hover: 0 14px 36px rgba(15, 23, 42, 0.09);
 
             --font-heading: "Cairo", sans-serif;
             --font-body: "Inter", sans-serif;
@@ -41,90 +42,125 @@
 
         body {
             margin: 0;
-            padding: 18px;
             background:
-                radial-gradient(circle at top right, rgba(14, 165, 233, 0.10), transparent 28%),
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.10), transparent 32%),
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 22%),
+                radial-gradient(circle at top left, rgba(29, 78, 216, 0.06), transparent 20%),
                 var(--bg-main);
             color: var(--text-main);
             font-family: var(--font-body);
+            padding: 12px;
         }
 
         .main-wrapper {
             width: 100%;
-            max-width: 1220px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
         .top-banner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            background: rgba(17, 24, 39, 0.88);
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 22px 24px;
-            box-shadow: var(--shadow);
-            margin-bottom: 18px;
+            padding: 18px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 14px;
         }
 
         .brand-area {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
         }
 
-        .brand-mark {
-            width: 58px;
-            height: 58px;
-            border-radius: 18px;
-            display: grid;
-            place-items: center;
+        .logo-globe {
+            width: 72px;
+            height: 72px;
+            min-width: 72px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #eef7ff, #dbeafe);
+            border: 1px solid #bfdbfe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7);
+        }
+
+        .globe-ring {
+            width: 54px;
+            height: 54px;
+            position: relative;
+            animation: globeSpin 12s linear infinite;
+            transform-origin: center;
+        }
+
+        .globe-ring svg {
+            width: 54px;
+            height: 54px;
+            display: block;
+        }
+
+        @keyframes globeSpin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .brand-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .brand-name {
+            margin: 0;
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
             background: var(--primary-gradient);
-            font-size: 28px;
-            font-weight: 900;
-            font-family: var(--font-heading);
-            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.22);
-        }
-
-        .sumsn-logo {
-            font-family: var(--font-heading);
-            font-size: 31px;
-            font-weight: 900;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
             letter-spacing: 1px;
-            margin: 0;
         }
 
-        .brand-desc h1 {
-            margin: 0;
+        .brand-title {
+            margin: 6px 0 0 0;
             font-family: var(--font-heading);
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
+            color: var(--text-main);
         }
 
-        .brand-desc p {
-            margin: 4px 0 0;
+        .brand-subtitle {
+            margin: 4px 0 0 0;
+            font-size: 13px;
             color: var(--text-muted);
-            font-size: 14px;
             line-height: 1.8;
         }
 
-        .status-chip {
+        .banner-chip {
+            align-self: flex-start;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(16, 185, 129, 0.13);
-            color: #d1fae5;
-            border: 1px solid rgba(16, 185, 129, 0.22);
-            padding: 10px 14px;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
             border-radius: 999px;
+            padding: 9px 14px;
             font-size: 13px;
             font-weight: 700;
-            white-space: nowrap;
         }
 
-        .status-dot {
+        .banner-dot {
             width: 9px;
             height: 9px;
             border-radius: 50%;
@@ -133,65 +169,65 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 18px;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
         }
 
-        .stats-card {
-            background: rgba(17, 24, 39, 0.92);
-            border: 1px solid var(--border);
+        .stat-card {
             border-radius: 22px;
-            padding: 22px 18px;
-            box-shadow: var(--shadow);
+            padding: 18px 16px;
+            color: white;
+            box-shadow: var(--shadow-soft);
         }
 
-        .stats-card h3 {
-            margin: 0 0 10px;
+        .stat-card h3 {
+            margin: 0 0 10px 0;
             font-family: var(--font-heading);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
-            color: rgba(255,255,255,0.86);
+            opacity: 0.95;
         }
 
         .stat-number {
             margin: 0;
             font-family: var(--font-heading);
-            font-size: 38px;
+            font-size: 32px;
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1.15;
         }
 
-        .stats-card.primary {
-            background: linear-gradient(135deg, rgba(29, 78, 216, 0.95), rgba(14, 165, 233, 0.88));
+        .stat-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%);
         }
 
-        .stats-card.success {
-            background: linear-gradient(135deg, rgba(5, 150, 105, 0.95), rgba(16, 185, 129, 0.88));
+        .stat-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
-        .stats-card.warning {
-            background: linear-gradient(135deg, rgba(180, 83, 9, 0.95), rgba(245, 158, 11, 0.88));
+        .stat-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
-        .section-card {
-            background: rgba(17, 24, 39, 0.92);
+        .card-box {
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 22px;
-            box-shadow: var(--shadow);
-            margin-bottom: 18px;
+            padding: 18px;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 14px;
         }
 
-        .section-title {
-            margin: 0 0 16px;
+        .card-box h2 {
+            margin: 0 0 6px 0;
             font-family: var(--font-heading);
             font-size: 21px;
             font-weight: 800;
+            color: var(--text-main);
         }
 
-        .section-subtitle {
-            margin: -6px 0 18px;
+        .card-box .desc {
+            margin: 0 0 18px 0;
             color: var(--text-muted);
             font-size: 14px;
             line-height: 1.8;
@@ -199,12 +235,14 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr;
             gap: 14px;
         }
 
-        .form-grid .full {
-            grid-column: 1 / -1;
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
         .input-group {
@@ -217,7 +255,7 @@
             font-size: 14px;
             font-weight: 700;
             font-family: var(--font-heading);
-            color: rgba(255,255,255,0.92);
+            color: var(--text-main);
         }
 
         input,
@@ -225,489 +263,599 @@
         textarea {
             width: 100%;
             border: 1px solid var(--border);
+            background: var(--input-bg);
             border-radius: 16px;
-            background: var(--bg-input);
-            color: var(--text-main);
-            padding: 14px 15px;
+            padding: 14px 14px;
             font-size: 15px;
+            color: var(--text-main);
             outline: none;
-            transition: 0.2s ease;
             font-family: var(--font-body);
+            transition: 0.2s ease;
         }
 
         input:focus,
         select:focus,
         textarea:focus {
-            border-color: rgba(14, 165, 233, 0.60);
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.10);
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.10);
         }
 
         input[readonly] {
-            opacity: 0.85;
+            background: #f8fafc;
             cursor: not-allowed;
-        }
-
-        .action-btn,
-        .secondary-btn,
-        .select-carrier-btn {
-            border: none;
-            cursor: pointer;
-            border-radius: 16px;
-            font-family: var(--font-heading);
-            font-weight: 800;
-            transition: 0.2s ease;
         }
 
         .action-btn {
             width: 100%;
-            padding: 16px 18px;
+            border: none;
+            border-radius: 16px;
             background: var(--primary-gradient);
             color: white;
-            font-size: 17px;
-            box-shadow: 0 10px 28px rgba(14, 165, 233, 0.25);
-            margin-top: 6px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: var(--font-heading);
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(29, 78, 216, 0.18);
+            transition: 0.2s ease;
         }
 
         .action-btn:hover {
             transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(29, 78, 216, 0.22);
         }
 
         .action-btn:disabled {
-            opacity: 0.65;
+            opacity: 0.7;
             cursor: wait;
             transform: none;
         }
 
         .secondary-btn {
-            background: rgba(16, 185, 129, 0.16);
-            color: #d1fae5;
-            padding: 10px 14px;
+            border: none;
+            border-radius: 14px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 11px 15px;
             font-size: 14px;
-            border: 1px solid rgba(16, 185, 129, 0.22);
-        }
-
-        .select-carrier-btn {
-            background: var(--primary-gradient);
-            color: white;
-            padding: 10px 14px;
-            font-size: 14px;
-            white-space: nowrap;
+            font-weight: 800;
+            font-family: var(--font-heading);
+            cursor: pointer;
         }
 
         .helper-box {
             margin-top: 14px;
-            background: rgba(14, 165, 233, 0.08);
-            border: 1px solid rgba(14, 165, 233, 0.18);
-            color: #e0f2fe;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
             border-radius: 16px;
-            padding: 12px 14px;
+            padding: 13px 14px;
             font-size: 13px;
             line-height: 1.8;
+            font-weight: 600;
         }
 
-        .table-header {
+        .results-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .results-header h2 {
+            margin: 0;
+            font-family: var(--font-heading);
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .desktop-table-wrap {
+            display: none;
+        }
+
+        .mobile-cards {
+            display: grid;
+            gap: 12px;
+        }
+
+        .result-card {
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 14px;
+            background: #fbfdff;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+        }
+
+        .result-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 10px;
             margin-bottom: 12px;
         }
 
-        .table-title {
+        .carrier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .price-badge {
+            color: var(--success);
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .info-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 11px;
+        }
+
+        .info-item .label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .info-item .value {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .result-action button {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 800;
+            font-family: var(--font-heading);
+            cursor: pointer;
+        }
+
+        .empty-state {
+            border: 1px dashed #cbd5e1;
+            border-radius: 18px;
+            background: #f8fafc;
+            padding: 18px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .table-section {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-section th {
+            text-align: right;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-section td {
+            padding: 14px 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: middle;
+        }
+
+        .table-section tr:hover td {
+            background: #fafcff;
+        }
+
+        .table-price {
+            color: var(--success);
+            font-family: var(--font-heading);
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .table-carrier {
+            font-weight: 800;
+            color: #1d4ed8;
+        }
+
+        .table-delivery {
+            display: block;
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .select-carrier-btn {
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: var(--font-heading);
+            cursor: pointer;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 900px;
+            max-height: 92vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+            padding: 18px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
             margin: 0;
             font-family: var(--font-heading);
             font-size: 20px;
             font-weight: 800;
         }
 
-        .table-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 18px;
-        }
-
-        table {
-            width: 100%;
-            min-width: 820px;
-            border-collapse: separate;
-            border-spacing: 0 12px;
-        }
-
-        th {
-            text-align: right;
-            color: var(--text-muted);
-            font-size: 13px;
-            font-weight: 700;
-            padding: 0 12px;
-        }
-
-        td {
-            background: rgba(11, 19, 36, 0.95);
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            padding: 15px 12px;
-            font-size: 14px;
-            vertical-align: middle;
-        }
-
-        td:first-child {
-            border-right: 1px solid var(--border);
-            border-radius: 0 16px 16px 0;
-        }
-
-        td:last-child {
-            border-left: 1px solid var(--border);
-            border-radius: 16px 0 0 16px;
-        }
-
-        .carrier-name {
-            font-weight: 800;
-            color: #7dd3fc;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .carrier-time {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .price-tag {
-            color: #6ee7b7;
-            font-weight: 900;
-            font-family: var(--font-heading);
-            font-size: 19px;
-            white-space: nowrap;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: var(--text-muted);
-            background: rgba(11, 19, 36, 0.95);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 20px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(2, 6, 23, 0.76);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            z-index: 9999;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-card {
-            width: 100%;
-            max-width: 920px;
-            max-height: 92vh;
-            overflow-y: auto;
-            background: #0f172a;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 22px;
-            box-shadow: var(--shadow);
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            font-family: var(--font-heading);
-            font-size: 22px;
-            font-weight: 800;
-        }
-
         .close-modal {
-            width: 42px;
-            height: 42px;
+            border: none;
+            background: #f1f5f9;
+            color: #334155;
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: white;
             font-size: 24px;
             cursor: pointer;
         }
 
         .mini-title {
-            margin: 16px 0 12px;
+            margin: 14px 0 12px 0;
             font-family: var(--font-heading);
             font-size: 15px;
             font-weight: 800;
-            color: #7dd3fc;
-            border-right: 3px solid #38bdf8;
-            padding-right: 10px;
+            color: #1d4ed8;
+            border-right: 3px solid #1d4ed8;
+            padding-right: 8px;
         }
 
         .parties-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
+            grid-template-columns: 1fr;
+            gap: 12px;
         }
 
         .party-box {
-            background: rgba(11, 19, 36, 0.95);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 16px;
-        }
-
-        .info-box {
-            margin-top: 14px;
-            background: rgba(245, 158, 11, 0.10);
-            border: 1px solid rgba(245, 158, 11, 0.20);
-            color: #fde68a;
-            border-radius: 16px;
-            padding: 12px 14px;
-            font-size: 13px;
-            line-height: 1.8;
-        }
-
-        .email-box {
-            margin-top: 14px;
-            background: rgba(14, 165, 233, 0.08);
-            border: 1px solid rgba(14, 165, 233, 0.18);
+            background: #f8fbff;
+            border: 1px solid #dbeafe;
             border-radius: 18px;
             padding: 14px;
         }
 
+        .email-box,
+        .info-box,
         .final-price-box {
-            margin-top: 16px;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.20);
-            color: #d1fae5;
-            padding: 16px;
-            border-radius: 18px;
+            margin-top: 14px;
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        .email-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+
+        .info-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            font-size: 13px;
+            line-height: 1.8;
+            font-weight: 600;
+        }
+
+        .final-price-box {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
             text-align: center;
             font-family: var(--font-heading);
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 900;
         }
 
-        @media (max-width: 900px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-grid,
-            .parties-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 640px) {
+        @media (min-width: 768px) {
             body {
-                padding: 12px;
-            }
-
-            .top-banner,
-            .section-card,
-            .stats-card,
-            .modal-card {
-                border-radius: 20px;
+                padding: 20px;
             }
 
             .top-banner {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 18px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding: 22px;
             }
 
-            .brand-area {
-                align-items: flex-start;
+            .banner-chip {
+                align-self: center;
             }
 
-            .brand-desc h1 {
-                font-size: 19px;
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
 
-            .sumsn-logo {
-                font-size: 26px;
+            .card-box {
+                padding: 24px;
             }
 
-            .brand-mark {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
             }
 
-            .stat-number {
-                font-size: 32px;
+            .form-grid .full-width {
+                grid-column: 1 / -1;
             }
 
-            .section-title,
-            .table-title {
+            .parties-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .results-header {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .mobile-cards {
+                display: none;
+            }
+
+            .desktop-table-wrap {
+                display: block;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .form-row-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .brand-name {
+                font-size: 28px;
+            }
+
+            .brand-title {
                 font-size: 18px;
             }
 
-            .section-card {
-                padding: 16px;
+            .logo-globe {
+                width: 64px;
+                height: 64px;
+                min-width: 64px;
             }
 
-            .stats-card {
-                padding: 18px 16px;
+            .globe-ring,
+            .globe-ring svg {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        @media (max-width: 460px) {
+            .form-row-2 {
+                grid-template-columns: 1fr;
             }
 
-            .action-btn {
-                font-size: 16px;
-            }
-
-            .table-header {
-                align-items: flex-start;
+            .result-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="main-wrapper">
-        <div class="top-banner">
-            <div class="brand-area">
-                <div class="brand-mark">S</div>
 
-                <div>
-                    <h2 class="sumsn-logo">SUMSN</h2>
+<div class="main-wrapper">
+    <div class="top-banner">
+        <div class="brand-area">
+            <div class="logo-globe">
+                <div class="globe-ring">
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="32" cy="32" r="28" fill="#e0f2fe" stroke="#60a5fa" stroke-width="1.8"/>
+                        <ellipse cx="32" cy="32" rx="18" ry="28" fill="none" stroke="#60a5fa" stroke-width="1.2"/>
+                        <ellipse cx="32" cy="32" rx="8" ry="28" fill="none" stroke="#93c5fd" stroke-width="1.1"/>
+                        <ellipse cx="32" cy="32" rx="28" ry="10" fill="none" stroke="#60a5fa" stroke-width="1.2"/>
+                        <ellipse cx="32" cy="32" rx="28" ry="20" fill="none" stroke="#93c5fd" stroke-width="1.1"/>
 
-                    <div class="brand-desc">
-                        <h1>منصة الشحن الذكي</h1>
-                        <p>
-                            استعلم عن أسعار الشحن النهائية ثم أكمل إصدار البوليصة
-                            بسهولة من نفس الصفحة.
-                        </p>
-                    </div>
+                        <path d="M18 23c3-4 8-6 12-5 2 1 2 3 5 4 3 1 6 0 8 2 2 1 3 4 1 6-2 2-6 1-9 2-3 1-3 4-6 5-2 1-5 0-7-2-3-3-7-7-4-12z"
+                              fill="#2563eb" opacity="0.95"/>
+
+                        <path d="M38 38c3-2 6-1 8 1 2 1 4 3 3 5-1 3-5 4-8 4-3-1-6-3-7-5-1-2 1-4 4-5z"
+                              fill="#2563eb" opacity="0.95"/>
+                    </svg>
                 </div>
             </div>
 
-            <div class="status-chip">
-                <span class="status-dot"></span>
-                نظام الشحن الفوري
-            </div>
-        </div>
-
-        <!-- العدادات صارت فوق مباشرة لتظهر بالجوال والكمبيوتر -->
-        <div class="stats-grid">
-            <div class="stats-card primary">
-                <h3>إجمالي عمليات الاستعلام</h3>
-                <p id="totalCount" class="stat-number">0</p>
-            </div>
-
-            <div class="stats-card success">
-                <h3>متوسط الأسعار</h3>
-                <p id="avgPriceCount" class="stat-number">0.00 ريال</p>
-            </div>
-
-            <div class="stats-card warning">
-                <h3>أعلى سعر مسجل</h3>
-                <p id="maxPriceCount" class="stat-number">0.00 ريال</p>
+            <div class="brand-text">
+                <h1 class="brand-name">SUMSN</h1>
+                <h2 class="brand-title">منصة الشحن الذكي</h2>
+                <p class="brand-subtitle">
+                    استعلم عن أسعار الشحن النهائية، ثم أكمل إصدار البوليصة بسهولة
+                    من نفس الصفحة بتجربة سريعة واحترافية.
+                </p>
             </div>
         </div>
 
-        <div class="section-card">
-            <h2 class="section-title">استعلام أسعار الشحن وإصدار البوليصة</h2>
-            <p class="section-subtitle">
-                أدخل بيانات الشحنة ليظهر لك السعر النهائي، وبعدها يمكنك اختيار
-                الشركة المناسبة وإكمال إصدار البوليصة.
-            </p>
+        <div class="banner-chip">
+            <span class="banner-dot"></span>
+            خدمة الشحن المباشر
+        </div>
+    </div>
 
-            <div class="form-grid">
-                <div class="input-group">
-                    <label for="fromCity">مدينة الإرسال</label>
-                    <input type="text" id="fromCity" value="مكة" />
-                </div>
+    <div class="stats-grid">
+        <div class="stat-card stat-primary">
+            <h3>إجمالي عمليات الاستعلام</h3>
+            <p id="totalCount" class="stat-number">0</p>
+        </div>
 
-                <div class="input-group">
-                    <label for="toCity">مدينة الوصول</label>
-                    <input type="text" id="toCity" value="الرياض" />
-                </div>
+        <div class="stat-card stat-success">
+            <h3>متوسط الأسعار</h3>
+            <p id="avgPriceCount" class="stat-number">0.00 ريال</p>
+        </div>
 
-                <div class="input-group full">
-                    <label for="weight">الوزن (كجم)</label>
-                    <input
-                        type="number"
-                        id="weight"
-                        value="0"
-                        min="0"
-                        step="0.1"
-                    />
-                </div>
+        <div class="stat-card stat-warning">
+            <h3>أعلى سعر مسجل</h3>
+            <p id="maxPriceCount" class="stat-number">0.00 ريال</p>
+        </div>
+    </div>
 
-                <div class="input-group">
-                    <label for="quoteBoxLength">طول الكرتون (سم)</label>
-                    <input
-                        type="number"
-                        id="quoteBoxLength"
-                        value="0"
-                        min="0"
-                        step="1"
-                    />
-                </div>
+    <div class="card-box">
+        <h2>استعلام أسعار الشحن</h2>
+        <p class="desc">
+            أدخل بيانات الشحنة ليظهر لك السعر النهائي المتاح، وبعدها يمكنك اختيار
+            الشركة المناسبة وإصدار البوليصة مباشرة.
+        </p>
 
-                <div class="input-group">
-                    <label for="quoteBoxWidth">عرض الكرتون (سم)</label>
-                    <input
-                        type="number"
-                        id="quoteBoxWidth"
-                        value="0"
-                        min="0"
-                        step="1"
-                    />
-                </div>
-
-                <div class="input-group full">
-                    <label for="quoteBoxHeight">ارتفاع الكرتون (سم)</label>
-                    <input
-                        type="number"
-                        id="quoteBoxHeight"
-                        value="0"
-                        min="0"
-                        step="1"
-                    />
-                </div>
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="fromCity">مدينة الإرسال</label>
+                <input type="text" id="fromCity" value="مكة" />
             </div>
 
-            <button
-                id="compareButton"
-                class="action-btn"
-                onclick="compareShipping()"
-            >
-                عرض أسعار الشحن
+            <div class="input-group">
+                <label for="toCity">مدينة الوصول</label>
+                <input type="text" id="toCity" value="الرياض" />
+            </div>
+
+            <div class="input-group full-width">
+                <label for="weight">الوزن (كجم)</label>
+                <input
+                    type="number"
+                    id="weight"
+                    value="0"
+                    min="0"
+                    step="0.1"
+                    placeholder="أدخل الوزن"
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="quoteBoxLength">طول الكرتون (سم)</label>
+                <input
+                    type="number"
+                    id="quoteBoxLength"
+                    value="0"
+                    min="0"
+                    step="1"
+                    placeholder="أدخل الطول"
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="quoteBoxWidth">عرض الكرتون (سم)</label>
+                <input
+                    type="number"
+                    id="quoteBoxWidth"
+                    value="0"
+                    min="0"
+                    step="1"
+                    placeholder="أدخل العرض"
+                />
+            </div>
+
+            <div class="input-group full-width">
+                <label for="quoteBoxHeight">ارتفاع الكرتون (سم)</label>
+                <input
+                    type="number"
+                    id="quoteBoxHeight"
+                    value="0"
+                    min="0"
+                    step="1"
+                    placeholder="أدخل الارتفاع"
+                />
+            </div>
+        </div>
+
+        <button id="compareButton" class="action-btn" onclick="compareShipping()">
+            عرض أسعار الشحن
+        </button>
+
+        <div class="helper-box">
+            يجب تغليف الشحنة جيدًا داخل كرتون مناسب قبل تسليمها لفرع شركة الشحن.
+        </div>
+    </div>
+
+    <div class="card-box">
+        <div class="results-header">
+            <h2>الأسعار المتاحة</h2>
+
+            <button class="secondary-btn" onclick="exportToCSV()">
+                تصدير Excel
             </button>
+        </div>
 
-            <div class="helper-box">
-                يجب تغليف الشحنة جيدًا داخل كرتون مناسب قبل تسليمها لفرع شركة الشحن.
+        <!-- عرض الجوال -->
+        <div id="mobileResults" class="mobile-cards">
+            <div class="empty-state">
+                أدخل بيانات الشحنة ثم اضغط على <strong>عرض أسعار الشحن</strong>.
             </div>
         </div>
 
-        <div class="section-card">
-            <div class="table-header">
-                <h2 class="table-title">نتائج الأسعار المتاحة</h2>
-
-                <div class="table-controls">
-                    <button class="secondary-btn" onclick="exportToCSV()">
-                        تصدير Excel
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-wrapper">
+        <!-- عرض الكمبيوتر -->
+        <div class="desktop-table-wrap">
+            <div class="table-section">
                 <table>
                     <thead>
                         <tr>
@@ -719,7 +867,6 @@
                             <th>إجراء الطلب</th>
                         </tr>
                     </thead>
-
                     <tbody id="logsTable">
                         <tr>
                             <td colspan="6">
@@ -734,573 +881,575 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- المودال -->
-    <div class="modal-overlay" id="orderModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3 id="modalCarrierTitle">إصدار بوليصة الشحن</h3>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
+<div class="modal-overlay" id="orderModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="modalCarrierTitle">إصدار بوليصة الشحن</h3>
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+        </div>
+
+        <div class="mini-title">تفاصيل محتوى الشحنة</div>
+
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="shipmentContentType">نوع محتوى الشحنة</label>
+                <select id="shipmentContentType">
+                    <option value="إلكترونيات وأجهزة ذكية">إلكترونيات وأجهزة ذكية</option>
+                    <option value="ملابس وأزياء ومستلزمات">ملابس وأزياء ومستلزمات</option>
+                    <option value="هدايا وعطور واكسسوارات">هدايا وعطور واكسسوارات</option>
+                    <option value="وثائق ومستندات رسمية">وثائق ومستندات رسمية</option>
+                    <option value="منتجات تجميل وعناية شخصية">منتجات تجميل وعناية شخصية</option>
+                    <option value="أغذية ومكملات غذائية جافة">أغذية ومكملات غذائية جافة</option>
+                    <option value="أخرى">أخرى</option>
+                </select>
             </div>
 
-            <div class="mini-title">تفاصيل محتوى الشحنة</div>
+            <div class="input-group">
+                <label for="shipmentContents">وصف محتوى الشحنة</label>
+                <input
+                    type="text"
+                    id="shipmentContents"
+                    placeholder="مثال: ملابس، أجهزة، هدايا..."
+                />
+            </div>
+        </div>
 
-            <div class="form-grid">
+        <div class="mini-title">بيانات الشحنة المختارة</div>
+
+        <div class="form-grid">
+            <div class="input-group">
+                <label for="modalWeight">الوزن (كجم)</label>
+                <input type="number" id="modalWeight" readonly />
+            </div>
+
+            <div class="input-group">
+                <label for="boxLength">طول الكرتون (سم)</label>
+                <input type="number" id="boxLength" readonly />
+            </div>
+
+            <div class="input-group">
+                <label for="boxWidth">عرض الكرتون (سم)</label>
+                <input type="number" id="boxWidth" readonly />
+            </div>
+
+            <div class="input-group">
+                <label for="boxHeight">ارتفاع الكرتون (سم)</label>
+                <input type="number" id="boxHeight" readonly />
+            </div>
+        </div>
+
+        <div class="info-box">
+            إذا أردت تغيير الوزن أو الأبعاد، أغلق هذه النافذة ثم عدّلها من الأعلى
+            واضغط عرض أسعار الشحن من جديد.
+        </div>
+
+        <div class="parties-grid">
+            <div class="party-box">
+                <div class="mini-title">بيانات المرسل</div>
+
                 <div class="input-group">
-                    <label for="shipmentContentType">نوع محتوى الشحنة</label>
-                    <select id="shipmentContentType">
-                        <option value="إلكترونيات وأجهزة ذكية">إلكترونيات وأجهزة ذكية</option>
-                        <option value="ملابس وأزياء ومستلزمات">ملابس وأزياء ومستلزمات</option>
-                        <option value="هدايا وعطور واكسسوارات">هدايا وعطور واكسسوارات</option>
-                        <option value="وثائق ومستندات رسمية">وثائق ومستندات رسمية</option>
-                        <option value="منتجات تجميل وعناية شخصية">منتجات تجميل وعناية شخصية</option>
-                        <option value="أغذية ومكملات غذائية جافة">أغذية ومكملات غذائية جافة</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
+                    <label for="senderName">الاسم الكامل</label>
+                    <input type="text" id="senderName" placeholder="اسم المرسل الكامل" />
                 </div>
 
                 <div class="input-group">
-                    <label for="shipmentContents">وصف محتوى الشحنة</label>
+                    <label for="senderCity">اسم المدينة</label>
+                    <input type="text" id="senderCity" />
+                </div>
+
+                <div class="input-group">
+                    <label for="senderPhone">رقم الجوال</label>
+                    <input type="tel" id="senderPhone" placeholder="05xxxxxxxx" />
+                </div>
+
+                <div class="input-group">
+                    <label for="senderNationalAddress">العنوان المختصر</label>
                     <input
                         type="text"
-                        id="shipmentContents"
-                        placeholder="مثال: ملابس، أجهزة، هدايا..."
+                        id="senderNationalAddress"
+                        placeholder="مثال: AAAA1234"
                     />
                 </div>
             </div>
 
-            <div class="mini-title">بيانات الشحنة المختارة</div>
-
-            <div class="form-grid">
-                <div class="input-group">
-                    <label for="modalWeight">الوزن (كجم)</label>
-                    <input type="number" id="modalWeight" readonly />
-                </div>
+            <div class="party-box">
+                <div class="mini-title">بيانات المستلم</div>
 
                 <div class="input-group">
-                    <label for="boxLength">طول الكرتون (سم)</label>
-                    <input type="number" id="boxLength" readonly />
+                    <label for="receiverName">الاسم الكامل</label>
+                    <input type="text" id="receiverName" placeholder="اسم المستلم الكامل" />
                 </div>
 
                 <div class="input-group">
-                    <label for="boxWidth">عرض الكرتون (سم)</label>
-                    <input type="number" id="boxWidth" readonly />
+                    <label for="receiverCity">اسم المدينة</label>
+                    <input type="text" id="receiverCity" />
                 </div>
 
                 <div class="input-group">
-                    <label for="boxHeight">ارتفاع الكرتون (سم)</label>
-                    <input type="number" id="boxHeight" readonly />
-                </div>
-            </div>
-
-            <div class="info-box">
-                إذا أردت تغيير الوزن أو الأبعاد، أغلق هذه النافذة ثم عدّلها من الأعلى
-                واضغط على عرض أسعار الشحن من جديد ليتم احتساب السعر الصحيح.
-            </div>
-
-            <div class="parties-grid">
-                <div class="party-box">
-                    <div class="mini-title">بيانات المرسل</div>
-
-                    <div class="input-group">
-                        <label for="senderName">الاسم الكامل</label>
-                        <input type="text" id="senderName" placeholder="اسم المرسل الكامل" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="senderCity">اسم المدينة</label>
-                        <input type="text" id="senderCity" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="senderPhone">رقم الجوال</label>
-                        <input type="tel" id="senderPhone" placeholder="05xxxxxxxx" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="senderNationalAddress">العنوان المختصر</label>
-                        <input
-                            type="text"
-                            id="senderNationalAddress"
-                            placeholder="مثال: AAAA1234"
-                        />
-                    </div>
+                    <label for="receiverPhone">رقم الجوال</label>
+                    <input type="tel" id="receiverPhone" placeholder="05xxxxxxxx" />
                 </div>
 
-                <div class="party-box">
-                    <div class="mini-title">بيانات المستلم</div>
-
-                    <div class="input-group">
-                        <label for="receiverName">الاسم الكامل</label>
-                        <input type="text" id="receiverName" placeholder="اسم المستلم الكامل" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="receiverCity">اسم المدينة</label>
-                        <input type="text" id="receiverCity" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="receiverPhone">رقم الجوال</label>
-                        <input type="tel" id="receiverPhone" placeholder="05xxxxxxxx" />
-                    </div>
-
-                    <div class="input-group">
-                        <label for="receiverNationalAddress">العنوان المختصر</label>
-                        <input
-                            type="text"
-                            id="receiverNationalAddress"
-                            placeholder="مثال: BBBB5678"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div class="email-box">
                 <div class="input-group">
-                    <label for="customerEmail">البريد الإلكتروني لاستلام البوليصة</label>
+                    <label for="receiverNationalAddress">العنوان المختصر</label>
                     <input
-                        type="email"
-                        id="customerEmail"
-                        placeholder="أدخل البريد الإلكتروني"
+                        type="text"
+                        id="receiverNationalAddress"
+                        placeholder="مثال: BBBB5678"
                     />
                 </div>
             </div>
-
-            <div class="final-price-box">
-                الإجمالي النهائي:
-                <span id="summaryTotal">0.00</span>
-                ريال
-            </div>
-
-            <div class="info-box">
-                تأكد من صحة جميع البيانات قبل تأكيد طلب الشحن.
-            </div>
-
-            <button
-                id="submitOrderButton"
-                class="action-btn"
-                style="margin-top: 16px;"
-                onclick="submitOrder()"
-            >
-                تأكيد طلب الشحن
-            </button>
         </div>
+
+        <div class="email-box">
+            <div class="input-group">
+                <label for="customerEmail">البريد الإلكتروني لاستلام البوليصة</label>
+                <input
+                    type="email"
+                    id="customerEmail"
+                    placeholder="أدخل البريد الإلكتروني"
+                />
+            </div>
+        </div>
+
+        <div class="final-price-box">
+            الإجمالي النهائي:
+            <span id="summaryTotal">0.00</span>
+            ريال
+        </div>
+
+        <div class="info-box">
+            تأكد من صحة جميع البيانات قبل تأكيد طلب الشحن.
+        </div>
+
+        <button
+            id="submitOrderButton"
+            class="action-btn"
+            style="margin-top: 14px;"
+            onclick="submitOrder()"
+        >
+            تأكيد طلب الشحن
+        </button>
     </div>
+</div>
 
-    <script>
-        let globalLogs = [];
-        let selectedOrderData = {};
+<script>
+    let globalLogs = [];
+    let selectedOrderData = {};
 
-        function formatMoney(value) {
-            const numberValue = Number(value);
+    function formatMoney(value) {
+        const numberValue = Number(value);
 
-            if (!Number.isFinite(numberValue)) {
-                return '0.00';
-            }
-
-            return numberValue.toFixed(2);
+        if (!Number.isFinite(numberValue)) {
+            return '0.00';
         }
 
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch('/api/dashboard-stats');
-                const result = await response.json();
+        return numberValue.toFixed(2);
+    }
 
-                if (!result.success) {
-                    return;
-                }
+    async function loadDashboardStats() {
+        try {
+            const response = await fetch('/api/dashboard-stats');
+            const result = await response.json();
 
-                document.getElementById('totalCount').innerText =
-                    Number(result.totalOperations || 0);
-
-                document.getElementById('avgPriceCount').innerText =
-                    `${formatMoney(result.avgCost)} ريال`;
-
-                document.getElementById('maxPriceCount').innerText =
-                    `${formatMoney(result.maxCost)} ريال`;
-            } catch (error) {
-                console.error('تعذر تحميل الإحصائيات:', error);
+            if (!result.success) {
+                return;
             }
+
+            document.getElementById('totalCount').innerText =
+                Number(result.totalOperations || 0);
+
+            document.getElementById('avgPriceCount').innerText =
+                `${formatMoney(result.avgCost)} ريال`;
+
+            document.getElementById('maxPriceCount').innerText =
+                `${formatMoney(result.maxCost)} ريال`;
+        } catch (error) {
+            console.error('تعذر تحميل الإحصائيات:', error);
+        }
+    }
+
+    async function compareShipping() {
+        const button = document.getElementById('compareButton');
+
+        const origin_city = document.getElementById('fromCity').value.trim();
+        const destination_city = document.getElementById('toCity').value.trim();
+        const weight = parseFloat(document.getElementById('weight').value);
+        const boxLength = parseFloat(document.getElementById('quoteBoxLength').value);
+        const boxWidth = parseFloat(document.getElementById('quoteBoxWidth').value);
+        const boxHeight = parseFloat(document.getElementById('quoteBoxHeight').value);
+
+        if (!origin_city || !destination_city) {
+            alert('الرجاء إدخال مدينتي الإرسال والوصول.');
+            return;
         }
 
-        async function compareShipping() {
-            const button = document.getElementById('compareButton');
+        if (!Number.isFinite(weight) || weight <= 0) {
+            alert('الرجاء إدخال وزن صحيح أكبر من صفر.');
+            return;
+        }
 
-            const origin_city =
-                document.getElementById('fromCity').value.trim();
+        if (
+            !Number.isFinite(boxLength) || boxLength <= 0 ||
+            !Number.isFinite(boxWidth) || boxWidth <= 0 ||
+            !Number.isFinite(boxHeight) || boxHeight <= 0
+        ) {
+            alert('الرجاء إدخال أبعاد الكرتون بشكل صحيح أكبر من صفر.');
+            return;
+        }
 
-            const destination_city =
-                document.getElementById('toCity').value.trim();
+        button.disabled = true;
+        const originalButtonText = button.innerText;
+        button.innerText = 'جاري جلب الأسعار...';
 
-            const weight =
-                parseFloat(document.getElementById('weight').value);
-
-            const boxLength =
-                parseFloat(document.getElementById('quoteBoxLength').value);
-
-            const boxWidth =
-                parseFloat(document.getElementById('quoteBoxWidth').value);
-
-            const boxHeight =
-                parseFloat(document.getElementById('quoteBoxHeight').value);
-
-            if (!origin_city || !destination_city) {
-                alert('الرجاء إدخال مدينتي الإرسال والوصول.');
-                return;
-            }
-
-            if (!Number.isFinite(weight) || weight <= 0) {
-                alert('الرجاء إدخال وزن صحيح أكبر من صفر.');
-                return;
-            }
-
-            if (
-                !Number.isFinite(boxLength) || boxLength <= 0 ||
-                !Number.isFinite(boxWidth) || boxWidth <= 0 ||
-                !Number.isFinite(boxHeight) || boxHeight <= 0
-            ) {
-                alert('الرجاء إدخال أبعاد الكرتون بشكل صحيح أكبر من صفر.');
-                return;
-            }
-
-            button.disabled = true;
-            const originalButtonText = button.innerText;
-            button.innerText = 'جاري جلب الأسعار...';
-
-            try {
-                const response = await fetch('/api/shipping-rates', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        origin_city,
-                        destination_city,
-                        weight,
-                        boxLength,
-                        boxWidth,
-                        boxHeight
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                    alert(result.message || 'تعذر جلب أسعار الشحن.');
-                    return;
-                }
-
-                if (!Array.isArray(result.rates) || result.rates.length === 0) {
-                    alert('لا توجد أسعار متاحة حاليًا.');
-                    return;
-                }
-
-                const newBatch = result.rates.map((rate) => ({
-                    fromCity: origin_city,
-                    toCity: destination_city,
+        try {
+            const response = await fetch('/api/shipping-rates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    origin_city,
+                    destination_city,
                     weight,
-                    carrier: rate.carrier || 'شركة شحن',
-                    price: Number(rate.price),
-                    delivery_time: rate.deliveryTime || 'حسب شركة الشحن',
-                    deliveryOptionId: String(rate.deliveryOptionId),
                     boxLength,
                     boxWidth,
                     boxHeight
-                }));
-
-                globalLogs = [...newBatch, ...globalLogs];
-
-                renderTable(globalLogs);
-
-                await loadDashboardStats();
-
-                document.querySelector('.table-wrapper').scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            } catch (error) {
-                console.error(error);
-                alert('حدث خطأ أثناء الاتصال بالنظام.');
-            } finally {
-                button.disabled = false;
-                button.innerText = originalButtonText;
-            }
-        }
-
-        function openOrderModal(log) {
-            selectedOrderData = { ...log };
-
-            document.getElementById('modalCarrierTitle').innerText =
-                `إصدار بوليصة الشحن عبر ${log.carrier}`;
-
-            document.getElementById('modalWeight').value = log.weight;
-            document.getElementById('boxLength').value = log.boxLength;
-            document.getElementById('boxWidth').value = log.boxWidth;
-            document.getElementById('boxHeight').value = log.boxHeight;
-
-            document.getElementById('summaryTotal').innerText =
-                formatMoney(log.price);
-
-            document.getElementById('shipmentContents').value = '';
-            document.getElementById('shipmentContentType').selectedIndex = 0;
-            document.getElementById('customerEmail').value = '';
-
-            document.getElementById('senderName').value = '';
-            document.getElementById('senderCity').value = log.fromCity;
-            document.getElementById('senderPhone').value = '';
-            document.getElementById('senderNationalAddress').value = '';
-
-            document.getElementById('receiverName').value = '';
-            document.getElementById('receiverCity').value = log.toCity;
-            document.getElementById('receiverPhone').value = '';
-            document.getElementById('receiverNationalAddress').value = '';
-
-            document.getElementById('orderModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('orderModal').style.display = 'none';
-        }
-
-        async function submitOrder() {
-            const button = document.getElementById('submitOrderButton');
-
-            if (!selectedOrderData || !selectedOrderData.deliveryOptionId) {
-                alert('اختر شركة شحن أولًا.');
-                return;
-            }
-
-            const email =
-                document.getElementById('customerEmail').value.trim();
-
-            const contentType =
-                document.getElementById('shipmentContentType').value;
-
-            const contentsDesc =
-                document.getElementById('shipmentContents').value.trim();
-
-            const senderName =
-                document.getElementById('senderName').value.trim();
-
-            const senderCity =
-                document.getElementById('senderCity').value.trim();
-
-            const senderPhone =
-                document.getElementById('senderPhone').value.trim();
-
-            const senderAddress =
-                document.getElementById('senderNationalAddress').value.trim();
-
-            const receiverName =
-                document.getElementById('receiverName').value.trim();
-
-            const receiverCity =
-                document.getElementById('receiverCity').value.trim();
-
-            const receiverPhone =
-                document.getElementById('receiverPhone').value.trim();
-
-            const receiverAddress =
-                document.getElementById('receiverNationalAddress').value.trim();
-
-            if (!email || !email.includes('@')) {
-                alert('الرجاء إدخال بريد إلكتروني صحيح.');
-                return;
-            }
-
-            if (
-                !contentsDesc ||
-                !senderName ||
-                !senderCity ||
-                !senderPhone ||
-                !senderAddress ||
-                !receiverName ||
-                !receiverCity ||
-                !receiverPhone ||
-                !receiverAddress
-            ) {
-                alert('الرجاء تعبئة جميع بيانات الشحنة والمرسل والمستلم.');
-                return;
-            }
-
-            button.disabled = true;
-            const originalButtonText = button.innerText;
-            button.innerText = 'جاري تأكيد الطلب...';
-
-            try {
-                const response = await fetch('/api/create-shipment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email,
-                        contentType,
-                        contentsDescription: contentsDesc,
-                        senderName,
-                        senderCity,
-                        senderPhone,
-                        senderAddress,
-                        receiverName,
-                        receiverCity,
-                        receiverPhone,
-                        receiverAddress,
-                        carrier: selectedOrderData.carrier,
-                        deliveryOptionId: selectedOrderData.deliveryOptionId,
-                        weight: selectedOrderData.weight,
-                        boxLength: selectedOrderData.boxLength,
-                        boxWidth: selectedOrderData.boxWidth,
-                        boxHeight: selectedOrderData.boxHeight
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                    alert(result.message || 'تعذر إصدار الشحنة.');
-                    return;
-                }
-
-                alert(
-                    `تم إنشاء طلب الشحن بنجاح.\nالإجمالي: ${formatMoney(result.finalPrice)} ريال`
-                );
-
-                closeModal();
-                await loadDashboardStats();
-            } catch (error) {
-                console.error(error);
-                alert('حدث خطأ أثناء الاتصال بخدمة الشحن.');
-            } finally {
-                button.disabled = false;
-                button.innerText = originalButtonText;
-            }
-        }
-
-        function renderTable(logs) {
-            const tbody = document.getElementById('logsTable');
-            tbody.innerHTML = '';
-
-            if (!logs || logs.length === 0) {
-                const row = document.createElement('tr');
-                const cell = document.createElement('td');
-
-                cell.colSpan = 6;
-                cell.innerHTML = `<div class="empty-state">لا توجد نتائج بعد.</div>`;
-
-                row.appendChild(cell);
-                tbody.appendChild(row);
-                return;
-            }
-
-            logs.forEach((log) => {
-                const row = document.createElement('tr');
-
-                const fromCell = document.createElement('td');
-                fromCell.textContent = log.fromCity;
-
-                const toCell = document.createElement('td');
-                toCell.textContent = log.toCity;
-
-                const weightCell = document.createElement('td');
-                weightCell.textContent = `${log.weight} كجم`;
-
-                const carrierCell = document.createElement('td');
-
-                const carrierName = document.createElement('span');
-                carrierName.className = 'carrier-name';
-                carrierName.textContent = log.carrier;
-
-                const deliveryTime = document.createElement('div');
-                deliveryTime.className = 'carrier-time';
-                deliveryTime.textContent = `التوصيل: ${log.delivery_time}`;
-
-                carrierCell.appendChild(carrierName);
-                carrierCell.appendChild(deliveryTime);
-
-                const priceCell = document.createElement('td');
-                priceCell.className = 'price-tag';
-                priceCell.textContent = `${formatMoney(log.price)} ريال`;
-
-                const actionCell = document.createElement('td');
-
-                const actionButton = document.createElement('button');
-                actionButton.className = 'select-carrier-btn';
-                actionButton.textContent = 'إصدار البوليصة';
-                actionButton.addEventListener('click', () => {
-                    openOrderModal(log);
-                });
-
-                actionCell.appendChild(actionButton);
-
-                row.appendChild(fromCell);
-                row.appendChild(toCell);
-                row.appendChild(weightCell);
-                row.appendChild(carrierCell);
-                row.appendChild(priceCell);
-                row.appendChild(actionCell);
-
-                tbody.appendChild(row);
-            });
-        }
-
-        function escapeCsv(value) {
-            let text = String(value ?? '');
-
-            if (/^[=+\-@]/.test(text)) {
-                text = "'" + text;
-            }
-
-            return '"' + text.replace(/"/g, '""') + '"';
-        }
-
-        function exportToCSV() {
-            if (!globalLogs || globalLogs.length === 0) {
-                alert('لا توجد بيانات لتصديرها.');
-                return;
-            }
-
-            let csvContent =
-                '\uFEFFمدينة الإرسال,مدينة الوصول,الوزن,الشركة,التكلفة النهائية\n';
-
-            globalLogs.forEach((log) => {
-                csvContent += [
-                    escapeCsv(log.fromCity),
-                    escapeCsv(log.toCity),
-                    escapeCsv(`${log.weight} كجم`),
-                    escapeCsv(log.carrier),
-                    escapeCsv(`${formatMoney(log.price)} ريال`)
-                ].join(',') + '\n';
+                })
             });
 
-            const blob = new Blob([csvContent], {
-                type: 'text/csv;charset=utf-8;'
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                alert(result.message || 'تعذر جلب أسعار الشحن.');
+                return;
+            }
+
+            if (!Array.isArray(result.rates) || result.rates.length === 0) {
+                alert('لا توجد أسعار متاحة حاليًا.');
+                return;
+            }
+
+            const newBatch = result.rates.map((rate) => ({
+                fromCity: origin_city,
+                toCity: destination_city,
+                weight,
+                carrier: rate.carrier || 'شركة شحن',
+                price: Number(rate.price),
+                delivery_time: rate.deliveryTime || 'حسب شركة الشحن',
+                deliveryOptionId: String(rate.deliveryOptionId),
+                boxLength,
+                boxWidth,
+                boxHeight
+            }));
+
+            globalLogs = [...newBatch, ...globalLogs];
+
+            renderDesktopTable(globalLogs);
+            renderMobileCards(globalLogs);
+            await loadDashboardStats();
+
+            document.querySelector('.card-box:last-of-type').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
             });
+        } catch (error) {
+            console.error(error);
+            alert('حدث خطأ أثناء الاتصال بالنظام.');
+        } finally {
+            button.disabled = false;
+            button.innerText = originalButtonText;
+        }
+    }
 
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
+    function openOrderModal(log) {
+        selectedOrderData = { ...log };
 
-            link.href = url;
-            link.download = 'sumsn_shipping_prices.csv';
+        document.getElementById('modalCarrierTitle').innerText =
+            `إصدار بوليصة الشحن عبر ${log.carrier}`;
 
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        document.getElementById('modalWeight').value = log.weight;
+        document.getElementById('boxLength').value = log.boxLength;
+        document.getElementById('boxWidth').value = log.boxWidth;
+        document.getElementById('boxHeight').value = log.boxHeight;
 
-            URL.revokeObjectURL(url);
+        document.getElementById('summaryTotal').innerText =
+            formatMoney(log.price);
+
+        document.getElementById('shipmentContents').value = '';
+        document.getElementById('shipmentContentType').selectedIndex = 0;
+        document.getElementById('customerEmail').value = '';
+
+        document.getElementById('senderName').value = '';
+        document.getElementById('senderCity').value = log.fromCity;
+        document.getElementById('senderPhone').value = '';
+        document.getElementById('senderNationalAddress').value = '';
+
+        document.getElementById('receiverName').value = '';
+        document.getElementById('receiverCity').value = log.toCity;
+        document.getElementById('receiverPhone').value = '';
+        document.getElementById('receiverNationalAddress').value = '';
+
+        document.getElementById('orderModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('orderModal').style.display = 'none';
+    }
+
+    async function submitOrder() {
+        const button = document.getElementById('submitOrderButton');
+
+        if (!selectedOrderData || !selectedOrderData.deliveryOptionId) {
+            alert('اختر شركة شحن أولًا.');
+            return;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDashboardStats();
+        const email = document.getElementById('customerEmail').value.trim();
+        const contentType = document.getElementById('shipmentContentType').value;
+        const contentsDesc = document.getElementById('shipmentContents').value.trim();
+
+        const senderName = document.getElementById('senderName').value.trim();
+        const senderCity = document.getElementById('senderCity').value.trim();
+        const senderPhone = document.getElementById('senderPhone').value.trim();
+        const senderAddress = document.getElementById('senderNationalAddress').value.trim();
+
+        const receiverName = document.getElementById('receiverName').value.trim();
+        const receiverCity = document.getElementById('receiverCity').value.trim();
+        const receiverPhone = document.getElementById('receiverPhone').value.trim();
+        const receiverAddress = document.getElementById('receiverNationalAddress').value.trim();
+
+        if (!email || !email.includes('@')) {
+            alert('الرجاء إدخال بريد إلكتروني صحيح.');
+            return;
+        }
+
+        if (
+            !contentsDesc ||
+            !senderName ||
+            !senderCity ||
+            !senderPhone ||
+            !senderAddress ||
+            !receiverName ||
+            !receiverCity ||
+            !receiverPhone ||
+            !receiverAddress
+        ) {
+            alert('الرجاء تعبئة جميع بيانات الشحنة والمرسل والمستلم.');
+            return;
+        }
+
+        button.disabled = true;
+        const originalButtonText = button.innerText;
+        button.innerText = 'جاري تأكيد الطلب...';
+
+        try {
+            const response = await fetch('/api/create-shipment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email,
+                    contentType,
+                    contentsDescription: contentsDesc,
+                    senderName,
+                    senderCity,
+                    senderPhone,
+                    senderAddress,
+                    receiverName,
+                    receiverCity,
+                    receiverPhone,
+                    receiverAddress,
+                    carrier: selectedOrderData.carrier,
+                    deliveryOptionId: selectedOrderData.deliveryOptionId,
+                    weight: selectedOrderData.weight,
+                    boxLength: selectedOrderData.boxLength,
+                    boxWidth: selectedOrderData.boxWidth,
+                    boxHeight: selectedOrderData.boxHeight
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                alert(result.message || 'تعذر إصدار الشحنة.');
+                return;
+            }
+
+            alert(
+                `تم إنشاء طلب الشحن بنجاح.\nالإجمالي: ${formatMoney(result.finalPrice)} ريال`
+            );
+
+            closeModal();
+            await loadDashboardStats();
+        } catch (error) {
+            console.error(error);
+            alert('حدث خطأ أثناء الاتصال بخدمة الشحن.');
+        } finally {
+            button.disabled = false;
+            button.innerText = originalButtonText;
+        }
+    }
+
+    function renderDesktopTable(logs) {
+        const tbody = document.getElementById('logsTable');
+        tbody.innerHTML = '';
+
+        if (!logs || logs.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            لا توجد نتائج بعد.
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        logs.forEach((log) => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${log.fromCity}</td>
+                <td>${log.toCity}</td>
+                <td>${log.weight} كجم</td>
+                <td>
+                    <span class="table-carrier">${log.carrier}</span>
+                    <span class="table-delivery">التوصيل: ${log.delivery_time}</span>
+                </td>
+                <td class="table-price">${formatMoney(log.price)} ريال</td>
+                <td>
+                    <button class="select-carrier-btn">إصدار البوليصة</button>
+                </td>
+            `;
+
+            row.querySelector('.select-carrier-btn').addEventListener('click', () => {
+                openOrderModal(log);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderMobileCards(logs) {
+        const container = document.getElementById('mobileResults');
+        container.innerHTML = '';
+
+        if (!logs || logs.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    لا توجد نتائج بعد.
+                </div>
+            `;
+            return;
+        }
+
+        logs.forEach((log) => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            card.innerHTML = `
+                <div class="result-top">
+                    <div class="carrier-badge">${log.carrier}</div>
+                    <div class="price-badge">${formatMoney(log.price)} ريال</div>
+                </div>
+
+                <div class="result-grid">
+                    <div class="info-item">
+                        <span class="label">مدينة الإرسال</span>
+                        <span class="value">${log.fromCity}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">مدينة الوصول</span>
+                        <span class="value">${log.toCity}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">الوزن</span>
+                        <span class="value">${log.weight} كجم</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">مدة التوصيل</span>
+                        <span class="value">${log.delivery_time}</span>
+                    </div>
+                </div>
+
+                <div class="result-action">
+                    <button>إصدار البوليصة</button>
+                </div>
+            `;
+
+            card.querySelector('button').addEventListener('click', () => {
+                openOrderModal(log);
+            });
+
+            container.appendChild(card);
+        });
+    }
+
+    function escapeCsv(value) {
+        let text = String(value ?? '');
+
+        if (/^[=+\-@]/.test(text)) {
+            text = "'" + text;
+        }
+
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function exportToCSV() {
+        if (!globalLogs || globalLogs.length === 0) {
+            alert('لا توجد بيانات لتصديرها.');
+            return;
+        }
+
+        let csvContent =
+            '\uFEFFمدينة الإرسال,مدينة الوصول,الوزن,الشركة,التكلفة النهائية\n';
+
+        globalLogs.forEach((log) => {
+            csvContent += [
+                escapeCsv(log.fromCity),
+                escapeCsv(log.toCity),
+                escapeCsv(`${log.weight} كجم`),
+                escapeCsv(log.carrier),
+                escapeCsv(`${formatMoney(log.price)} ريال`)
+            ].join(',') + '\n';
         });
 
-        document
-            .getElementById('orderModal')
-            .addEventListener('click', (event) => {
-                if (event.target.id === 'orderModal') {
-                    closeModal();
-                }
-            });
-    </script>
+        const blob = new Blob([csvContent], {
+            type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = 'sumsn_shipping_prices.csv';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDashboardStats();
+    });
+
+    document.getElementById('orderModal').addEventListener('click', (event) => {
+        if (event.target.id === 'orderModal') {
+            closeModal();
+        }
+    });
+</script>
+
 </body>
 </html>
