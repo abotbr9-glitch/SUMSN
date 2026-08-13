@@ -1592,6 +1592,525 @@ app.get('/api/shipment-label', async (req, res) => {
 
 /*
 |--------------------------------------------------------------------------
+| حسابات العملاء
+|--------------------------------------------------------------------------
+*/
+
+app.get('/api/auth/config', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
+    res.json({
+        success: true,
+        enabled: customerAccountsEnabled(),
+        emailReady: emailServiceConfigured(),
+        supportEmail: SUPPORT_EMAIL
+    });
+});
+
+app.get('/api/auth/me', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
+    if (!customerAccountsEnabled()) {
+        return res.json({
+            success: true,
+            user: null
+        });
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        return res.json({
+            success: true,
+            user: user ? publicUser(user) : null
+        });
+    } catch (error) {
+        console.error('تعذر قراءة جلسة العميل:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'تعذر تحميل الحساب حاليًا.'
+        });
+    }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'إنشاء الحسابات غير متاح مؤقتًا حتى اكتمال إعداد البريد.'
+        });
+    }
+
+    if (!emailServiceConfigured()) {
+        return res.status(503).json({
+            success: false,
+            message: 'خدمة رسائل التحقق غير مهيأة بعد.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'register',
+            8,
+            60 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم تجاوز عدد المحاولات. حاول بعد ساعة.'
+        });
+    }
+
+    const fullName =
+        String(req.body.fullName || '').trim();
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || '');
+
+    if (fullName.length < 2 || fullName.length > 80) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل اسمًا صحيحًا من حرفين على الأقل.'
+        });
+    }
+
+    if (!validEmail(email)) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل بريدًا إلكترونيًا صحيحًا.'
+        });
+    }
+
+    if (password.length < 8 || password.length > 128) {
+        return res.status(400).json({
+            success: false,
+            message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.'
+        });
+    }
+
+    try {
+        await connectToDatabase();
+
+        const existing = await User.findOne({
+            email
+        }).select(
+            '+passwordSalt +passwordHash +verificationTokenHash +verificationTokenExpiresAt'
+        );
+
+        if (existing?.emailVerifiedAt) {
+            return res.status(409).json({
+                success: false,
+                message: 'هذا البريد مسجل بالفعل. استخدم تسجيل الدخول.'
+            });
+        }
+
+        const passwordRecord =
+            await createPasswordRecord(password);
+        const verification = createActionToken();
+        const verificationExpiresAt =
+            new Date(Date.now() + 24 * 60 * 60 * 1000);
+        let user;
+
+        if (existing) {
+            existing.fullName = fullName;
+            existing.passwordSalt =
+                passwordRecord.salt;
+            existing.passwordHash =
+                passwordRecord.hash;
+            existing.verificationTokenHash =
+                verification.hash;
+            existing.verificationTokenExpiresAt =
+                verificationExpiresAt;
+            user = await existing.save();
+        } else {
+            user = await User.create({
+                fullName,
+                email,
+                passwordSalt:
+                    passwordRecord.salt,
+                passwordHash:
+                    passwordRecord.hash,
+                verificationTokenHash:
+                    verification.hash,
+                verificationTokenExpiresAt:
+                    verificationExpiresAt
+            });
+        }
+
+        await sendVerificationEmail(
+            user,
+            verification.token
+        );
+        void maybeAlertDatabaseStorage();
+
+        return res.status(201).json({
+            success: true,
+            message: 'تم إنشاء الحساب. افتح بريدك واضغط رابط التحقق.'
+        });
+    } catch (error) {
+        console.error('تعذر إنشاء حساب العميل:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'تعذر إرسال رسالة التحقق حاليًا. حاول مرة أخرى بعد قليل.'
+        });
+    }
+});
+
+app.get('/api/auth/verify-email', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.redirect(
+            303,
+            '/?account=unavailable'
+        );
+    }
+
+    const token = String(req.query.token || '');
+
+    if (!token) {
+        return res.redirect(
+            303,
+            '/?account=invalid'
+        );
+    }
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            verificationTokenHash:
+                actionTokenHash(token),
+            verificationTokenExpiresAt: {
+                $gt: new Date()
+            }
+        }).select(
+            '+verificationTokenHash +verificationTokenExpiresAt'
+        );
+
+        if (!user) {
+            return res.redirect(
+                303,
+                '/?account=invalid'
+            );
+        }
+
+        user.emailVerifiedAt = new Date();
+        user.verificationTokenHash = '';
+        user.verificationTokenExpiresAt = null;
+        await user.save();
+
+        setSessionCookie(res, user);
+
+        return res.redirect(
+            303,
+            '/?account=verified'
+        );
+    } catch (error) {
+        console.error('تعذر تأكيد بريد العميل:', error);
+
+        return res.redirect(
+            303,
+            '/?account=error'
+        );
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'تسجيل الدخول غير متاح مؤقتًا.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'login',
+            12,
+            15 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'محاولات كثيرة. حاول بعد 15 دقيقة.'
+        });
+    }
+
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || '');
+
+    if (!validEmail(email) || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل البريد وكلمة المرور.'
+        });
+    }
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            email
+        }).select('+passwordSalt +passwordHash');
+
+        if (
+            !user ||
+            !await passwordMatches(
+                password,
+                user.passwordSalt,
+                user.passwordHash
+            )
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'البريد أو كلمة المرور غير صحيحة.'
+            });
+        }
+
+        if (!user.emailVerifiedAt) {
+            return res.status(403).json({
+                success: false,
+                message: 'أكد بريدك الإلكتروني أولًا من الرسالة المرسلة إليك.'
+            });
+        }
+
+        setSessionCookie(res, user);
+
+        return res.json({
+            success: true,
+            user: publicUser(user)
+        });
+    } catch (error) {
+        console.error('تعذر تسجيل دخول العميل:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'تعذر تسجيل الدخول حاليًا.'
+        });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    clearSessionCookie(res);
+
+    res.json({
+        success: true
+    });
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+    if (
+        !customerAccountsEnabled() ||
+        !emailServiceConfigured()
+    ) {
+        return res.status(503).json({
+            success: false,
+            message: 'استعادة كلمة المرور غير متاحة مؤقتًا.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'forgot',
+            6,
+            60 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم تجاوز عدد المحاولات. حاول بعد ساعة.'
+        });
+    }
+
+    const email = normalizeEmail(req.body.email);
+
+    if (!validEmail(email)) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل بريدًا إلكترونيًا صحيحًا.'
+        });
+    }
+
+    const genericResponse = {
+        success: true,
+        message: 'إذا كان البريد مسجلًا فستصلك رسالة الاستعادة خلال دقائق.'
+    };
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            email,
+            emailVerifiedAt: {
+                $ne: null
+            }
+        }).select(
+            '+resetTokenHash +resetTokenExpiresAt'
+        );
+
+        if (!user) {
+            return res.json(genericResponse);
+        }
+
+        const reset = createActionToken();
+        user.resetTokenHash = reset.hash;
+        user.resetTokenExpiresAt =
+            new Date(Date.now() + 60 * 60 * 1000);
+        await user.save();
+
+        await sendPasswordResetEmail(
+            user,
+            reset.token
+        );
+
+        return res.json(genericResponse);
+    } catch (error) {
+        console.error('تعذر إرسال استعادة كلمة المرور:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'تعذر إرسال رسالة الاستعادة حاليًا.'
+        });
+    }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'استعادة كلمة المرور غير متاحة مؤقتًا.'
+        });
+    }
+
+    const token = String(req.body.token || '');
+    const password = String(req.body.password || '');
+
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: 'رابط الاستعادة غير صالح.'
+        });
+    }
+
+    if (password.length < 8 || password.length > 128) {
+        return res.status(400).json({
+            success: false,
+            message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.'
+        });
+    }
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            resetTokenHash:
+                actionTokenHash(token),
+            resetTokenExpiresAt: {
+                $gt: new Date()
+            }
+        }).select(
+            '+passwordSalt +passwordHash +resetTokenHash +resetTokenExpiresAt'
+        );
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'رابط الاستعادة منتهي أو غير صالح.'
+            });
+        }
+
+        const passwordRecord =
+            await createPasswordRecord(password);
+        user.passwordSalt = passwordRecord.salt;
+        user.passwordHash = passwordRecord.hash;
+        user.resetTokenHash = '';
+        user.resetTokenExpiresAt = null;
+        user.sessionVersion =
+            number(user.sessionVersion) + 1;
+        await user.save();
+
+        setSessionCookie(res, user);
+
+        return res.json({
+            success: true,
+            user: publicUser(user),
+            message: 'تم تغيير كلمة المرور وتسجيل دخولك.'
+        });
+    } catch (error) {
+        console.error('تعذر تغيير كلمة المرور:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'تعذر تغيير كلمة المرور حاليًا.'
+        });
+    }
+});
+
+app.get('/api/account/shipments', async (req, res) => {
+    res.set('Cache-Control', 'private, no-store');
+
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'لوحة الحساب غير متاحة مؤقتًا.'
+        });
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'سجّل الدخول لعرض بوالصك.'
+            });
+        }
+
+        const shipments = await Shipment.find({
+            userId: user._id
+        })
+            .sort({
+                createdAt: -1
+            })
+            .limit(100)
+            .lean();
+
+        return res.json({
+            success: true,
+            shipments: shipments.map((shipment) => ({
+                id: String(shipment._id),
+                orderId: shipment.otoOrderId || '',
+                carrier: shipment.carrier,
+                fromCity: shipment.fromCity,
+                toCity: shipment.toCity,
+                weight: shipment.weight,
+                price: shipment.price,
+                deliveryTime: shipment.deliveryTime,
+                trackingNumber:
+                    shipment.trackingNumber || '',
+                emailDeliveryStatus:
+                    shipment.emailDeliveryStatus || 'skipped',
+                createdAt: shipment.createdAt,
+                labelUrl: shipment.otoOrderId
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}&token=${labelAccessToken(shipment.otoOrderId)}`
+                    : ''
+            }))
+        });
+    } catch (error) {
+        console.error('تعذر تحميل بوالص العميل:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'تعذر تحميل البوالص حاليًا.'
+        });
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
 | إحصائيات العدادات
 |--------------------------------------------------------------------------
 */
