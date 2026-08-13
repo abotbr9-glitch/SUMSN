@@ -80,12 +80,15 @@ mongoose
         console.log('تم الاتصال بقاعدة بيانات MongoDB بنجاح');
     })
     .catch((error) => {
-        console.error('خطأ في الاتصال بقاعدة MongoDB:', error);
+        console.error(
+            'خطأ في الاتصال بقاعدة MongoDB:',
+            error
+        );
     });
 
 /*
 |--------------------------------------------------------------------------
-| نموذج الشحنة
+| نموذج الشحنات الحقيقية
 |--------------------------------------------------------------------------
 */
 
@@ -133,11 +136,100 @@ const shipmentSchema = new mongoose.Schema({
 
 const Shipment =
     mongoose.models.Shipment ||
-    mongoose.model('Shipment', shipmentSchema);
+    mongoose.model(
+        'Shipment',
+        shipmentSchema
+    );
 
 /*
 |--------------------------------------------------------------------------
-| البريد
+| نموذج عمليات البحث عن أسعار الشحن
+|--------------------------------------------------------------------------
+|
+| كل استعلام أسعار ناجح يحفظ سجلًا واحدًا فقط.
+| لا نحفظ سعر مزود الشحن الأصلي هنا.
+| نحفظ فقط الأسعار النهائية المعروضة للعميل.
+|
+|--------------------------------------------------------------------------
+*/
+
+const shippingSearchSchema =
+    new mongoose.Schema(
+        {
+            fromCity: {
+                type: String,
+                required: true
+            },
+
+            toCity: {
+                type: String,
+                required: true
+            },
+
+            weight: {
+                type: Number,
+                required: true
+            },
+
+            boxLength: {
+                type: Number,
+                required: true
+            },
+
+            boxWidth: {
+                type: Number,
+                required: true
+            },
+
+            boxHeight: {
+                type: Number,
+                required: true
+            },
+
+            rateCount: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+
+            totalDisplayedPrice: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+
+            maxDisplayedPrice: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+
+            minDisplayedPrice: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+
+            createdAt: {
+                type: Date,
+                default: Date.now
+            }
+        },
+        {
+            collection: 'shipping_searches'
+        }
+    );
+
+const ShippingSearch =
+    mongoose.models.ShippingSearch ||
+    mongoose.model(
+        'ShippingSearch',
+        shippingSearchSchema
+    );
+
+/*
+|--------------------------------------------------------------------------
+| إعداد البريد
 |--------------------------------------------------------------------------
 */
 
@@ -145,6 +237,7 @@ const transporter =
     EMAIL_USER && EMAIL_PASS
         ? nodemailer.createTransport({
             service: 'gmail',
+
             auth: {
                 user: EMAIL_USER,
                 pass: EMAIL_PASS
@@ -167,14 +260,18 @@ function number(value, fallback = 0) {
 }
 
 function roundMoney(value) {
-    return Number(number(value).toFixed(2));
+    return Number(
+        number(value).toFixed(2)
+    );
 }
 
 function excessWeightFee(weight) {
-    return Math.max(
-        0,
-        number(weight) - INCLUDED_WEIGHT_KG
-    ) * EXTRA_KG_PRICE;
+    return (
+        Math.max(
+            0,
+            number(weight) - INCLUDED_WEIGHT_KG
+        ) * EXTRA_KG_PRICE
+    );
 }
 
 function customerPrice(providerPrice, weight) {
@@ -259,7 +356,8 @@ function looksTechnicalName(value) {
         return true;
     }
 
-    const text = String(value).trim();
+    const text =
+        String(value).trim();
 
     return (
         /[A-Z].*[A-Z]/.test(text) ||
@@ -271,20 +369,28 @@ function looksTechnicalName(value) {
 
 function getCarrierDisplayName(company) {
     const optionName =
-        cleanPublicText(company?.deliveryOptionName);
+        cleanPublicText(
+            company?.deliveryOptionName
+        );
 
     const optionMapped =
-        normalizeCarrierCode(optionName);
+        normalizeCarrierCode(
+            optionName
+        );
 
     if (optionMapped) {
         return optionMapped;
     }
 
     const companyName =
-        cleanPublicText(company?.deliveryCompanyName);
+        cleanPublicText(
+            company?.deliveryCompanyName
+        );
 
     const companyMapped =
-        normalizeCarrierCode(companyName);
+        normalizeCarrierCode(
+            companyName
+        );
 
     if (companyMapped) {
         return companyMapped;
@@ -316,13 +422,16 @@ function getCarrierDisplayName(company) {
 async function getShippingAccessToken() {
     if (
         shippingAccessToken &&
-        Date.now() < shippingAccessTokenExpiresAt
+        Date.now() <
+            shippingAccessTokenExpiresAt
     ) {
         return shippingAccessToken;
     }
 
     if (!SHIPPING_REFRESH_TOKEN) {
-        throw new Error('SHIPPING_CONFIGURATION_ERROR');
+        throw new Error(
+            'SHIPPING_CONFIGURATION_ERROR'
+        );
     }
 
     const response =
@@ -332,23 +441,31 @@ async function getShippingAccessToken() {
                 method: 'POST',
 
                 headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json'
+                    Accept:
+                        'application/json',
+
+                    'Content-Type':
+                        'application/json'
                 },
 
-                body: JSON.stringify({
-                    refresh_token:
-                        SHIPPING_REFRESH_TOKEN
-                })
+                body:
+                    JSON.stringify({
+                        refresh_token:
+                            SHIPPING_REFRESH_TOKEN
+                    })
             }
         );
 
-    const raw = await response.text();
+    const raw =
+        await response.text();
 
     let data;
 
     try {
-        data = raw ? JSON.parse(raw) : {};
+        data =
+            raw
+                ? JSON.parse(raw)
+                : {};
     } catch {
         data = {};
     }
@@ -359,26 +476,33 @@ async function getShippingAccessToken() {
         data.data?.access_token ||
         data.data?.accessToken;
 
-    if (!response.ok || !token) {
+    if (
+        !response.ok ||
+        !token
+    ) {
         console.error(
             'تعذر إنشاء Access Token لمزود الشحن:',
             response.status
         );
 
-        throw new Error('SHIPPING_PROVIDER_ERROR');
+        throw new Error(
+            'SHIPPING_PROVIDER_ERROR'
+        );
     }
 
-    shippingAccessToken = token;
+    shippingAccessToken =
+        token;
 
     shippingAccessTokenExpiresAt =
-        Date.now() + (55 * 60 * 1000);
+        Date.now() +
+        (55 * 60 * 1000);
 
     return shippingAccessToken;
 }
 
 /*
 |--------------------------------------------------------------------------
-| طلب داخلي لمزود الشحن
+| تنفيذ طلب داخلي لمزود الشحن
 |--------------------------------------------------------------------------
 */
 
@@ -414,12 +538,16 @@ async function shippingRequest(
             }
         );
 
-    const raw = await response.text();
+    const raw =
+        await response.text();
 
     let data;
 
     try {
-        data = raw ? JSON.parse(raw) : {};
+        data =
+            raw
+                ? JSON.parse(raw)
+                : {};
     } catch {
         data = {};
     }
@@ -431,7 +559,8 @@ async function shippingRequest(
         console.error(
             'خطأ داخلي من مزود الشحن:',
             {
-                status: response.status,
+                status:
+                    response.status,
 
                 message:
                     data.message ||
@@ -441,11 +570,19 @@ async function shippingRequest(
             }
         );
 
-        throw new Error('SHIPPING_PROVIDER_ERROR');
+        throw new Error(
+            'SHIPPING_PROVIDER_ERROR'
+        );
     }
 
     return data;
 }
+
+/*
+|--------------------------------------------------------------------------
+| استخراج شركات الشحن
+|--------------------------------------------------------------------------
+*/
 
 function getDeliveryCompanies(data) {
     const options =
@@ -459,6 +596,12 @@ function getDeliveryCompanies(data) {
         : [];
 }
 
+/*
+|--------------------------------------------------------------------------
+| تجهيز بيانات استعلام السعر
+|--------------------------------------------------------------------------
+*/
+
 function quotePayload(
     originCity,
     destinationCity,
@@ -471,28 +614,113 @@ function quotePayload(
         originCity,
         destinationCity,
 
-        originCountry: 'SA',
-        destinationCountry: 'SA',
+        originCountry:
+            'SA',
 
-        weight: number(weight),
+        destinationCountry:
+            'SA',
 
-        length: number(boxLength),
-        width: number(boxWidth),
-        height: number(boxHeight),
+        weight:
+            number(weight),
 
-        packageCount: 1,
+        length:
+            number(boxLength),
 
-        currency: 'SAR'
+        width:
+            number(boxWidth),
+
+        height:
+            number(boxHeight),
+
+        packageCount:
+            1,
+
+        currency:
+            'SAR'
     };
 }
 
 /*
 |--------------------------------------------------------------------------
-| إحصائيات عامة
+| حساب الإحصائيات
 |--------------------------------------------------------------------------
-|
-| لا نرسل بيانات العملاء أو أرقام التتبع أو روابط البوالص.
-|
+*/
+
+async function getDashboardStats() {
+    const stats =
+        await ShippingSearch.aggregate([
+            {
+                $group: {
+                    _id: null,
+
+                    totalOperations: {
+                        $sum: 1
+                    },
+
+                    totalPrices: {
+                        $sum:
+                            '$totalDisplayedPrice'
+                    },
+
+                    totalRates: {
+                        $sum:
+                            '$rateCount'
+                    },
+
+                    maxCost: {
+                        $max:
+                            '$maxDisplayedPrice'
+                    }
+                }
+            }
+        ]);
+
+    const result =
+        stats[0] || {
+            totalOperations: 0,
+            totalPrices: 0,
+            totalRates: 0,
+            maxCost: 0
+        };
+
+    const totalOperations =
+        number(
+            result.totalOperations
+        );
+
+    const totalRates =
+        number(
+            result.totalRates
+        );
+
+    const totalPrices =
+        number(
+            result.totalPrices
+        );
+
+    const avgCost =
+        totalRates > 0
+            ? roundMoney(
+                totalPrices /
+                totalRates
+            )
+            : 0;
+
+    const maxCost =
+        roundMoney(
+            result.maxCost
+        );
+
+    return {
+        totalOperations,
+        avgCost,
+        maxCost
+    };
+}
+
+/*
+|--------------------------------------------------------------------------
+| API الإحصائيات
 |--------------------------------------------------------------------------
 */
 
@@ -501,44 +729,19 @@ app.get(
     async (req, res) => {
         try {
             const stats =
-                await Shipment.aggregate([
-                    {
-                        $group: {
-                            _id: null,
-
-                            totalOperations: {
-                                $sum: 1
-                            },
-
-                            avgCost: {
-                                $avg: '$price'
-                            },
-
-                            maxCost: {
-                                $max: '$price'
-                            }
-                        }
-                    }
-                ]);
-
-            const result =
-                stats[0] || {
-                    totalOperations: 0,
-                    avgCost: 0,
-                    maxCost: 0
-                };
+                await getDashboardStats();
 
             res.json({
                 success: true,
 
                 totalOperations:
-                    number(result.totalOperations),
+                    stats.totalOperations,
 
                 avgCost:
-                    roundMoney(result.avgCost),
+                    stats.avgCost,
 
                 maxCost:
-                    roundMoney(result.maxCost)
+                    stats.maxCost
             });
 
         } catch (error) {
@@ -551,6 +754,7 @@ app.get(
                 .status(500)
                 .json({
                     success: false,
+
                     message:
                         'تعذر جلب الإحصائيات حاليًا.'
                 });
@@ -563,9 +767,11 @@ app.get(
 | استعلام أسعار الشحن
 |--------------------------------------------------------------------------
 |
-| المهم:
-| العميل يستلم السعر النهائي فقط.
-| التكلفة الأصلية لا يتم إرسالها للمتصفح.
+| كل استعلام ناجح:
+| 1- يجلب الأسعار.
+| 2- يضيف ربح SUMSN.
+| 3- يرسل السعر النهائي فقط للعميل.
+| 4- يسجل عملية واحدة في عدادات الموقع.
 |
 |--------------------------------------------------------------------------
 */
@@ -577,11 +783,9 @@ app.post(
             origin_city,
             destination_city,
             weight,
-
-            boxLength = 30,
-            boxWidth = 30,
-            boxHeight = 30
-
+            boxLength,
+            boxWidth,
+            boxHeight
         } = req.body;
 
         if (
@@ -593,6 +797,7 @@ app.post(
                 .status(400)
                 .json({
                     success: false,
+
                     message:
                         'أدخل مدينتي الإرسال والوصول والوزن.'
                 });
@@ -607,6 +812,7 @@ app.post(
                 .status(400)
                 .json({
                     success: false,
+
                     message:
                         'أدخل أبعاد الشحنة بشكل صحيح.'
                 });
@@ -634,7 +840,6 @@ app.post(
 
             const rates =
                 companies
-
                     .filter(
                         (company) =>
                             company.deliveryOptionId &&
@@ -645,17 +850,12 @@ app.post(
                                 )
                             )
                     )
-
                     .map(
                         (company) => ({
                             carrier:
                                 getCarrierDisplayName(
                                     company
                                 ),
-
-                            /*
-                            | السعر النهائي فقط
-                            */
 
                             price:
                                 customerPrice(
@@ -682,14 +882,135 @@ app.post(
                     .status(422)
                     .json({
                         success: false,
+
                         message:
                             'لا توجد شركات شحن متاحة لهذا المسار حاليًا.'
                     });
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | استخراج الأسعار النهائية
+            |--------------------------------------------------------------------------
+            */
+
+            const displayedPrices =
+                rates
+                    .map(
+                        (rate) =>
+                            number(
+                                rate.price,
+                                NaN
+                            )
+                    )
+                    .filter(
+                        (price) =>
+                            Number.isFinite(
+                                price
+                            )
+                    );
+
+            const totalDisplayedPrice =
+                roundMoney(
+                    displayedPrices.reduce(
+                        (sum, price) =>
+                            sum + price,
+                        0
+                    )
+                );
+
+            const maxDisplayedPrice =
+                displayedPrices.length
+                    ? roundMoney(
+                        Math.max(
+                            ...displayedPrices
+                        )
+                    )
+                    : 0;
+
+            const minDisplayedPrice =
+                displayedPrices.length
+                    ? roundMoney(
+                        Math.min(
+                            ...displayedPrices
+                        )
+                    )
+                    : 0;
+
+            /*
+            |--------------------------------------------------------------------------
+            | تسجيل عملية الاستعلام في MongoDB
+            |--------------------------------------------------------------------------
+            */
+
+            try {
+                await ShippingSearch.create({
+                    fromCity:
+                        origin_city.trim(),
+
+                    toCity:
+                        destination_city.trim(),
+
+                    weight:
+                        number(weight),
+
+                    boxLength:
+                        number(boxLength),
+
+                    boxWidth:
+                        number(boxWidth),
+
+                    boxHeight:
+                        number(boxHeight),
+
+                    rateCount:
+                        displayedPrices.length,
+
+                    totalDisplayedPrice,
+
+                    maxDisplayedPrice,
+
+                    minDisplayedPrice
+                });
+
+            } catch (statsError) {
+                /*
+                |--------------------------------------------------------------------------
+                | لو فشل حفظ العداد لا نمنع العميل من رؤية أسعار الشحن
+                |--------------------------------------------------------------------------
+                */
+
+                console.error(
+                    'تعذر تسجيل عملية الاستعلام:',
+                    statsError
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | نحاول إرجاع الإحصائيات الجديدة أيضًا
+            |--------------------------------------------------------------------------
+            */
+
+            let dashboardStats = null;
+
+            try {
+                dashboardStats =
+                    await getDashboardStats();
+            } catch (statsError) {
+                console.error(
+                    'تعذر تحديث الإحصائيات بعد الاستعلام:',
+                    statsError
+                );
+            }
+
             res.json({
                 success: true,
-                rates
+
+                rates,
+
+                stats:
+                    dashboardStats
             });
 
         } catch (error) {
@@ -702,6 +1023,7 @@ app.post(
                 .status(502)
                 .json({
                     success: false,
+
                     message:
                         'تعذر جلب أسعار الشحن حاليًا. حاول مرة أخرى بعد قليل.'
                 });
@@ -752,16 +1074,24 @@ app.post(
                 .status(400)
                 .json({
                     success: false,
+
                     message:
                         'يرجى تعبئة جميع بيانات الشحنة المطلوبة.'
                 });
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | منع الشحن الحقيقي أثناء الاختبار
+        |--------------------------------------------------------------------------
+        */
 
         if (!ALLOW_LIVE_SHIPMENTS) {
             return res
                 .status(403)
                 .json({
                     success: false,
+
                     message:
                         'إصدار الشحنات غير متاح مؤقتًا أثناء مرحلة الاختبار.'
                 });
@@ -808,13 +1138,16 @@ app.post(
                     .status(409)
                     .json({
                         success: false,
+
                         message:
                             'خيار الشحن المحدد لم يعد متاحًا. أعد جلب الأسعار واختر خيارًا جديدًا.'
                     });
             }
 
             const providerCost =
-                number(selected.price);
+                number(
+                    selected.price
+                );
 
             const finalPrice =
                 customerPrice(
@@ -827,16 +1160,29 @@ app.post(
                     selected
                 );
 
+            /*
+            |--------------------------------------------------------------------------
+            | رقم طلب SUMSN
+            |--------------------------------------------------------------------------
+            */
+
             const orderId =
                 `SUMSN-${Date.now()}-${crypto
                     .randomBytes(3)
                     .toString('hex')
                     .toUpperCase()}`;
 
+            /*
+            |--------------------------------------------------------------------------
+            | بيانات الطلب
+            |--------------------------------------------------------------------------
+            */
+
             const order = {
                 orderId,
 
-                createShipment: false,
+                createShipment:
+                    false,
 
                 deliveryOptionId:
                     number(
@@ -934,10 +1280,22 @@ app.post(
                 }
             };
 
+            /*
+            |--------------------------------------------------------------------------
+            | إنشاء الطلب
+            |--------------------------------------------------------------------------
+            */
+
             await shippingRequest(
                 'createOrder',
                 order
             );
+
+            /*
+            |--------------------------------------------------------------------------
+            | إنشاء الشحنة
+            |--------------------------------------------------------------------------
+            */
 
             const shipmentResult =
                 await shippingRequest(
@@ -951,6 +1309,12 @@ app.post(
                             )
                     }
                 );
+
+            /*
+            |--------------------------------------------------------------------------
+            | جلب رابط البوليصة
+            |--------------------------------------------------------------------------
+            */
 
             let labelUrl = '';
 
@@ -976,6 +1340,12 @@ app.post(
                     labelError.message
                 );
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | حفظ الشحنة الحقيقية
+            |--------------------------------------------------------------------------
+            */
 
             const savedShipment =
                 await Shipment.create({
@@ -1019,6 +1389,12 @@ app.post(
                     labelUrl
                 });
 
+            /*
+            |--------------------------------------------------------------------------
+            | إرسال البريد
+            |--------------------------------------------------------------------------
+            */
+
             if (transporter) {
                 await transporter.sendMail({
                     from:
@@ -1046,6 +1422,12 @@ app.post(
                         )
                 });
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | الرد للعميل
+            |--------------------------------------------------------------------------
+            */
 
             res.json({
                 success: true,
@@ -1076,6 +1458,7 @@ app.post(
                 .status(502)
                 .json({
                     success: false,
+
                     message:
                         'تعذر إنشاء الشحنة حاليًا. حاول مرة أخرى أو تواصل مع الدعم.'
                 });

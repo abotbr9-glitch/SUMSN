@@ -3,11 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>SUMSN | الشحن وإصدار البوليصات</title>
 
@@ -20,7 +16,6 @@
         :root {
             --bg-main: #f8fafc;
             --bg-card: #ffffff;
-
             --primary: #0284c7;
 
             --primary-gradient:
@@ -32,9 +27,7 @@
 
             --text-main: #1e293b;
             --text-muted: #64748b;
-
             --border-color: #e2e8f0;
-
             --success: #10b981;
 
             --warning-bg: #fffbeb;
@@ -45,13 +38,8 @@
             --info-border: #bae6fd;
             --info-text: #0369a1;
 
-            --font-heading:
-                'Cairo',
-                sans-serif;
-
-            --font-body:
-                'Inter',
-                sans-serif;
+            --font-heading: 'Cairo', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
 
         @keyframes spinGlobe {
@@ -149,9 +137,6 @@
             margin-top: 0;
             margin-bottom: 20px;
             color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .input-group {
@@ -612,7 +597,6 @@
                     min="0.1"
                     max="500"
                     step="0.1"
-                    required
                 >
 
             </div>
@@ -633,7 +617,6 @@
                         placeholder="أدخل الطول"
                         min="1"
                         step="1"
-                        required
                     >
 
                 </div>
@@ -652,7 +635,6 @@
                         placeholder="أدخل العرض"
                         min="1"
                         step="1"
-                        required
                     >
 
                 </div>
@@ -673,7 +655,6 @@
                     placeholder="أدخل الارتفاع"
                     min="1"
                     step="1"
-                    required
                 >
 
             </div>
@@ -703,7 +684,7 @@
             >
 
                 <h3>
-                    إجمالي الشحنات المسجلة
+                    إجمالي عمليات الاستعلام
                 </h3>
 
                 <p
@@ -722,7 +703,7 @@
             >
 
                 <h3>
-                    متوسط التكلفة
+                    متوسط الأسعار
                 </h3>
 
                 <p
@@ -741,7 +722,7 @@
             >
 
                 <h3>
-                    أعلى تكلفة مسجلة
+                    أعلى سعر مسجل
                 </h3>
 
                 <p
@@ -762,9 +743,7 @@
 
         <div class="table-header">
 
-            <h2
-                style="margin:0; font-size:18px;"
-            >
+            <h2 style="margin:0; font-size:18px;">
                 أسعار شركات الشحن المتاحة
             </h2>
 
@@ -798,29 +777,17 @@
 
                 <tr>
 
-                    <th>
-                        مدينة الإرسال
-                    </th>
+                    <th>مدينة الإرسال</th>
 
-                    <th>
-                        مدينة الوصول
-                    </th>
+                    <th>مدينة الوصول</th>
 
-                    <th>
-                        الوزن
-                    </th>
+                    <th>الوزن</th>
 
-                    <th>
-                        شركة الشحن
-                    </th>
+                    <th>شركة الشحن</th>
 
-                    <th>
-                        السعر النهائي
-                    </th>
+                    <th>السعر النهائي</th>
 
-                    <th>
-                        الإجراء
-                    </th>
+                    <th>الإجراء</th>
 
                 </tr>
 
@@ -1017,7 +984,6 @@
 
 
         <div class="parties-grid">
-
 
             <div class="party-box">
 
@@ -1227,13 +1193,13 @@
 
 <script>
     let globalLogs = [];
-
     let selectedOrderData = {};
 
 
     function formatMoney(value) {
 
-        const numberValue = Number(value);
+        const numberValue =
+            Number(value);
 
         if (!Number.isFinite(numberValue)) {
             return '0.00';
@@ -1242,6 +1208,49 @@
         return numberValue.toFixed(2);
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | تحديث العدادات على الشاشة
+    |--------------------------------------------------------------------------
+    */
+
+    function updateDashboardUI(stats) {
+
+        if (!stats) {
+            return;
+        }
+
+        document
+            .getElementById('totalCount')
+            .innerText =
+                Number(
+                    stats.totalOperations || 0
+                );
+
+        document
+            .getElementById('avgPriceCount')
+            .innerText =
+                formatMoney(
+                    stats.avgCost || 0
+                ) +
+                ' ريال';
+
+        document
+            .getElementById('maxPriceCount')
+            .innerText =
+                formatMoney(
+                    stats.maxCost || 0
+                ) +
+                ' ريال';
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | تحميل العدادات من MongoDB عند فتح الموقع
+    |--------------------------------------------------------------------------
+    */
 
     async function loadDashboardStats() {
 
@@ -1255,30 +1264,16 @@
             const result =
                 await response.json();
 
-            if (!result.success) {
+            if (
+                !response.ok ||
+                !result.success
+            ) {
                 return;
             }
 
-            document
-                .getElementById('totalCount')
-                .innerText =
-                    Number(
-                        result.totalOperations || 0
-                    );
-
-            document
-                .getElementById('avgPriceCount')
-                .innerText =
-                    formatMoney(
-                        result.avgCost
-                    ) + ' ريال';
-
-            document
-                .getElementById('maxPriceCount')
-                .innerText =
-                    formatMoney(
-                        result.maxCost
-                    ) + ' ريال';
+            updateDashboardUI(
+                result
+            );
 
         } catch (error) {
 
@@ -1289,6 +1284,12 @@
         }
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | استعلام أسعار الشحن
+    |--------------------------------------------------------------------------
+    */
 
     async function compareShipping() {
 
@@ -1419,7 +1420,8 @@
         }
 
 
-        button.disabled = true;
+        button.disabled =
+            true;
 
         const originalButtonText =
             button.innerText;
@@ -1434,7 +1436,8 @@
                 await fetch(
                     '/api/shipping-rates',
                     {
-                        method: 'POST',
+                        method:
+                            'POST',
 
                         headers: {
                             'Content-Type':
@@ -1487,6 +1490,7 @@
             const newBatch =
                 result.rates.map(
                     (rate) => ({
+
                         fromCity:
                             origin_city,
 
@@ -1500,7 +1504,9 @@
                             'شركة شحن',
 
                         price:
-                            Number(rate.price),
+                            Number(
+                                rate.price
+                            ),
 
                         delivery_time:
                             rate.deliveryTime ||
@@ -1526,14 +1532,39 @@
             ];
 
 
-            renderTable(globalLogs);
+            renderTable(
+                globalLogs
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | تحديث العدادات فورًا بعد الاستعلام
+            |--------------------------------------------------------------------------
+            */
+
+            if (result.stats) {
+
+                updateDashboardUI(
+                    result.stats
+                );
+
+            } else {
+
+                await loadDashboardStats();
+            }
 
 
             document
-                .querySelector('.table-section')
+                .querySelector(
+                    '.table-section'
+                )
                 .scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+                    behavior:
+                        'smooth',
+
+                    block:
+                        'start'
                 });
 
 
@@ -1547,13 +1578,20 @@
 
         } finally {
 
-            button.disabled = false;
+            button.disabled =
+                false;
 
             button.innerText =
                 originalButtonText;
         }
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | فتح نافذة إصدار البوليصة
+    |--------------------------------------------------------------------------
+    */
 
     function openOrderModal(log) {
 
@@ -1563,100 +1601,147 @@
 
 
         document
-            .getElementById('modalCarrierTitle')
+            .getElementById(
+                'modalCarrierTitle'
+            )
             .innerText =
                 `إصدار بوليصة الشحن عبر ${log.carrier}`;
 
 
         document
-            .getElementById('modalWeight')
+            .getElementById(
+                'modalWeight'
+            )
             .value =
                 log.weight;
 
 
         document
-            .getElementById('boxLength')
+            .getElementById(
+                'boxLength'
+            )
             .value =
                 log.boxLength;
 
 
         document
-            .getElementById('boxWidth')
+            .getElementById(
+                'boxWidth'
+            )
             .value =
                 log.boxWidth;
 
 
         document
-            .getElementById('boxHeight')
+            .getElementById(
+                'boxHeight'
+            )
             .value =
                 log.boxHeight;
 
 
         document
-            .getElementById('summaryTotal')
+            .getElementById(
+                'summaryTotal'
+            )
             .innerText =
-                formatMoney(log.price);
+                formatMoney(
+                    log.price
+                );
 
 
         document
-            .getElementById('shipmentContents')
-            .value = '';
+            .getElementById(
+                'shipmentContents'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('shipmentContentType')
-            .selectedIndex = 0;
+            .getElementById(
+                'shipmentContentType'
+            )
+            .selectedIndex =
+                0;
 
 
         document
-            .getElementById('customerEmail')
-            .value = '';
+            .getElementById(
+                'customerEmail'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('senderName')
-            .value = '';
+            .getElementById(
+                'senderName'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('senderCity')
+            .getElementById(
+                'senderCity'
+            )
             .value =
                 log.fromCity;
 
 
         document
-            .getElementById('senderPhone')
-            .value = '';
+            .getElementById(
+                'senderPhone'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('senderNationalAddress')
-            .value = '';
+            .getElementById(
+                'senderNationalAddress'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('receiverName')
-            .value = '';
+            .getElementById(
+                'receiverName'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('receiverCity')
+            .getElementById(
+                'receiverCity'
+            )
             .value =
                 log.toCity;
 
 
         document
-            .getElementById('receiverPhone')
-            .value = '';
+            .getElementById(
+                'receiverPhone'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('receiverNationalAddress')
-            .value = '';
+            .getElementById(
+                'receiverNationalAddress'
+            )
+            .value =
+                '';
 
 
         document
-            .getElementById('orderModal')
+            .getElementById(
+                'orderModal'
+            )
             .style
             .display =
                 'flex';
@@ -1666,12 +1751,20 @@
     function closeModal() {
 
         document
-            .getElementById('orderModal')
+            .getElementById(
+                'orderModal'
+            )
             .style
             .display =
                 'none';
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | إصدار الشحنة
+    |--------------------------------------------------------------------------
+    */
 
     async function submitOrder() {
 
@@ -1696,76 +1789,98 @@
 
         const email =
             document
-                .getElementById('customerEmail')
+                .getElementById(
+                    'customerEmail'
+                )
                 .value
                 .trim();
 
 
         const contentType =
             document
-                .getElementById('shipmentContentType')
+                .getElementById(
+                    'shipmentContentType'
+                )
                 .value;
 
 
         const contentsDesc =
             document
-                .getElementById('shipmentContents')
+                .getElementById(
+                    'shipmentContents'
+                )
                 .value
                 .trim();
 
 
         const senderName =
             document
-                .getElementById('senderName')
+                .getElementById(
+                    'senderName'
+                )
                 .value
                 .trim();
 
 
         const senderCity =
             document
-                .getElementById('senderCity')
+                .getElementById(
+                    'senderCity'
+                )
                 .value
                 .trim();
 
 
         const senderPhone =
             document
-                .getElementById('senderPhone')
+                .getElementById(
+                    'senderPhone'
+                )
                 .value
                 .trim();
 
 
         const senderAddress =
             document
-                .getElementById('senderNationalAddress')
+                .getElementById(
+                    'senderNationalAddress'
+                )
                 .value
                 .trim();
 
 
         const receiverName =
             document
-                .getElementById('receiverName')
+                .getElementById(
+                    'receiverName'
+                )
                 .value
                 .trim();
 
 
         const receiverCity =
             document
-                .getElementById('receiverCity')
+                .getElementById(
+                    'receiverCity'
+                )
                 .value
                 .trim();
 
 
         const receiverPhone =
             document
-                .getElementById('receiverPhone')
+                .getElementById(
+                    'receiverPhone'
+                )
                 .value
                 .trim();
 
 
         const receiverAddress =
             document
-                .getElementById('receiverNationalAddress')
+                .getElementById(
+                    'receiverNationalAddress'
+                )
                 .value
                 .trim();
 
@@ -1803,7 +1918,8 @@
         }
 
 
-        button.disabled = true;
+        button.disabled =
+            true;
 
         const originalButtonText =
             button.innerText;
@@ -1818,7 +1934,8 @@
                 await fetch(
                     '/api/create-shipment',
                     {
-                        method: 'POST',
+                        method:
+                            'POST',
 
                         headers: {
                             'Content-Type':
@@ -1898,8 +2015,6 @@
 
             closeModal();
 
-            await loadDashboardStats();
-
 
         } catch (error) {
 
@@ -1911,13 +2026,20 @@
 
         } finally {
 
-            button.disabled = false;
+            button.disabled =
+                false;
 
             button.innerText =
                 originalButtonText;
         }
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | عرض النتائج
+    |--------------------------------------------------------------------------
+    */
 
     function renderTable(logs) {
 
@@ -1927,7 +2049,8 @@
             );
 
 
-        tbody.innerHTML = '';
+        tbody.innerHTML =
+            '';
 
 
         if (
@@ -1936,12 +2059,18 @@
         ) {
 
             const row =
-                document.createElement('tr');
+                document.createElement(
+                    'tr'
+                );
 
             const cell =
-                document.createElement('td');
+                document.createElement(
+                    'td'
+                );
 
-            cell.colSpan = 6;
+
+            cell.colSpan =
+                6;
 
             cell.style.textAlign =
                 'center';
@@ -1952,9 +2081,14 @@
             cell.textContent =
                 'لا توجد أسعار بعد.';
 
-            row.appendChild(cell);
 
-            tbody.appendChild(row);
+            row.appendChild(
+                cell
+            );
+
+            tbody.appendChild(
+                row
+            );
 
             return;
         }
@@ -1964,36 +2098,48 @@
             (log) => {
 
                 const row =
-                    document.createElement('tr');
+                    document.createElement(
+                        'tr'
+                    );
 
 
                 const fromCell =
-                    document.createElement('td');
+                    document.createElement(
+                        'td'
+                    );
 
                 fromCell.textContent =
                     log.fromCity;
 
 
                 const toCell =
-                    document.createElement('td');
+                    document.createElement(
+                        'td'
+                    );
 
                 toCell.textContent =
                     log.toCity;
 
 
                 const weightCell =
-                    document.createElement('td');
+                    document.createElement(
+                        'td'
+                    );
 
                 weightCell.textContent =
                     `${log.weight} كجم`;
 
 
                 const carrierCell =
-                    document.createElement('td');
+                    document.createElement(
+                        'td'
+                    );
 
 
                 const carrierName =
-                    document.createElement('span');
+                    document.createElement(
+                        'span'
+                    );
 
                 carrierName.style.fontWeight =
                     '700';
@@ -2006,7 +2152,9 @@
 
 
                 const deliveryTime =
-                    document.createElement('div');
+                    document.createElement(
+                        'div'
+                    );
 
                 deliveryTime.style.fontSize =
                     '11px';
@@ -2028,7 +2176,9 @@
 
 
                 const priceCell =
-                    document.createElement('td');
+                    document.createElement(
+                        'td'
+                    );
 
                 priceCell.className =
                     'price-tag';
@@ -2038,11 +2188,15 @@
 
 
                 const actionCell =
-                    document.createElement('td');
+                    document.createElement(
+                        'td'
+                    );
 
 
                 const actionButton =
-                    document.createElement('button');
+                    document.createElement(
+                        'button'
+                    );
 
                 actionButton.className =
                     'select-carrier-btn';
@@ -2054,7 +2208,9 @@
                 actionButton.addEventListener(
                     'click',
                     () => {
-                        openOrderModal(log);
+                        openOrderModal(
+                            log
+                        );
                     }
                 );
 
@@ -2097,6 +2253,12 @@
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | تصدير CSV
+    |--------------------------------------------------------------------------
+    */
+
     function escapeCsv(value) {
 
         let text =
@@ -2109,7 +2271,8 @@
             /^[=+\-@]/.test(text)
         ) {
 
-            text = "'" + text;
+            text =
+                "'" + text;
         }
 
 
@@ -2195,7 +2358,8 @@
             );
 
 
-        link.href = url;
+        link.href =
+            url;
 
         link.download =
             'sumsn_shipping_prices.csv';
@@ -2220,16 +2384,32 @@
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | عند فتح الموقع
+    |--------------------------------------------------------------------------
+    */
+
     document.addEventListener(
         'DOMContentLoaded',
         () => {
+
             loadDashboardStats();
+
         }
     );
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | إغلاق النافذة عند الضغط خارجها
+    |--------------------------------------------------------------------------
+    */
+
     document
-        .getElementById('orderModal')
+        .getElementById(
+            'orderModal'
+        )
         .addEventListener(
             'click',
             (event) => {
