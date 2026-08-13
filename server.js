@@ -50,20 +50,19 @@ const SHIPPING_BASE_URL =
 |--------------------------------------------------------------------------
 */
 
-const SUMSN_MARKUP =
-    Number(process.env.SUMSN_MARKUP || 10);
-
-const INCLUDED_WEIGHT_KG =
-    Number(process.env.INCLUDED_WEIGHT_KG || 30);
-
-const EXTRA_KG_PRICE =
-    Number(process.env.EXTRA_KG_PRICE || 3);
+// التسعير ثابت هنا حتى لا تتغلب عليه قيم قديمة محفوظة في Vercel.
+// حتى 30 كجم: سعر الشركة + 10 ريالات.
+// فوق 30 كجم: يضاف 3 ريالات لكل كيلوجرام زائد عن 30.
+const SUMSN_MARKUP = 10;
+const INCLUDED_WEIGHT_KG = 30;
+const EXTRA_KG_PRICE = 3;
 
 const ALLOW_LIVE_SHIPMENTS =
     process.env.ALLOW_LIVE_SHIPMENTS === 'true';
 
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
+let mongoConnectionPromise = null;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,17 +70,30 @@ let shippingAccessTokenExpiresAt = 0;
 |--------------------------------------------------------------------------
 */
 
-mongoose
-    .connect(MONGO_URI, {
-        serverSelectionTimeoutMS: 15000,
-        autoIndex: true
-    })
-    .then(() => {
-        console.log('تم الاتصال بقاعدة بيانات MongoDB بنجاح');
-    })
-    .catch((error) => {
-        console.error('خطأ في الاتصال بقاعدة MongoDB:', error);
-    });
+async function connectToDatabase() {
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
+    }
+
+    if (!mongoConnectionPromise) {
+        mongoConnectionPromise = mongoose
+            .connect(MONGO_URI, {
+                serverSelectionTimeoutMS: 15000,
+                autoIndex: true
+            })
+            .then((connection) => {
+                console.log('تم الاتصال بقاعدة بيانات MongoDB بنجاح');
+                return connection;
+            })
+            .catch((error) => {
+                mongoConnectionPromise = null;
+                console.error('خطأ في الاتصال بقاعدة MongoDB:', error);
+                throw error;
+            });
+    }
+
+    return mongoConnectionPromise;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -408,13 +420,17 @@ async function shippingRequest(path, body, method = 'POST') {
 }
 
 function getDeliveryCompanies(data) {
-    const options =
-        data.deliveryCompany ||
-        data.deliveryCompanies ||
-        data.data ||
-        [];
+    const candidates = [
+        data?.deliveryCompany,
+        data?.deliveryCompanies,
+        data?.data?.deliveryCompany,
+        data?.data?.deliveryCompanies,
+        data?.rates,
+        data?.results,
+        data?.data
+    ];
 
-    return Array.isArray(options) ? options : [];
+    return candidates.find(Array.isArray) || [];
 }
 
 function quotePayload(
@@ -447,30 +463,26 @@ function quotePayload(
 
 app.get('/api/dashboard-stats', async (req, res) => {
     try {
-        const logs = await SearchLog.find({}, { prices: 1 }).lean();
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
-        const totalOperations = logs.length;
+        await connectToDatabase();
 
-        const allPrices = logs.flatMap((log) =>
-            Array.isArray(log.prices)
-                ? log.prices
-                    .map((item) => number(item.price))
-                    .filter((price) => Number.isFinite(price))
-                : []
-        );
+        const [totalOperations, priceStats] = await Promise.all([
+            SearchLog.countDocuments(),
+            SearchLog.aggregate([
+                { $unwind: '$prices' },
+                {
+                    $group: {
+                        _id: null,
+                        avgCost: { $avg: '$prices.price' },
+                        maxCost: { $max: '$prices.price' }
+                    }
+                }
+            ])
+        ]);
 
-        const avgCost =
-            allPrices.length > 0
-                ? roundMoney(
-                    allPrices.reduce((sum, price) => sum + price, 0) /
-                    allPrices.length
-                )
-                : 0;
-
-        const maxCost =
-            allPrices.length > 0
-                ? roundMoney(Math.max(...allPrices))
-                : 0;
+        const avgCost = roundMoney(priceStats[0]?.avgCost || 0);
+        const maxCost = roundMoney(priceStats[0]?.maxCost || 0);
 
         res.json({
             success: true,
@@ -551,7 +563,8 @@ app.post('/api/shipping-rates', async (req, res) => {
                     'حسب شركة الشحن'
                 ),
                 deliveryOptionId: String(company.deliveryOptionId)
-            }));
+            }))
+            .sort((first, second) => first.price - second.price);
 
         if (!rates.length) {
             return res.status(422).json({
@@ -561,6 +574,8 @@ app.post('/api/shipping-rates', async (req, res) => {
         }
 
         try {
+            await connectToDatabase();
+
             await SearchLog.create({
                 fromCity: origin_city.trim(),
                 toCity: destination_city.trim(),
@@ -744,6 +759,8 @@ app.post('/api/create-shipment', async (req, res) => {
         } catch (labelError) {
             console.warn('تعذر جلب رابط البوليصة:', labelError.message);
         }
+
+        await connectToDatabase();
 
         const savedShipment = await Shipment.create({
             fromCity: body.senderCity,
