@@ -61,6 +61,11 @@ const EXTRA_KG_PRICE = 3;
 const ALLOW_LIVE_SHIPMENTS =
     process.env.ALLOW_LIVE_SHIPMENTS === 'true';
 
+const LIVE_SHIPMENT_TEST_EMAIL =
+    String(process.env.LIVE_SHIPMENT_TEST_EMAIL || '')
+        .trim()
+        .toLowerCase();
+
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
 let mongoConnectionPromise = null;
@@ -645,6 +650,17 @@ app.post('/api/create-shipment', async (req, res) => {
         return res.status(403).json({
             success: false,
             message: 'إصدار الشحنات غير متاح مؤقتًا أثناء مرحلة الاختبار.'
+        });
+    }
+
+    if (
+        LIVE_SHIPMENT_TEST_EMAIL &&
+        String(req.body.email).trim().toLowerCase() !==
+            LIVE_SHIPMENT_TEST_EMAIL
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: 'إصدار الشحنات متاح حاليًا لحساب الاختبار فقط.'
         });
     }
 
