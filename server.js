@@ -54,10 +54,10 @@ const SUMSN_MARKUP =
     Number(process.env.SUMSN_MARKUP || 10);
 
 const INCLUDED_WEIGHT_KG =
-    Number(process.env.INCLUDED_WEIGHT_KG || 15);
+    Number(process.env.INCLUDED_WEIGHT_KG || 30);
 
 const EXTRA_KG_PRICE =
-    Number(process.env.EXTRA_KG_PRICE || 2);
+    Number(process.env.EXTRA_KG_PRICE || 3);
 
 const ALLOW_LIVE_SHIPMENTS =
     process.env.ALLOW_LIVE_SHIPMENTS === 'true';
