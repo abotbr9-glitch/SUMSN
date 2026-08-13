@@ -57,8 +57,8 @@ const SUMSN_MARKUP = 10;
 const INCLUDED_WEIGHT_KG = 30;
 const EXTRA_KG_PRICE = 3;
 
-const ALLOW_LIVE_SHIPMENTS =
-    process.env.ALLOW_LIVE_SHIPMENTS === 'true';
+// يبقى معطلًا حتى اكتمال اختبار عنوان الاستلام يدويًا داخل OTO.
+const ALLOW_LIVE_SHIPMENTS = false;
 
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
@@ -455,6 +455,49 @@ function quotePayload(
     };
 }
 
+function pickupLocationCode(orderId) {
+    return `SUMSN-${crypto
+        .createHash('sha256')
+        .update(orderId)
+        .digest('hex')
+        .slice(0, 20)
+        .toUpperCase()}`;
+}
+
+async function createSenderPickupLocation(body, orderId) {
+    const requestedCode = pickupLocationCode(orderId);
+
+    const result = await shippingRequest(
+        'createPickupLocation',
+        {
+            type: 'warehouse',
+            code: requestedCode,
+            name: body.senderName.trim(),
+            mobile: body.senderPhone.trim(),
+            address: body.senderAddress.trim(),
+            contactName: body.senderName.trim(),
+            city: body.senderCity.trim(),
+            country: 'SA',
+            status: 'active'
+        }
+    );
+
+    const confirmedCode =
+        result.pickupLocationCode ||
+        result.code ||
+        result.data?.pickupLocationCode ||
+        result.data?.code ||
+        result.pickupLocation?.pickupLocationCode ||
+        result.pickupLocation?.code ||
+        requestedCode;
+
+    if (!confirmedCode) {
+        throw new Error('PICKUP_LOCATION_CODE_MISSING');
+    }
+
+    return String(confirmedCode);
+}
+
 /*
 |--------------------------------------------------------------------------
 | إحصائيات العدادات
@@ -684,8 +727,12 @@ app.post('/api/create-shipment', async (req, res) => {
             .toString('hex')
             .toUpperCase()}`;
 
+        const senderPickupLocationCode =
+            await createSenderPickupLocation(body, orderId);
+
         const order = {
             orderId,
+            pickupLocationCode: senderPickupLocationCode,
             createShipment: false,
             deliveryOptionId: number(body.deliveryOptionId),
             storeName: 'SUMSN',
@@ -702,14 +749,6 @@ app.post('/api/create-shipment', async (req, res) => {
             boxHeight: number(body.boxHeight),
             shippingNotes: body.contentsDescription,
             item_description: body.contentsDescription,
-            senderInformation: {
-                senderFullName: body.senderName,
-                senderMobile: body.senderPhone,
-                senderCountry: 'SA',
-                senderCity: body.senderCity,
-                senderAddressLine: body.senderAddress,
-                senderShortAddressCode: body.senderAddress
-            },
             customer: {
                 name: body.receiverName,
                 email: body.email,
