@@ -652,6 +652,66 @@ async function getShipmentLabel(orderId) {
     return '';
 }
 
+function labelAccessToken(orderId) {
+    return crypto
+        .createHmac('sha256', SHIPPING_REFRESH_TOKEN || 'disabled')
+        .update(orderId)
+        .digest('hex');
+}
+
+function isValidLabelAccessToken(orderId, token) {
+    const expected = Buffer.from(labelAccessToken(orderId));
+    const received = Buffer.from(String(token || ''));
+
+    return (
+        expected.length === received.length &&
+        crypto.timingSafeEqual(expected, received)
+    );
+}
+
+app.get('/api/shipment-label', async (req, res) => {
+    const orderId = String(req.query.orderId || '');
+    const token = String(req.query.token || '');
+
+    if (
+        !orderId.startsWith('SUMSN-') ||
+        !isValidLabelAccessToken(orderId, token)
+    ) {
+        return res.status(403).send('الرابط غير صالح.');
+    }
+
+    try {
+        const providerLabelUrl = await getShipmentLabel(orderId);
+
+        if (!providerLabelUrl) {
+            return res.status(404).send('البوليصة غير جاهزة بعد.');
+        }
+
+        const labelResponse = await fetch(providerLabelUrl);
+
+        if (!labelResponse.ok) {
+            throw new Error('LABEL_DOWNLOAD_ERROR');
+        }
+
+        const labelBytes = Buffer.from(await labelResponse.arrayBuffer());
+        const contentType =
+            labelResponse.headers.get('content-type') ||
+            'application/pdf';
+
+        res.set({
+            'Content-Type': contentType,
+            'Content-Disposition': `inline; filename="${orderId}.pdf"`,
+            'Cache-Control': 'private, no-store',
+            'X-Content-Type-Options': 'nosniff'
+        });
+
+        return res.send(labelBytes);
+    } catch (error) {
+        console.error('تعذر تحميل البوليصة:', error);
+        return res.status(502).send('تعذر تحميل البوليصة حاليًا.');
+    }
+});
+
 /*
 |--------------------------------------------------------------------------
 | إحصائيات العدادات
@@ -1017,7 +1077,10 @@ app.post('/api/create-shipment', async (req, res) => {
             shipmentId ||
             '';
 
-        const labelUrl = await getShipmentLabel(orderId);
+        const providerLabelUrl = await getShipmentLabel(orderId);
+        const labelUrl = providerLabelUrl
+            ? `/api/shipment-label?orderId=${encodeURIComponent(orderId)}&token=${labelAccessToken(orderId)}`
+            : '';
 
         await connectToDatabase();
 
@@ -1035,7 +1098,7 @@ app.post('/api/create-shipment', async (req, res) => {
             otoOrderId: orderId,
             otoShipmentId: shipmentId,
             trackingNumber,
-            labelUrl
+            labelUrl: providerLabelUrl
         });
 
         if (transporter) {
@@ -1079,7 +1142,7 @@ app.post('/api/create-shipment', async (req, res) => {
         ) {
             message = 'رصيد حساب الشحن غير كافٍ لإصدار البوليصة.';
         } else if (providerMessage.includes('not assigned yet')) {
-            message = 'تم إنشاء الطلب لكن OTO لم يعيّنه لشركة الشحن بعد. لا تعِد المحاولة وتواصل مع الدعم.';
+            message = 'تم إنشاء الطلب لكن شركة الشحن لم تعتمد الإسناد بعد. لا تعِد المحاولة وتواصل مع الدعم.';
         }
 
         res.status(502).json({
