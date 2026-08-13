@@ -317,6 +317,106 @@ function getCarrierDisplayName(company) {
     return 'شركة شحن';
 }
 
+function getDeliveryServiceLabel(company) {
+    const pickingType = String(
+        company?.pickingType ||
+        company?.pickupType ||
+        company?.collectionType ||
+        ''
+    )
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    const deliveryType = String(
+        company?.deliveryType ||
+        company?.destinationDeliveryType ||
+        company?.dropOffType ||
+        ''
+    )
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    const descriptiveText = [
+        company?.serviceName,
+        company?.shippingMethod,
+        company?.deliveryOptionName
+    ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    const serviceDetails = `${pickingType} ${deliveryType} ${descriptiveText}`;
+    const destinationHasChoice =
+        deliveryType.includes('tocustomerdoorsteporpickupbycustomer');
+    const originFromDoor =
+        pickingType.includes('pickupbydc') ||
+        /doortodoor|doortobranch/.test(serviceDetails);
+    const originAtBranch =
+        pickingType.includes('branchdropoff') ||
+        /branchtodoor|branchtobranch/.test(serviceDetails);
+    const destinationAtDoor =
+        !destinationHasChoice &&
+        (
+            deliveryType.includes('tocustomerdoorstep') ||
+            /doortodoor|branchtodoor/.test(serviceDetails)
+        );
+    const destinationAtBranch =
+        !destinationHasChoice &&
+        (
+            deliveryType.includes('pickupbycustomer') ||
+            /doortobranch|branchtobranch/.test(serviceDetails)
+        );
+
+    if (destinationHasChoice) {
+        if (originFromDoor) {
+            return 'استلام من الباب، والتسليم للباب أو الاستلام من الفرع';
+        }
+
+        if (originAtBranch) {
+            return 'تسليم الشحنة للفرع، والتسليم للباب أو الاستلام من الفرع';
+        }
+
+        return 'التسليم للباب أو الاستلام من الفرع';
+    }
+
+    if (originFromDoor && destinationAtDoor) {
+        return 'استلام من الباب وتسليم لباب المستلم';
+    }
+
+    if (originFromDoor && destinationAtBranch) {
+        return 'استلام من الباب واستلام المستلم من الفرع';
+    }
+
+    if (originAtBranch && destinationAtDoor) {
+        return 'تسليم الشحنة للفرع وتوصيلها لباب المستلم';
+    }
+
+    if (originAtBranch && destinationAtBranch) {
+        return 'تسليم واستلام من الفرع';
+    }
+
+    if (originFromDoor) {
+        return 'استلام الشحنة من باب المرسل';
+    }
+
+    if (originAtBranch) {
+        return 'تسليم الشحنة لفرع الشركة';
+    }
+
+    if (destinationAtDoor) {
+        return 'توصيل الشحنة لباب المستلم';
+    }
+
+    if (destinationAtBranch) {
+        return 'استلام المستلم من الفرع';
+    }
+
+    return 'تفاصيل الخدمة حسب شركة الشحن';
+}
+
 /*
 |--------------------------------------------------------------------------
 | Access Token
@@ -813,6 +913,7 @@ app.post('/api/shipping-rates', async (req, res) => {
             )
             .map((company) => ({
                 carrier: getCarrierDisplayName(company),
+                serviceMode: getDeliveryServiceLabel(company),
                 price: customerPrice(company.price, weight),
                 deliveryTime: cleanPublicText(
                     company.avgDeliveryTime ||
