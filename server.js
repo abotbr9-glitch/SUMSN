@@ -2120,27 +2120,26 @@ app.get('/api/dashboard-stats', async (req, res) => {
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
         await connectToDatabase();
+        await initializePlatformStats();
 
-        const [totalOperations, priceStats] = await Promise.all([
-            SearchLog.countDocuments(),
-            SearchLog.aggregate([
-                { $unwind: '$prices' },
-                {
-                    $group: {
-                        _id: null,
-                        avgCost: { $avg: '$prices.price' },
-                        maxCost: { $max: '$prices.price' }
-                    }
-                }
-            ])
-        ]);
+        const stats =
+            await PlatformStat.findById('global').lean();
+        const avgCost =
+            number(stats?.priceCount) > 0
+                ? roundMoney(
+                    number(stats.priceSum) /
+                    number(stats.priceCount)
+                )
+                : 0;
+        const maxCost =
+            roundMoney(stats?.maxCost || 0);
 
-        const avgCost = roundMoney(priceStats[0]?.avgCost || 0);
-        const maxCost = roundMoney(priceStats[0]?.maxCost || 0);
+        void maybeAlertDatabaseStorage();
 
         res.json({
             success: true,
-            totalOperations,
+            totalOperations:
+                number(stats?.totalOperations),
             avgCost,
             maxCost
         });
@@ -2231,6 +2230,8 @@ app.post('/api/shipping-rates', async (req, res) => {
         try {
             await connectToDatabase();
 
+            await recordSearchStatistics(rates);
+
             await SearchLog.create({
                 fromCity: origin_city.trim(),
                 toCity: destination_city.trim(),
@@ -2244,6 +2245,8 @@ app.post('/api/shipping-rates', async (req, res) => {
                     deliveryTime: rate.deliveryTime
                 }))
             });
+
+            void maybeAlertDatabaseStorage();
         } catch (saveError) {
             console.error('تعذر حفظ سجل الاستعلام:', saveError);
         }
@@ -2268,6 +2271,30 @@ app.post('/api/shipping-rates', async (req, res) => {
 */
 
 app.post('/api/create-shipment', async (req, res) => {
+    let shipmentUser = null;
+
+    if (customerAccountsEnabled()) {
+        try {
+            shipmentUser = await authenticatedUser(req);
+        } catch (error) {
+            console.error('تعذر التحقق من جلسة العميل:', error);
+
+            return res.status(500).json({
+                success: false,
+                message: 'تعذر التحقق من الحساب حاليًا.'
+            });
+        }
+
+        if (!shipmentUser) {
+            return res.status(401).json({
+                success: false,
+                message: 'سجّل الدخول أولًا لإنشاء الشحنة وحفظها في لوحتك.'
+            });
+        }
+
+        req.body.email = shipmentUser.email;
+    }
+
     const required = [
         'email',
         'contentsDescription',
@@ -2482,7 +2509,21 @@ app.post('/api/create-shipment', async (req, res) => {
 
         await connectToDatabase();
 
+        const notificationUser =
+            shipmentUser || {
+                email: normalizeEmail(body.email),
+                fullName:
+                    String(body.receiverName || 'عميل SUMSN').trim()
+            };
         const savedShipment = await Shipment.create({
+            userId: shipmentUser?._id || null,
+            customerEmail: notificationUser.email,
+            contentsDescription:
+                String(body.contentsDescription || '').trim(),
+            emailDeliveryStatus:
+                emailServiceConfigured()
+                    ? 'pending'
+                    : 'skipped',
             fromCity: body.senderCity,
             toCity: body.receiverCity,
             weight: number(body.weight),
@@ -2499,20 +2540,57 @@ app.post('/api/create-shipment', async (req, res) => {
             labelUrl: providerLabelUrl
         });
 
-        if (transporter) {
-            await transporter.sendMail({
-                from: `"SUMSN" <${EMAIL_USER}>`,
-                to: body.email,
-                subject: 'تم إنشاء شحنتك عبر SUMSN',
-                text:
-                    `تم إنشاء شحنتك بنجاح عبر SUMSN.\n\n` +
-                    `شركة الشحن: ${carrierName}\n` +
-                    `رقم الطلب: ${orderId}\n` +
-                    `رقم التتبع: ${savedShipment.trackingNumber || 'سيتم توفيره قريبًا'}\n` +
-                    `الإجمالي: ${finalPrice.toFixed(2)} ريال\n` +
-                    (labelUrl ? `رابط البوليصة: ${labelUrl}` : '')
-            });
+        let emailSent = false;
+        let labelAttached = false;
+
+        if (emailServiceConfigured()) {
+            let attachment = null;
+
+            if (providerLabelUrl) {
+                try {
+                    attachment = await labelAttachment(
+                        providerLabelUrl,
+                        orderId
+                    );
+                    labelAttached = Boolean(attachment);
+                } catch (labelError) {
+                    console.warn(
+                        'تعذر تجهيز مرفق البوليصة:',
+                        labelError.message
+                    );
+                }
+            }
+
+            try {
+                const emailResult =
+                    await sendShipmentCreatedEmail({
+                        user: notificationUser,
+                        carrierName,
+                        orderId,
+                        trackingNumber:
+                            savedShipment.trackingNumber,
+                        finalPrice,
+                        attachment
+                    });
+
+                savedShipment.emailDeliveryStatus = 'sent';
+                savedShipment.emailMessageId =
+                    emailResult.id || '';
+                savedShipment.emailSentAt = new Date();
+                await savedShipment.save();
+                emailSent = true;
+            } catch (emailError) {
+                console.error(
+                    'تعذر إرسال بريد البوليصة:',
+                    emailError.message
+                );
+
+                savedShipment.emailDeliveryStatus = 'failed';
+                await savedShipment.save();
+            }
         }
+
+        void maybeAlertDatabaseStorage();
 
         res.json({
             success: true,
@@ -2521,7 +2599,9 @@ app.post('/api/create-shipment', async (req, res) => {
             shipmentId: savedShipment.otoShipmentId,
             trackingNumber: savedShipment.trackingNumber,
             labelUrl,
-            finalPrice
+            finalPrice,
+            emailSent,
+            labelAttached
         });
     } catch (error) {
         console.error('خطأ أثناء إنشاء الشحنة:', error);
