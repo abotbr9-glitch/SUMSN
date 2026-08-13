@@ -30,6 +30,36 @@ const MONGO_URI =
 
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
+const EMAIL_SMTP_HOST = String(process.env.EMAIL_SMTP_HOST || '').trim();
+const EMAIL_SMTP_PORT = Number(process.env.EMAIL_SMTP_PORT || 465);
+const EMAIL_SMTP_SECURE =
+    process.env.EMAIL_SMTP_SECURE !== 'false';
+
+const SUPPORT_EMAIL =
+    String(process.env.SUPPORT_EMAIL || 'support@sumsn.com')
+        .trim()
+        .toLowerCase();
+const EMAIL_FROM =
+    String(process.env.EMAIL_FROM || SUPPORT_EMAIL)
+        .trim()
+        .toLowerCase();
+const RESEND_API_KEY =
+    String(process.env.RESEND_API_KEY || '').trim();
+const PUBLIC_BASE_URL =
+    String(process.env.PUBLIC_BASE_URL || 'https://sumsn.com')
+        .trim()
+        .replace(/\/$/, '');
+const AUTH_SECRET =
+    String(process.env.AUTH_SECRET || '').trim();
+const ENABLE_CUSTOMER_ACCOUNTS =
+    process.env.ENABLE_CUSTOMER_ACCOUNTS === 'true';
+const SESSION_COOKIE_NAME = 'sumsn_session';
+const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const SEARCH_LOG_RETENTION_DAYS = 90;
+const MONGO_STORAGE_LIMIT_BYTES =
+    Number(process.env.MONGO_STORAGE_LIMIT_MB || 512) *
+    1024 *
+    1024;
 
 /*
 |--------------------------------------------------------------------------
@@ -108,6 +138,32 @@ async function connectToDatabase() {
 */
 
 const shipmentSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        index: true,
+        default: null
+    },
+    customerEmail: {
+        type: String,
+        lowercase: true,
+        trim: true,
+        default: ''
+    },
+    contentsDescription: {
+        type: String,
+        default: ''
+    },
+    emailDeliveryStatus: {
+        type: String,
+        enum: ['pending', 'sent', 'failed', 'skipped'],
+        default: 'pending'
+    },
+    emailMessageId: {
+        type: String,
+        default: ''
+    },
+    emailSentAt: Date,
     fromCity: {
         type: String,
         required: true
@@ -186,13 +242,110 @@ const searchLogSchema = new mongoose.Schema({
     ],
     createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        expires: SEARCH_LOG_RETENTION_DAYS * 24 * 60 * 60
     }
 });
 
 const SearchLog =
     mongoose.models.SearchLog ||
     mongoose.model('SearchLog', searchLogSchema);
+
+const userSchema = new mongoose.Schema(
+    {
+        fullName: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 80
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+            lowercase: true,
+            trim: true
+        },
+        passwordSalt: {
+            type: String,
+            required: true,
+            select: false
+        },
+        passwordHash: {
+            type: String,
+            required: true,
+            select: false
+        },
+        emailVerifiedAt: {
+            type: Date,
+            default: null
+        },
+        verificationTokenHash: {
+            type: String,
+            select: false,
+            default: ''
+        },
+        verificationTokenExpiresAt: {
+            type: Date,
+            select: false,
+            default: null
+        },
+        resetTokenHash: {
+            type: String,
+            select: false,
+            default: ''
+        },
+        resetTokenExpiresAt: {
+            type: Date,
+            select: false,
+            default: null
+        },
+        sessionVersion: {
+            type: Number,
+            default: 0
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+const User =
+    mongoose.models.User ||
+    mongoose.model('User', userSchema);
+
+const platformStatSchema = new mongoose.Schema({
+    _id: {
+        type: String,
+        default: 'global'
+    },
+    totalOperations: {
+        type: Number,
+        default: 0
+    },
+    priceSum: {
+        type: Number,
+        default: 0
+    },
+    priceCount: {
+        type: Number,
+        default: 0
+    },
+    maxCost: {
+        type: Number,
+        default: 0
+    },
+    lastStorageAlertAt: Date,
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const PlatformStat =
+    mongoose.models.PlatformStat ||
+    mongoose.model('PlatformStat', platformStatSchema);
 
 /*
 |--------------------------------------------------------------------------
@@ -202,13 +355,25 @@ const SearchLog =
 
 const transporter =
     EMAIL_USER && EMAIL_PASS
-        ? nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: EMAIL_USER,
-                pass: EMAIL_PASS
-            }
-        })
+        ? nodemailer.createTransport(
+            EMAIL_SMTP_HOST
+                ? {
+                    host: EMAIL_SMTP_HOST,
+                    port: EMAIL_SMTP_PORT,
+                    secure: EMAIL_SMTP_SECURE,
+                    auth: {
+                        user: EMAIL_USER,
+                        pass: EMAIL_PASS
+                    }
+                }
+                : {
+                    service: 'gmail',
+                    auth: {
+                        user: EMAIL_USER,
+                        pass: EMAIL_PASS
+                    }
+                }
+        )
         : null;
 
 /*
@@ -250,6 +415,619 @@ function cleanPublicText(value) {
         .replace(/OTO/gi, '')
         .replace(/\s{2,}/g, ' ')
         .trim();
+}
+
+
+function customerAccountsEnabled() {
+    return ENABLE_CUSTOMER_ACCOUNTS && Boolean(AUTH_SECRET);
+}
+
+function emailServiceConfigured() {
+    return Boolean(RESEND_API_KEY || transporter);
+}
+
+function normalizeEmail(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function validEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function passwordDigest(password, salt) {
+    return new Promise((resolve, reject) => {
+        crypto.scrypt(
+            String(password),
+            salt,
+            64,
+            {
+                N: 16384,
+                r: 8,
+                p: 1,
+                maxmem: 64 * 1024 * 1024
+            },
+            (error, derivedKey) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve(derivedKey.toString('hex'));
+            }
+        );
+    });
+}
+
+async function createPasswordRecord(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+
+    return {
+        salt,
+        hash: await passwordDigest(password, salt)
+    };
+}
+
+async function passwordMatches(password, salt, expectedHash) {
+    const actualHash = await passwordDigest(password, salt);
+    const actual = Buffer.from(actualHash, 'hex');
+    const expected = Buffer.from(String(expectedHash || ''), 'hex');
+
+    return (
+        actual.length === expected.length &&
+        crypto.timingSafeEqual(actual, expected)
+    );
+}
+
+function createActionToken() {
+    const token = crypto.randomBytes(32).toString('hex');
+
+    return {
+        token,
+        hash: crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex')
+    };
+}
+
+function actionTokenHash(token) {
+    return crypto
+        .createHash('sha256')
+        .update(String(token || ''))
+        .digest('hex');
+}
+
+function encodeSessionPart(value) {
+    return Buffer.from(JSON.stringify(value)).toString('base64url');
+}
+
+function signSessionPart(encodedPayload) {
+    return crypto
+        .createHmac('sha256', AUTH_SECRET)
+        .update(encodedPayload)
+        .digest('base64url');
+}
+
+function createSessionToken(user) {
+    const encodedPayload = encodeSessionPart({
+        userId: String(user._id),
+        version: number(user.sessionVersion),
+        expiresAt: Date.now() + SESSION_MAX_AGE_MS
+    });
+
+    return `${encodedPayload}.${signSessionPart(encodedPayload)}`;
+}
+
+function parseCookies(req) {
+    return String(req.headers.cookie || '')
+        .split(';')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .reduce((cookies, part) => {
+            const separator = part.indexOf('=');
+
+            if (separator > 0) {
+                cookies[part.slice(0, separator)] =
+                    decodeURIComponent(part.slice(separator + 1));
+            }
+
+            return cookies;
+        }, {});
+}
+
+function readSession(req) {
+    if (!customerAccountsEnabled()) {
+        return null;
+    }
+
+    const token = parseCookies(req)[SESSION_COOKIE_NAME];
+
+    if (!token) {
+        return null;
+    }
+
+    const [encodedPayload, signature] = token.split('.');
+
+    if (!encodedPayload || !signature) {
+        return null;
+    }
+
+    const expected = Buffer.from(signSessionPart(encodedPayload));
+    const received = Buffer.from(signature);
+
+    if (
+        expected.length !== received.length ||
+        !crypto.timingSafeEqual(expected, received)
+    ) {
+        return null;
+    }
+
+    try {
+        const payload = JSON.parse(
+            Buffer.from(encodedPayload, 'base64url').toString('utf8')
+        );
+
+        if (
+            !payload.userId ||
+            number(payload.expiresAt) <= Date.now()
+        ) {
+            return null;
+        }
+
+        return payload;
+    } catch {
+        return null;
+    }
+}
+
+async function authenticatedUser(req) {
+    const session = readSession(req);
+
+    if (!session) {
+        return null;
+    }
+
+    await connectToDatabase();
+
+    const user = await User.findById(session.userId);
+
+    if (
+        !user ||
+        !user.emailVerifiedAt ||
+        number(user.sessionVersion) !== number(session.version)
+    ) {
+        return null;
+    }
+
+    return user;
+}
+
+function setSessionCookie(res, user) {
+    res.cookie(
+        SESSION_COOKIE_NAME,
+        createSessionToken(user),
+        {
+            httpOnly: true,
+            secure:
+                process.env.NODE_ENV === 'production' ||
+                PUBLIC_BASE_URL.startsWith('https://'),
+            sameSite: 'lax',
+            maxAge: SESSION_MAX_AGE_MS,
+            path: '/'
+        }
+    );
+}
+
+function clearSessionCookie(res) {
+    res.clearCookie(SESSION_COOKIE_NAME, {
+        httpOnly: true,
+        secure:
+            process.env.NODE_ENV === 'production' ||
+            PUBLIC_BASE_URL.startsWith('https://'),
+        sameSite: 'lax',
+        path: '/'
+    });
+}
+
+function publicUser(user) {
+    return {
+        id: String(user._id),
+        fullName: user.fullName,
+        email: user.email,
+        emailVerified: Boolean(user.emailVerifiedAt)
+    };
+}
+
+function brandedEmailHtml(title, bodyHtml, buttonText, buttonUrl) {
+    const action = buttonUrl
+        ? `<p style="margin:26px 0;text-align:center"><a href="${escapeHtml(buttonUrl)}" style="display:inline-block;padding:13px 24px;border-radius:12px;background:#1769ff;color:#fff;text-decoration:none;font-weight:800">${escapeHtml(buttonText)}</a></p>`
+        : '';
+
+    return `<!doctype html><html lang="ar" dir="rtl"><body style="margin:0;background:#f5f7fb;font-family:Tahoma,Arial,sans-serif;color:#101828"><div style="max-width:620px;margin:28px auto;padding:0 14px"><div style="padding:18px 24px;border-radius:18px 18px 0 0;background:#0b1f41;color:#fff;font-size:24px;font-weight:900;letter-spacing:1px">SUMSN</div><div style="padding:26px 24px;border:1px solid #e5eaf2;border-top:0;border-radius:0 0 18px 18px;background:#fff"><h1 style="margin:0 0 16px;font-size:22px;color:#0b1f41">${escapeHtml(title)}</h1><div style="font-size:15px;line-height:1.9;color:#475467">${bodyHtml}</div>${action}<p style="margin:26px 0 0;padding-top:16px;border-top:1px solid #eef1f5;color:#98a2b3;font-size:12px">هذه رسالة آلية من SUMSN. للرد أو المساعدة تواصل عبر ${escapeHtml(SUPPORT_EMAIL)}.</p></div></div></body></html>`;
+}
+
+async function sendBrandedEmail({
+    to,
+    subject,
+    text,
+    html,
+    attachments = []
+}) {
+    if (!emailServiceConfigured()) {
+        throw new Error('EMAIL_NOT_CONFIGURED');
+    }
+
+    if (RESEND_API_KEY) {
+        const response = await fetch(
+            'https://api.resend.com/emails',
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${RESEND_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: `SUMSN <${EMAIL_FROM}>`,
+                    to: [to],
+                    reply_to: SUPPORT_EMAIL,
+                    subject,
+                    text,
+                    html,
+                    attachments: attachments.map((attachment) => ({
+                        filename: attachment.filename,
+                        content: Buffer
+                            .from(attachment.content)
+                            .toString('base64')
+                    }))
+                })
+            }
+        );
+
+        const raw = await response.text();
+        let result = {};
+
+        try {
+            result = raw ? JSON.parse(raw) : {};
+        } catch {
+            result = {};
+        }
+
+        if (!response.ok) {
+            const error = new Error('EMAIL_SEND_ERROR');
+            error.providerMessage =
+                result.message ||
+                result.error ||
+                'تعذر إرسال البريد.';
+            throw error;
+        }
+
+        return {
+            id: result.id || ''
+        };
+    }
+
+    const result = await transporter.sendMail({
+        from: `"SUMSN" <${EMAIL_FROM}>`,
+        replyTo: SUPPORT_EMAIL,
+        to,
+        subject,
+        text,
+        html,
+        attachments: attachments.map((attachment) => ({
+            filename: attachment.filename,
+            content: attachment.content,
+            contentType:
+                attachment.contentType ||
+                'application/pdf'
+        }))
+    });
+
+    return {
+        id: result.messageId || ''
+    };
+}
+
+async function sendVerificationEmail(user, token) {
+    const link =
+        `${PUBLIC_BASE_URL}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+
+    return sendBrandedEmail({
+        to: user.email,
+        subject: 'تأكيد بريدك في SUMSN',
+        text:
+            `مرحبًا ${user.fullName}،\n\n` +
+            `أكد بريدك لبدء استخدام حساب SUMSN:\n${link}\n\n` +
+            'تنتهي صلاحية الرابط خلال 24 ساعة.',
+        html: brandedEmailHtml(
+            'تأكيد البريد الإلكتروني',
+            `<p>مرحبًا ${escapeHtml(user.fullName)}،</p><p>اضغط الزر التالي لتأكيد بريدك وبدء استخدام حساب SUMSN.</p><p>تنتهي صلاحية الرابط خلال 24 ساعة.</p>`,
+            'تأكيد بريدي',
+            link
+        )
+    });
+}
+
+async function sendPasswordResetEmail(user, token) {
+    const link =
+        `${PUBLIC_BASE_URL}/?resetToken=${encodeURIComponent(token)}`;
+
+    return sendBrandedEmail({
+        to: user.email,
+        subject: 'إعادة تعيين كلمة مرور SUMSN',
+        text:
+            `مرحبًا ${user.fullName}،\n\n` +
+            `استخدم الرابط التالي لإعادة تعيين كلمة المرور:\n${link}\n\n` +
+            'تنتهي صلاحية الرابط خلال ساعة. تجاهل الرسالة إن لم تطلب ذلك.',
+        html: brandedEmailHtml(
+            'إعادة تعيين كلمة المرور',
+            `<p>مرحبًا ${escapeHtml(user.fullName)}،</p><p>وصلنا طلب لإعادة تعيين كلمة مرور حسابك.</p><p>تنتهي صلاحية الرابط خلال ساعة. تجاهل الرسالة إن لم تطلب ذلك.</p>`,
+            'تعيين كلمة مرور جديدة',
+            link
+        )
+    });
+}
+
+async function labelAttachment(providerLabelUrl, orderId) {
+    if (!providerLabelUrl) {
+        return null;
+    }
+
+    const response = await fetch(providerLabelUrl);
+
+    if (!response.ok) {
+        throw new Error('LABEL_DOWNLOAD_ERROR');
+    }
+
+    const content = Buffer.from(await response.arrayBuffer());
+
+    if (content.length > 25 * 1024 * 1024) {
+        throw new Error('LABEL_TOO_LARGE');
+    }
+
+    return {
+        filename: `${orderId}.pdf`,
+        content,
+        contentType:
+            response.headers.get('content-type') ||
+            'application/pdf'
+    };
+}
+
+async function sendShipmentCreatedEmail({
+    user,
+    carrierName,
+    orderId,
+    trackingNumber,
+    finalPrice,
+    attachment
+}) {
+    const attachmentText = attachment
+        ? 'ستجد بوليصة الشحن PDF مرفقة مع هذه الرسالة.'
+        : 'البوليصة قيد التجهيز ويمكن فتحها من لوحة حسابك عند جاهزيتها.';
+
+    return sendBrandedEmail({
+        to: user.email,
+        subject: `بوليصة شحنتك ${orderId}`,
+        text:
+            `مرحبًا ${user.fullName}،\n\n` +
+            'تم إنشاء شحنتك بنجاح عبر SUMSN.\n' +
+            `شركة الشحن: ${carrierName}\n` +
+            `رقم الطلب: ${orderId}\n` +
+            `رقم التتبع: ${trackingNumber || 'سيتم توفيره قريبًا'}\n` +
+            `الإجمالي: ${finalPrice.toFixed(2)} ريال\n\n` +
+            attachmentText,
+        html: brandedEmailHtml(
+            'تم إنشاء شحنتك بنجاح',
+            `<p>مرحبًا ${escapeHtml(user.fullName)}،</p><p>تم إنشاء شحنتك بنجاح عبر SUMSN.</p><table style="width:100%;border-collapse:collapse;margin:18px 0"><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">شركة الشحن</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(carrierName)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">رقم الطلب</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(orderId)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">رقم التتبع</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(trackingNumber || 'سيتم توفيره قريبًا')}</td></tr><tr><td style="padding:8px">الإجمالي</td><td style="padding:8px;font-weight:700">${escapeHtml(finalPrice.toFixed(2))} ريال</td></tr></table><p>${escapeHtml(attachmentText)}</p>`,
+            '',
+            ''
+        ),
+        attachments: attachment ? [attachment] : []
+    });
+}
+
+const authAttempts = new Map();
+
+function authRateLimited(req, action, maximum, windowMs) {
+    const forwarded = String(req.headers['x-forwarded-for'] || '')
+        .split(',')[0]
+        .trim();
+    const address =
+        forwarded ||
+        req.socket?.remoteAddress ||
+        'unknown';
+    const key = `${action}:${address}`;
+    const now = Date.now();
+    const current = authAttempts.get(key);
+
+    if (!current || current.resetAt <= now) {
+        authAttempts.set(key, {
+            count: 1,
+            resetAt: now + windowMs
+        });
+        return false;
+    }
+
+    current.count += 1;
+
+    return current.count > maximum;
+}
+
+async function initializePlatformStats() {
+    const exists = await PlatformStat.exists({
+        _id: 'global'
+    });
+
+    if (exists) {
+        return;
+    }
+
+    const [totalOperations, priceStats] = await Promise.all([
+        SearchLog.countDocuments(),
+        SearchLog.aggregate([
+            {
+                $unwind: '$prices'
+            },
+            {
+                $group: {
+                    _id: null,
+                    priceSum: {
+                        $sum: '$prices.price'
+                    },
+                    priceCount: {
+                        $sum: 1
+                    },
+                    maxCost: {
+                        $max: '$prices.price'
+                    }
+                }
+            }
+        ])
+    ]);
+    const current = priceStats[0] || {};
+
+    await PlatformStat.updateOne(
+        {
+            _id: 'global'
+        },
+        {
+            $setOnInsert: {
+                totalOperations,
+                priceSum: number(current.priceSum),
+                priceCount: number(current.priceCount),
+                maxCost: number(current.maxCost),
+                updatedAt: new Date()
+            }
+        },
+        {
+            upsert: true
+        }
+    );
+}
+
+async function recordSearchStatistics(rates) {
+    await initializePlatformStats();
+
+    const priceSum = rates.reduce(
+        (sum, rate) => sum + number(rate.price),
+        0
+    );
+    const maxCost = rates.reduce(
+        (highest, rate) =>
+            Math.max(highest, number(rate.price)),
+        0
+    );
+
+    await PlatformStat.updateOne(
+        {
+            _id: 'global'
+        },
+        {
+            $inc: {
+                totalOperations: 1,
+                priceSum,
+                priceCount: rates.length
+            },
+            $max: {
+                maxCost
+            },
+            $set: {
+                updatedAt: new Date()
+            }
+        }
+    );
+}
+
+let lastStorageCheckAt = 0;
+
+async function maybeAlertDatabaseStorage() {
+    const now = Date.now();
+
+    if (
+        now - lastStorageCheckAt <
+        6 * 60 * 60 * 1000
+    ) {
+        return;
+    }
+
+    lastStorageCheckAt = now;
+
+    try {
+        const stats =
+            await mongoose.connection.db.command({
+                dbStats: 1
+            });
+        const usedBytes =
+            number(stats.dataSize) +
+            number(stats.indexSize);
+        const usedPercent =
+            MONGO_STORAGE_LIMIT_BYTES > 0
+                ? (usedBytes / MONGO_STORAGE_LIMIT_BYTES) * 100
+                : 0;
+
+        if (usedPercent < 70) {
+            return;
+        }
+
+        console.warn(
+            `استخدام MongoDB وصل إلى ${usedPercent.toFixed(1)}%`
+        );
+
+        const platform =
+            await PlatformStat.findById('global');
+        const lastAlert =
+            platform?.lastStorageAlertAt
+                ? new Date(platform.lastStorageAlertAt).getTime()
+                : 0;
+
+        if (
+            !emailServiceConfigured() ||
+            now - lastAlert < 24 * 60 * 60 * 1000
+        ) {
+            return;
+        }
+
+        await sendBrandedEmail({
+            to: SUPPORT_EMAIL,
+            subject: 'تنبيه مساحة قاعدة بيانات SUMSN',
+            text:
+                `وصل استخدام قاعدة البيانات إلى ${usedPercent.toFixed(1)}%. راجع MongoDB Atlas قبل بلوغ الحد المجاني.`,
+            html: brandedEmailHtml(
+                'تنبيه مساحة قاعدة البيانات',
+                `<p>وصل استخدام قاعدة بيانات SUMSN إلى <strong>${escapeHtml(usedPercent.toFixed(1))}%</strong>.</p><p>راجع MongoDB Atlas ونظّف البيانات القديمة أو قم بالترقية قبل بلوغ الحد المجاني.</p>`,
+                '',
+                ''
+            )
+        });
+
+        await PlatformStat.updateOne(
+            {
+                _id: 'global'
+            },
+            {
+                $set: {
+                    lastStorageAlertAt: new Date()
+                }
+            },
+            {
+                upsert: true
+            }
+        );
+    } catch (error) {
+        console.warn(
+            'تعذر فحص مساحة MongoDB:',
+            error.message
+        );
+    }
 }
 
 function normalizeCarrierCode(value) {
