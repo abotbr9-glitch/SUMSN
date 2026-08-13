@@ -455,49 +455,6 @@ function quotePayload(
     };
 }
 
-function pickupLocationCode(orderId) {
-    return `SUMSN-${crypto
-        .createHash('sha256')
-        .update(orderId)
-        .digest('hex')
-        .slice(0, 20)
-        .toUpperCase()}`;
-}
-
-async function createSenderPickupLocation(body, orderId) {
-    const requestedCode = pickupLocationCode(orderId);
-
-    const result = await shippingRequest(
-        'createPickupLocation',
-        {
-            type: 'warehouse',
-            code: requestedCode,
-            name: body.senderName.trim(),
-            mobile: body.senderPhone.trim(),
-            address: body.senderAddress.trim(),
-            contactName: body.senderName.trim(),
-            city: body.senderCity.trim(),
-            country: 'SA',
-            status: 'active'
-        }
-    );
-
-    const confirmedCode =
-        result.pickupLocationCode ||
-        result.code ||
-        result.data?.pickupLocationCode ||
-        result.data?.code ||
-        result.pickupLocation?.pickupLocationCode ||
-        result.pickupLocation?.code ||
-        requestedCode;
-
-    if (!confirmedCode) {
-        throw new Error('PICKUP_LOCATION_CODE_MISSING');
-    }
-
-    return String(confirmedCode);
-}
-
 /*
 |--------------------------------------------------------------------------
 | إحصائيات العدادات
@@ -727,12 +684,8 @@ app.post('/api/create-shipment', async (req, res) => {
             .toString('hex')
             .toUpperCase()}`;
 
-        const senderPickupLocationCode =
-            await createSenderPickupLocation(body, orderId);
-
         const order = {
             orderId,
-            pickupLocationCode: senderPickupLocationCode,
             createShipment: false,
             deliveryOptionId: number(body.deliveryOptionId),
             storeName: 'SUMSN',
@@ -749,6 +702,13 @@ app.post('/api/create-shipment', async (req, res) => {
             boxHeight: number(body.boxHeight),
             shippingNotes: body.contentsDescription,
             item_description: body.contentsDescription,
+            senderInformation: {
+                senderFullName: body.senderName.trim(),
+                senderMobile: body.senderPhone.trim(),
+                senderCountry: 'SA',
+                senderCity: body.senderCity.trim(),
+                senderAddressLine: body.senderAddress.trim()
+            },
             customer: {
                 name: body.receiverName,
                 email: body.email,
