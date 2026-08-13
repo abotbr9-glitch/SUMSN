@@ -33,7 +33,7 @@ const EMAIL_PASS = process.env.EMAIL_PASS;
 
 /*
 |--------------------------------------------------------------------------
-| إعداد مزود الشحن - داخلي فقط
+| مزود الشحن - داخلي فقط
 |--------------------------------------------------------------------------
 */
 
@@ -80,15 +80,12 @@ mongoose
         console.log('تم الاتصال بقاعدة بيانات MongoDB بنجاح');
     })
     .catch((error) => {
-        console.error(
-            'خطأ في الاتصال بقاعدة MongoDB:',
-            error
-        );
+        console.error('خطأ في الاتصال بقاعدة MongoDB:', error);
     });
 
 /*
 |--------------------------------------------------------------------------
-| نموذج الشحنات الحقيقية
+| نموذج الشحنات المصدرة فعلياً
 |--------------------------------------------------------------------------
 */
 
@@ -97,37 +94,30 @@ const shipmentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
     toCity: {
         type: String,
         required: true
     },
-
     weight: {
         type: Number,
         required: true
     },
-
     carrier: {
         type: String,
         required: true
     },
-
     price: {
         type: Number,
         required: true
     },
-
     deliveryTime: {
         type: String,
         default: ''
     },
-
     otoOrderId: String,
     otoShipmentId: String,
     trackingNumber: String,
     labelUrl: String,
-
     createdAt: {
         type: Date,
         default: Date.now
@@ -136,100 +126,61 @@ const shipmentSchema = new mongoose.Schema({
 
 const Shipment =
     mongoose.models.Shipment ||
-    mongoose.model(
-        'Shipment',
-        shipmentSchema
-    );
+    mongoose.model('Shipment', shipmentSchema);
 
 /*
 |--------------------------------------------------------------------------
-| نموذج عمليات البحث عن أسعار الشحن
+| نموذج سجل الاستعلامات
 |--------------------------------------------------------------------------
-|
-| كل استعلام أسعار ناجح يحفظ سجلًا واحدًا فقط.
-| لا نحفظ سعر مزود الشحن الأصلي هنا.
-| نحفظ فقط الأسعار النهائية المعروضة للعميل.
-|
+| هذا هو المهم للعدادات
 |--------------------------------------------------------------------------
 */
 
-const shippingSearchSchema =
-    new mongoose.Schema(
+const searchLogSchema = new mongoose.Schema({
+    fromCity: {
+        type: String,
+        required: true
+    },
+    toCity: {
+        type: String,
+        required: true
+    },
+    weight: {
+        type: Number,
+        required: true
+    },
+    boxLength: {
+        type: Number,
+        required: true
+    },
+    boxWidth: {
+        type: Number,
+        required: true
+    },
+    boxHeight: {
+        type: Number,
+        required: true
+    },
+    prices: [
         {
-            fromCity: {
-                type: String,
-                required: true
-            },
-
-            toCity: {
-                type: String,
-                required: true
-            },
-
-            weight: {
-                type: Number,
-                required: true
-            },
-
-            boxLength: {
-                type: Number,
-                required: true
-            },
-
-            boxWidth: {
-                type: Number,
-                required: true
-            },
-
-            boxHeight: {
-                type: Number,
-                required: true
-            },
-
-            rateCount: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-
-            totalDisplayedPrice: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-
-            maxDisplayedPrice: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-
-            minDisplayedPrice: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-
-            createdAt: {
-                type: Date,
-                default: Date.now
-            }
-        },
-        {
-            collection: 'shipping_searches'
+            carrier: String,
+            price: Number,
+            deliveryTime: String
         }
-    );
+    ],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
 
-const ShippingSearch =
-    mongoose.models.ShippingSearch ||
-    mongoose.model(
-        'ShippingSearch',
-        shippingSearchSchema
-    );
+const SearchLog =
+    mongoose.models.SearchLog ||
+    mongoose.model('SearchLog', searchLogSchema);
 
 /*
 |--------------------------------------------------------------------------
-| إعداد البريد
+| البريد
 |--------------------------------------------------------------------------
 */
 
@@ -237,7 +188,6 @@ const transporter =
     EMAIL_USER && EMAIL_PASS
         ? nodemailer.createTransport({
             service: 'gmail',
-
             auth: {
                 user: EMAIL_USER,
                 pass: EMAIL_PASS
@@ -253,25 +203,18 @@ const transporter =
 
 function number(value, fallback = 0) {
     const parsed = Number(value);
-
-    return Number.isFinite(parsed)
-        ? parsed
-        : fallback;
+    return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function roundMoney(value) {
-    return Number(
-        number(value).toFixed(2)
-    );
+    return Number(number(value).toFixed(2));
 }
 
 function excessWeightFee(weight) {
-    return (
-        Math.max(
-            0,
-            number(weight) - INCLUDED_WEIGHT_KG
-        ) * EXTRA_KG_PRICE
-    );
+    return Math.max(
+        0,
+        number(weight) - INCLUDED_WEIGHT_KG
+    ) * EXTRA_KG_PRICE;
 }
 
 function customerPrice(providerPrice, weight) {
@@ -304,11 +247,10 @@ function normalizeCarrierCode(value) {
         return '';
     }
 
-    const normalized =
-        String(value)
-            .trim()
-            .toLowerCase()
-            .replace(/[\s_-]/g, '');
+    const normalized = String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
 
     if (normalized.includes('smsa')) {
         return 'SMSA';
@@ -348,6 +290,14 @@ function normalizeCarrierCode(value) {
         return 'J&T Express';
     }
 
+    if (normalized.includes('aymakan')) {
+        return 'Aymakan';
+    }
+
+    if (normalized.includes('ups')) {
+        return 'UPS';
+    }
+
     return '';
 }
 
@@ -356,8 +306,7 @@ function looksTechnicalName(value) {
         return true;
     }
 
-    const text =
-        String(value).trim();
+    const text = String(value).trim();
 
     return (
         /[A-Z].*[A-Z]/.test(text) ||
@@ -369,44 +318,30 @@ function looksTechnicalName(value) {
 
 function getCarrierDisplayName(company) {
     const optionName =
-        cleanPublicText(
-            company?.deliveryOptionName
-        );
+        cleanPublicText(company?.deliveryOptionName);
 
     const optionMapped =
-        normalizeCarrierCode(
-            optionName
-        );
+        normalizeCarrierCode(optionName);
 
     if (optionMapped) {
         return optionMapped;
     }
 
     const companyName =
-        cleanPublicText(
-            company?.deliveryCompanyName
-        );
+        cleanPublicText(company?.deliveryCompanyName);
 
     const companyMapped =
-        normalizeCarrierCode(
-            companyName
-        );
+        normalizeCarrierCode(companyName);
 
     if (companyMapped) {
         return companyMapped;
     }
 
-    if (
-        optionName &&
-        !looksTechnicalName(optionName)
-    ) {
+    if (optionName && !looksTechnicalName(optionName)) {
         return optionName;
     }
 
-    if (
-        companyName &&
-        !looksTechnicalName(companyName)
-    ) {
+    if (companyName && !looksTechnicalName(companyName)) {
         return companyName;
     }
 
@@ -422,50 +357,34 @@ function getCarrierDisplayName(company) {
 async function getShippingAccessToken() {
     if (
         shippingAccessToken &&
-        Date.now() <
-            shippingAccessTokenExpiresAt
+        Date.now() < shippingAccessTokenExpiresAt
     ) {
         return shippingAccessToken;
     }
 
     if (!SHIPPING_REFRESH_TOKEN) {
-        throw new Error(
-            'SHIPPING_CONFIGURATION_ERROR'
-        );
+        throw new Error('SHIPPING_CONFIGURATION_ERROR');
     }
 
-    const response =
-        await fetch(
-            `${SHIPPING_BASE_URL}/refreshToken`,
-            {
-                method: 'POST',
+    const response = await fetch(
+        `${SHIPPING_BASE_URL}/refreshToken`,
+        {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                refresh_token: SHIPPING_REFRESH_TOKEN
+            })
+        }
+    );
 
-                headers: {
-                    Accept:
-                        'application/json',
-
-                    'Content-Type':
-                        'application/json'
-                },
-
-                body:
-                    JSON.stringify({
-                        refresh_token:
-                            SHIPPING_REFRESH_TOKEN
-                    })
-            }
-        );
-
-    const raw =
-        await response.text();
+    const raw = await response.text();
 
     let data;
-
     try {
-        data =
-            raw
-                ? JSON.parse(raw)
-                : {};
+        data = raw ? JSON.parse(raw) : {};
     } catch {
         data = {};
     }
@@ -476,113 +395,63 @@ async function getShippingAccessToken() {
         data.data?.access_token ||
         data.data?.accessToken;
 
-    if (
-        !response.ok ||
-        !token
-    ) {
-        console.error(
-            'تعذر إنشاء Access Token لمزود الشحن:',
-            response.status
-        );
-
-        throw new Error(
-            'SHIPPING_PROVIDER_ERROR'
-        );
+    if (!response.ok || !token) {
+        console.error('تعذر إنشاء Access Token لمزود الشحن:', response.status);
+        throw new Error('SHIPPING_PROVIDER_ERROR');
     }
 
-    shippingAccessToken =
-        token;
-
-    shippingAccessTokenExpiresAt =
-        Date.now() +
-        (55 * 60 * 1000);
+    shippingAccessToken = token;
+    shippingAccessTokenExpiresAt = Date.now() + (55 * 60 * 1000);
 
     return shippingAccessToken;
 }
 
 /*
 |--------------------------------------------------------------------------
-| تنفيذ طلب داخلي لمزود الشحن
+| طلب داخلي لمزود الشحن
 |--------------------------------------------------------------------------
 */
 
-async function shippingRequest(
-    path,
-    body,
-    method = 'POST'
-) {
-    const accessToken =
-        await getShippingAccessToken();
+async function shippingRequest(path, body, method = 'POST') {
+    const accessToken = await getShippingAccessToken();
 
-    const response =
-        await fetch(
-            `${SHIPPING_BASE_URL}/${path}`,
-            {
-                method,
+    const response = await fetch(
+        `${SHIPPING_BASE_URL}/${path}`,
+        {
+            method,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: method === 'GET' ? undefined : JSON.stringify(body)
+        }
+    );
 
-                headers: {
-                    Authorization:
-                        `Bearer ${accessToken}`,
-
-                    Accept:
-                        'application/json',
-
-                    'Content-Type':
-                        'application/json'
-                },
-
-                body:
-                    method === 'GET'
-                        ? undefined
-                        : JSON.stringify(body)
-            }
-        );
-
-    const raw =
-        await response.text();
+    const raw = await response.text();
 
     let data;
-
     try {
-        data =
-            raw
-                ? JSON.parse(raw)
-                : {};
+        data = raw ? JSON.parse(raw) : {};
     } catch {
         data = {};
     }
 
-    if (
-        !response.ok ||
-        data.success === false
-    ) {
-        console.error(
-            'خطأ داخلي من مزود الشحن:',
-            {
-                status:
-                    response.status,
+    if (!response.ok || data.success === false) {
+        console.error('خطأ داخلي من مزود الشحن:', {
+            status: response.status,
+            message:
+                data.message ||
+                data.error ||
+                data.errorMsg ||
+                raw?.slice(0, 500)
+        });
 
-                message:
-                    data.message ||
-                    data.error ||
-                    data.errorMsg ||
-                    raw?.slice(0, 500)
-            }
-        );
-
-        throw new Error(
-            'SHIPPING_PROVIDER_ERROR'
-        );
+        throw new Error('SHIPPING_PROVIDER_ERROR');
     }
 
     return data;
 }
-
-/*
-|--------------------------------------------------------------------------
-| استخراج شركات الشحن
-|--------------------------------------------------------------------------
-*/
 
 function getDeliveryCompanies(data) {
     const options =
@@ -591,16 +460,8 @@ function getDeliveryCompanies(data) {
         data.data ||
         [];
 
-    return Array.isArray(options)
-        ? options
-        : [];
+    return Array.isArray(options) ? options : [];
 }
-
-/*
-|--------------------------------------------------------------------------
-| تجهيز بيانات استعلام السعر
-|--------------------------------------------------------------------------
-*/
 
 function quotePayload(
     originCity,
@@ -613,423 +474,172 @@ function quotePayload(
     return {
         originCity,
         destinationCity,
-
-        originCountry:
-            'SA',
-
-        destinationCountry:
-            'SA',
-
-        weight:
-            number(weight),
-
-        length:
-            number(boxLength),
-
-        width:
-            number(boxWidth),
-
-        height:
-            number(boxHeight),
-
-        packageCount:
-            1,
-
-        currency:
-            'SAR'
+        originCountry: 'SA',
+        destinationCountry: 'SA',
+        weight: number(weight),
+        length: number(boxLength),
+        width: number(boxWidth),
+        height: number(boxHeight),
+        packageCount: 1,
+        currency: 'SAR'
     };
 }
 
 /*
 |--------------------------------------------------------------------------
-| حساب الإحصائيات
+| إحصائيات العدادات
+|--------------------------------------------------------------------------
+| تعتمد على عمليات الاستعلام المخزنة في SearchLog
 |--------------------------------------------------------------------------
 */
 
-async function getDashboardStats() {
-    const stats =
-        await ShippingSearch.aggregate([
-            {
-                $group: {
-                    _id: null,
+app.get('/api/dashboard-stats', async (req, res) => {
+    try {
+        const logs = await SearchLog.find({}, { prices: 1 }).lean();
 
-                    totalOperations: {
-                        $sum: 1
-                    },
+        const totalOperations = logs.length;
 
-                    totalPrices: {
-                        $sum:
-                            '$totalDisplayedPrice'
-                    },
-
-                    totalRates: {
-                        $sum:
-                            '$rateCount'
-                    },
-
-                    maxCost: {
-                        $max:
-                            '$maxDisplayedPrice'
-                    }
-                }
-            }
-        ]);
-
-    const result =
-        stats[0] || {
-            totalOperations: 0,
-            totalPrices: 0,
-            totalRates: 0,
-            maxCost: 0
-        };
-
-    const totalOperations =
-        number(
-            result.totalOperations
+        const allPrices = logs.flatMap((log) =>
+            Array.isArray(log.prices)
+                ? log.prices
+                    .map((item) => number(item.price))
+                    .filter((price) => Number.isFinite(price))
+                : []
         );
 
-    const totalRates =
-        number(
-            result.totalRates
-        );
+        const avgCost =
+            allPrices.length > 0
+                ? roundMoney(
+                    allPrices.reduce((sum, price) => sum + price, 0) /
+                    allPrices.length
+                )
+                : 0;
 
-    const totalPrices =
-        number(
-            result.totalPrices
-        );
+        const maxCost =
+            allPrices.length > 0
+                ? roundMoney(Math.max(...allPrices))
+                : 0;
 
-    const avgCost =
-        totalRates > 0
-            ? roundMoney(
-                totalPrices /
-                totalRates
-            )
-            : 0;
-
-    const maxCost =
-        roundMoney(
-            result.maxCost
-        );
-
-    return {
-        totalOperations,
-        avgCost,
-        maxCost
-    };
-}
-
-/*
-|--------------------------------------------------------------------------
-| API الإحصائيات
-|--------------------------------------------------------------------------
-*/
-
-app.get(
-    '/api/dashboard-stats',
-    async (req, res) => {
-        try {
-            const stats =
-                await getDashboardStats();
-
-            res.json({
-                success: true,
-
-                totalOperations:
-                    stats.totalOperations,
-
-                avgCost:
-                    stats.avgCost,
-
-                maxCost:
-                    stats.maxCost
-            });
-
-        } catch (error) {
-            console.error(
-                'خطأ في جلب الإحصائيات:',
-                error
-            );
-
-            res
-                .status(500)
-                .json({
-                    success: false,
-
-                    message:
-                        'تعذر جلب الإحصائيات حاليًا.'
-                });
-        }
+        res.json({
+            success: true,
+            totalOperations,
+            avgCost,
+            maxCost
+        });
+    } catch (error) {
+        console.error('خطأ في جلب الإحصائيات:', error);
+        res.status(500).json({
+            success: false,
+            message: 'تعذر جلب الإحصائيات حاليًا.'
+        });
     }
-);
+});
 
 /*
 |--------------------------------------------------------------------------
 | استعلام أسعار الشحن
 |--------------------------------------------------------------------------
-|
-| كل استعلام ناجح:
-| 1- يجلب الأسعار.
-| 2- يضيف ربح SUMSN.
-| 3- يرسل السعر النهائي فقط للعميل.
-| 4- يسجل عملية واحدة في عدادات الموقع.
-|
+| العميل يستلم السعر النهائي فقط
 |--------------------------------------------------------------------------
 */
 
-app.post(
-    '/api/shipping-rates',
-    async (req, res) => {
-        const {
-            origin_city,
-            destination_city,
-            weight,
-            boxLength,
-            boxWidth,
-            boxHeight
-        } = req.body;
+app.post('/api/shipping-rates', async (req, res) => {
+    const {
+        origin_city,
+        destination_city,
+        weight,
+        boxLength = 30,
+        boxWidth = 30,
+        boxHeight = 30
+    } = req.body;
 
-        if (
-            !origin_city ||
-            !destination_city ||
-            number(weight) <= 0
-        ) {
-            return res
-                .status(400)
-                .json({
-                    success: false,
+    if (!origin_city || !destination_city || number(weight) <= 0) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل مدينتي الإرسال والوصول والوزن.'
+        });
+    }
 
-                    message:
-                        'أدخل مدينتي الإرسال والوصول والوزن.'
-                });
-        }
+    if (
+        number(boxLength) <= 0 ||
+        number(boxWidth) <= 0 ||
+        number(boxHeight) <= 0
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل أبعاد الشحنة بشكل صحيح.'
+        });
+    }
 
-        if (
-            number(boxLength) <= 0 ||
-            number(boxWidth) <= 0 ||
-            number(boxHeight) <= 0
-        ) {
-            return res
-                .status(400)
-                .json({
-                    success: false,
+    try {
+        const providerResult = await shippingRequest(
+            'checkOTODeliveryFee',
+            quotePayload(
+                origin_city.trim(),
+                destination_city.trim(),
+                weight,
+                boxLength,
+                boxWidth,
+                boxHeight
+            )
+        );
 
-                    message:
-                        'أدخل أبعاد الشحنة بشكل صحيح.'
-                });
+        const companies = getDeliveryCompanies(providerResult);
+
+        const rates = companies
+            .filter(
+                (company) =>
+                    company.deliveryOptionId &&
+                    Number.isFinite(number(company.price, NaN))
+            )
+            .map((company) => ({
+                carrier: getCarrierDisplayName(company),
+                price: customerPrice(company.price, weight),
+                deliveryTime: cleanPublicText(
+                    company.avgDeliveryTime ||
+                    company.estimatedDeliveryTime ||
+                    'حسب شركة الشحن'
+                ),
+                deliveryOptionId: String(company.deliveryOptionId)
+            }));
+
+        if (!rates.length) {
+            return res.status(422).json({
+                success: false,
+                message: 'لا توجد شركات شحن متاحة لهذا المسار حاليًا.'
+            });
         }
 
         try {
-            const providerResult =
-                await shippingRequest(
-                    'checkOTODeliveryFee',
-
-                    quotePayload(
-                        origin_city.trim(),
-                        destination_city.trim(),
-                        weight,
-                        boxLength,
-                        boxWidth,
-                        boxHeight
-                    )
-                );
-
-            const companies =
-                getDeliveryCompanies(
-                    providerResult
-                );
-
-            const rates =
-                companies
-                    .filter(
-                        (company) =>
-                            company.deliveryOptionId &&
-                            Number.isFinite(
-                                number(
-                                    company.price,
-                                    NaN
-                                )
-                            )
-                    )
-                    .map(
-                        (company) => ({
-                            carrier:
-                                getCarrierDisplayName(
-                                    company
-                                ),
-
-                            price:
-                                customerPrice(
-                                    company.price,
-                                    weight
-                                ),
-
-                            deliveryTime:
-                                cleanPublicText(
-                                    company.avgDeliveryTime ||
-                                    company.estimatedDeliveryTime ||
-                                    'حسب شركة الشحن'
-                                ),
-
-                            deliveryOptionId:
-                                String(
-                                    company.deliveryOptionId
-                                )
-                        })
-                    );
-
-            if (!rates.length) {
-                return res
-                    .status(422)
-                    .json({
-                        success: false,
-
-                        message:
-                            'لا توجد شركات شحن متاحة لهذا المسار حاليًا.'
-                    });
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | استخراج الأسعار النهائية
-            |--------------------------------------------------------------------------
-            */
-
-            const displayedPrices =
-                rates
-                    .map(
-                        (rate) =>
-                            number(
-                                rate.price,
-                                NaN
-                            )
-                    )
-                    .filter(
-                        (price) =>
-                            Number.isFinite(
-                                price
-                            )
-                    );
-
-            const totalDisplayedPrice =
-                roundMoney(
-                    displayedPrices.reduce(
-                        (sum, price) =>
-                            sum + price,
-                        0
-                    )
-                );
-
-            const maxDisplayedPrice =
-                displayedPrices.length
-                    ? roundMoney(
-                        Math.max(
-                            ...displayedPrices
-                        )
-                    )
-                    : 0;
-
-            const minDisplayedPrice =
-                displayedPrices.length
-                    ? roundMoney(
-                        Math.min(
-                            ...displayedPrices
-                        )
-                    )
-                    : 0;
-
-            /*
-            |--------------------------------------------------------------------------
-            | تسجيل عملية الاستعلام في MongoDB
-            |--------------------------------------------------------------------------
-            */
-
-            try {
-                await ShippingSearch.create({
-                    fromCity:
-                        origin_city.trim(),
-
-                    toCity:
-                        destination_city.trim(),
-
-                    weight:
-                        number(weight),
-
-                    boxLength:
-                        number(boxLength),
-
-                    boxWidth:
-                        number(boxWidth),
-
-                    boxHeight:
-                        number(boxHeight),
-
-                    rateCount:
-                        displayedPrices.length,
-
-                    totalDisplayedPrice,
-
-                    maxDisplayedPrice,
-
-                    minDisplayedPrice
-                });
-
-            } catch (statsError) {
-                /*
-                |--------------------------------------------------------------------------
-                | لو فشل حفظ العداد لا نمنع العميل من رؤية أسعار الشحن
-                |--------------------------------------------------------------------------
-                */
-
-                console.error(
-                    'تعذر تسجيل عملية الاستعلام:',
-                    statsError
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | نحاول إرجاع الإحصائيات الجديدة أيضًا
-            |--------------------------------------------------------------------------
-            */
-
-            let dashboardStats = null;
-
-            try {
-                dashboardStats =
-                    await getDashboardStats();
-            } catch (statsError) {
-                console.error(
-                    'تعذر تحديث الإحصائيات بعد الاستعلام:',
-                    statsError
-                );
-            }
-
-            res.json({
-                success: true,
-
-                rates,
-
-                stats:
-                    dashboardStats
+            await SearchLog.create({
+                fromCity: origin_city.trim(),
+                toCity: destination_city.trim(),
+                weight: number(weight),
+                boxLength: number(boxLength),
+                boxWidth: number(boxWidth),
+                boxHeight: number(boxHeight),
+                prices: rates.map((rate) => ({
+                    carrier: rate.carrier,
+                    price: rate.price,
+                    deliveryTime: rate.deliveryTime
+                }))
             });
-
-        } catch (error) {
-            console.error(
-                'خطأ أثناء جلب أسعار الشحن:',
-                error.message
-            );
-
-            res
-                .status(502)
-                .json({
-                    success: false,
-
-                    message:
-                        'تعذر جلب أسعار الشحن حاليًا. حاول مرة أخرى بعد قليل.'
-                });
+        } catch (saveError) {
+            console.error('تعذر حفظ سجل الاستعلام:', saveError);
         }
+
+        res.json({
+            success: true,
+            rates
+        });
+    } catch (error) {
+        console.error('خطأ أثناء جلب أسعار الشحن:', error.message);
+        res.status(502).json({
+            success: false,
+            message: 'تعذر جلب أسعار الشحن حاليًا. حاول مرة أخرى بعد قليل.'
+        });
     }
-);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -1037,434 +647,203 @@ app.post(
 |--------------------------------------------------------------------------
 */
 
-app.post(
-    '/api/create-shipment',
-    async (req, res) => {
-        const required = [
-            'email',
-            'contentsDescription',
+app.post('/api/create-shipment', async (req, res) => {
+    const required = [
+        'email',
+        'contentsDescription',
+        'senderName',
+        'senderCity',
+        'senderPhone',
+        'senderAddress',
+        'receiverName',
+        'receiverCity',
+        'receiverPhone',
+        'receiverAddress',
+        'deliveryOptionId',
+        'weight',
+        'boxLength',
+        'boxWidth',
+        'boxHeight'
+    ];
 
-            'senderName',
-            'senderCity',
-            'senderPhone',
-            'senderAddress',
+    const missing = required.filter((field) => !req.body[field]);
 
-            'receiverName',
-            'receiverCity',
-            'receiverPhone',
-            'receiverAddress',
+    if (missing.length) {
+        return res.status(400).json({
+            success: false,
+            message: 'يرجى تعبئة جميع بيانات الشحنة المطلوبة.'
+        });
+    }
 
-            'deliveryOptionId',
+    if (!ALLOW_LIVE_SHIPMENTS) {
+        return res.status(403).json({
+            success: false,
+            message: 'إصدار الشحنات غير متاح مؤقتًا أثناء مرحلة الاختبار.'
+        });
+    }
 
-            'weight',
+    const body = req.body;
 
-            'boxLength',
-            'boxWidth',
-            'boxHeight'
-        ];
+    try {
+        const quote = await shippingRequest(
+            'checkOTODeliveryFee',
+            quotePayload(
+                body.senderCity.trim(),
+                body.receiverCity.trim(),
+                body.weight,
+                body.boxLength,
+                body.boxWidth,
+                body.boxHeight
+            )
+        );
 
-        const missing =
-            required.filter(
-                (field) =>
-                    !req.body[field]
-            );
+        const selected = getDeliveryCompanies(quote).find(
+            (company) =>
+                String(company.deliveryOptionId) ===
+                String(body.deliveryOptionId)
+        );
 
-        if (missing.length) {
-            return res
-                .status(400)
-                .json({
-                    success: false,
-
-                    message:
-                        'يرجى تعبئة جميع بيانات الشحنة المطلوبة.'
-                });
+        if (!selected) {
+            return res.status(409).json({
+                success: false,
+                message: 'خيار الشحن المحدد لم يعد متاحًا. أعد جلب الأسعار واختر خيارًا جديدًا.'
+            });
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | منع الشحن الحقيقي أثناء الاختبار
-        |--------------------------------------------------------------------------
-        */
+        const providerCost = number(selected.price);
+        const finalPrice = customerPrice(providerCost, body.weight);
+        const carrierName = getCarrierDisplayName(selected);
 
-        if (!ALLOW_LIVE_SHIPMENTS) {
-            return res
-                .status(403)
-                .json({
-                    success: false,
+        const orderId = `SUMSN-${Date.now()}-${crypto
+            .randomBytes(3)
+            .toString('hex')
+            .toUpperCase()}`;
 
-                    message:
-                        'إصدار الشحنات غير متاح مؤقتًا أثناء مرحلة الاختبار.'
-                });
-        }
+        const order = {
+            orderId,
+            createShipment: false,
+            deliveryOptionId: number(body.deliveryOptionId),
+            storeName: 'SUMSN',
+            payment_method: 'paid',
+            amount: finalPrice,
+            amount_due: 0,
+            shippingAmount: providerCost,
+            subtotal: finalPrice,
+            currency: 'SAR',
+            packageCount: 1,
+            packageWeight: number(body.weight),
+            boxLength: number(body.boxLength),
+            boxWidth: number(body.boxWidth),
+            boxHeight: number(body.boxHeight),
+            shippingNotes: body.contentsDescription,
+            item_description: body.contentsDescription,
+            senderInformation: {
+                senderFullName: body.senderName,
+                senderMobile: body.senderPhone,
+                senderCountry: 'SA',
+                senderCity: body.senderCity,
+                senderAddressLine: body.senderAddress,
+                senderShortAddressCode: body.senderAddress
+            },
+            customer: {
+                name: body.receiverName,
+                email: body.email,
+                mobile: body.receiverPhone,
+                address: body.receiverAddress,
+                city: body.receiverCity,
+                country: 'SA'
+            }
+        };
 
-        const body = req.body;
+        await shippingRequest('createOrder', order);
+
+        const shipmentResult = await shippingRequest(
+            'createShipment',
+            {
+                orderId,
+                deliveryOptionId: number(body.deliveryOptionId)
+            }
+        );
+
+        const shipmentId =
+            shipmentResult.shipmentId ||
+            shipmentResult.data?.shipmentId ||
+            shipmentResult.otoId ||
+            '';
+
+        const trackingNumber =
+            shipmentResult.trackingNumber ||
+            shipmentResult.data?.trackingNumber ||
+            shipmentId ||
+            '';
+
+        let labelUrl = '';
 
         try {
-            /*
-            |--------------------------------------------------------------------------
-            | إعادة التسعير من المصدر
-            |--------------------------------------------------------------------------
-            */
-
-            const quote =
-                await shippingRequest(
-                    'checkOTODeliveryFee',
-
-                    quotePayload(
-                        body.senderCity.trim(),
-                        body.receiverCity.trim(),
-                        body.weight,
-                        body.boxLength,
-                        body.boxWidth,
-                        body.boxHeight
-                    )
-                );
-
-            const selected =
-                getDeliveryCompanies(
-                    quote
-                ).find(
-                    (company) =>
-                        String(
-                            company.deliveryOptionId
-                        ) ===
-                        String(
-                            body.deliveryOptionId
-                        )
-                );
-
-            if (!selected) {
-                return res
-                    .status(409)
-                    .json({
-                        success: false,
-
-                        message:
-                            'خيار الشحن المحدد لم يعد متاحًا. أعد جلب الأسعار واختر خيارًا جديدًا.'
-                    });
-            }
-
-            const providerCost =
-                number(
-                    selected.price
-                );
-
-            const finalPrice =
-                customerPrice(
-                    providerCost,
-                    body.weight
-                );
-
-            const carrierName =
-                getCarrierDisplayName(
-                    selected
-                );
-
-            /*
-            |--------------------------------------------------------------------------
-            | رقم طلب SUMSN
-            |--------------------------------------------------------------------------
-            */
-
-            const orderId =
-                `SUMSN-${Date.now()}-${crypto
-                    .randomBytes(3)
-                    .toString('hex')
-                    .toUpperCase()}`;
-
-            /*
-            |--------------------------------------------------------------------------
-            | بيانات الطلب
-            |--------------------------------------------------------------------------
-            */
-
-            const order = {
-                orderId,
-
-                createShipment:
-                    false,
-
-                deliveryOptionId:
-                    number(
-                        body.deliveryOptionId
-                    ),
-
-                storeName:
-                    'SUMSN',
-
-                payment_method:
-                    'paid',
-
-                amount:
-                    finalPrice,
-
-                amount_due:
-                    0,
-
-                shippingAmount:
-                    providerCost,
-
-                subtotal:
-                    finalPrice,
-
-                currency:
-                    'SAR',
-
-                packageCount:
-                    1,
-
-                packageWeight:
-                    number(
-                        body.weight
-                    ),
-
-                boxLength:
-                    number(
-                        body.boxLength
-                    ),
-
-                boxWidth:
-                    number(
-                        body.boxWidth
-                    ),
-
-                boxHeight:
-                    number(
-                        body.boxHeight
-                    ),
-
-                shippingNotes:
-                    body.contentsDescription,
-
-                item_description:
-                    body.contentsDescription,
-
-                senderInformation: {
-                    senderFullName:
-                        body.senderName,
-
-                    senderMobile:
-                        body.senderPhone,
-
-                    senderCountry:
-                        'SA',
-
-                    senderCity:
-                        body.senderCity,
-
-                    senderAddressLine:
-                        body.senderAddress,
-
-                    senderShortAddressCode:
-                        body.senderAddress
-                },
-
-                customer: {
-                    name:
-                        body.receiverName,
-
-                    email:
-                        body.email,
-
-                    mobile:
-                        body.receiverPhone,
-
-                    address:
-                        body.receiverAddress,
-
-                    city:
-                        body.receiverCity,
-
-                    country:
-                        'SA'
-                }
-            };
-
-            /*
-            |--------------------------------------------------------------------------
-            | إنشاء الطلب
-            |--------------------------------------------------------------------------
-            */
-
-            await shippingRequest(
-                'createOrder',
-                order
+            const label = await shippingRequest(
+                `print/${encodeURIComponent(orderId)}`,
+                undefined,
+                'GET'
             );
 
-            /*
-            |--------------------------------------------------------------------------
-            | إنشاء الشحنة
-            |--------------------------------------------------------------------------
-            */
-
-            const shipmentResult =
-                await shippingRequest(
-                    'createShipment',
-                    {
-                        orderId,
-
-                        deliveryOptionId:
-                            number(
-                                body.deliveryOptionId
-                            )
-                    }
-                );
-
-            /*
-            |--------------------------------------------------------------------------
-            | جلب رابط البوليصة
-            |--------------------------------------------------------------------------
-            */
-
-            let labelUrl = '';
-
-            try {
-                const label =
-                    await shippingRequest(
-                        `print/${encodeURIComponent(
-                            orderId
-                        )}`,
-                        undefined,
-                        'GET'
-                    );
-
-                labelUrl =
-                    label.printAWBURL ||
-                    label.url ||
-                    label.data?.printAWBURL ||
-                    '';
-
-            } catch (labelError) {
-                console.warn(
-                    'تعذر جلب رابط البوليصة:',
-                    labelError.message
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | حفظ الشحنة الحقيقية
-            |--------------------------------------------------------------------------
-            */
-
-            const savedShipment =
-                await Shipment.create({
-                    fromCity:
-                        body.senderCity,
-
-                    toCity:
-                        body.receiverCity,
-
-                    weight:
-                        number(
-                            body.weight
-                        ),
-
-                    carrier:
-                        carrierName,
-
-                    price:
-                        finalPrice,
-
-                    deliveryTime:
-                        cleanPublicText(
-                            selected.avgDeliveryTime ||
-                            selected.estimatedDeliveryTime ||
-                            ''
-                        ),
-
-                    otoOrderId:
-                        orderId,
-
-                    otoShipmentId:
-                        shipmentResult.shipmentId ||
-                        shipmentResult.otoId ||
-                        '',
-
-                    trackingNumber:
-                        shipmentResult.trackingNumber ||
-                        shipmentResult.shipmentId ||
-                        '',
-
-                    labelUrl
-                });
-
-            /*
-            |--------------------------------------------------------------------------
-            | إرسال البريد
-            |--------------------------------------------------------------------------
-            */
-
-            if (transporter) {
-                await transporter.sendMail({
-                    from:
-                        `"SUMSN" <${EMAIL_USER}>`,
-
-                    to:
-                        body.email,
-
-                    subject:
-                        'تم إنشاء شحنتك عبر SUMSN',
-
-                    text:
-                        `تم إنشاء شحنتك بنجاح عبر SUMSN.\n\n` +
-                        `شركة الشحن: ${carrierName}\n` +
-                        `رقم الطلب: ${orderId}\n` +
-                        `رقم التتبع: ${
-                            savedShipment.trackingNumber ||
-                            'سيتم توفيره قريبًا'
-                        }\n` +
-                        `الإجمالي: ${finalPrice.toFixed(2)} ريال\n` +
-                        (
-                            labelUrl
-                                ? `رابط البوليصة: ${labelUrl}`
-                                : ''
-                        )
-                });
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | الرد للعميل
-            |--------------------------------------------------------------------------
-            */
-
-            res.json({
-                success: true,
-
-                orderId,
-
-                carrier:
-                    carrierName,
-
-                shipmentId:
-                    savedShipment.otoShipmentId,
-
-                trackingNumber:
-                    savedShipment.trackingNumber,
-
-                labelUrl,
-
-                finalPrice
-            });
-
-        } catch (error) {
-            console.error(
-                'خطأ أثناء إنشاء الشحنة:',
-                error
-            );
-
-            res
-                .status(502)
-                .json({
-                    success: false,
-
-                    message:
-                        'تعذر إنشاء الشحنة حاليًا. حاول مرة أخرى أو تواصل مع الدعم.'
-                });
+            labelUrl =
+                label.printAWBURL ||
+                label.url ||
+                label.data?.printAWBURL ||
+                '';
+        } catch (labelError) {
+            console.warn('تعذر جلب رابط البوليصة:', labelError.message);
         }
+
+        const savedShipment = await Shipment.create({
+            fromCity: body.senderCity,
+            toCity: body.receiverCity,
+            weight: number(body.weight),
+            carrier: carrierName,
+            price: finalPrice,
+            deliveryTime: cleanPublicText(
+                selected.avgDeliveryTime ||
+                selected.estimatedDeliveryTime ||
+                ''
+            ),
+            otoOrderId: orderId,
+            otoShipmentId: shipmentId,
+            trackingNumber,
+            labelUrl
+        });
+
+        if (transporter) {
+            await transporter.sendMail({
+                from: `"SUMSN" <${EMAIL_USER}>`,
+                to: body.email,
+                subject: 'تم إنشاء شحنتك عبر SUMSN',
+                text:
+                    `تم إنشاء شحنتك بنجاح عبر SUMSN.\n\n` +
+                    `شركة الشحن: ${carrierName}\n` +
+                    `رقم الطلب: ${orderId}\n` +
+                    `رقم التتبع: ${savedShipment.trackingNumber || 'سيتم توفيره قريبًا'}\n` +
+                    `الإجمالي: ${finalPrice.toFixed(2)} ريال\n` +
+                    (labelUrl ? `رابط البوليصة: ${labelUrl}` : '')
+            });
+        }
+
+        res.json({
+            success: true,
+            orderId,
+            carrier: carrierName,
+            shipmentId: savedShipment.otoShipmentId,
+            trackingNumber: savedShipment.trackingNumber,
+            labelUrl,
+            finalPrice
+        });
+    } catch (error) {
+        console.error('خطأ أثناء إنشاء الشحنة:', error);
+        res.status(502).json({
+            success: false,
+            message: 'تعذر إنشاء الشحنة حاليًا. حاول مرة أخرى أو تواصل مع الدعم.'
+        });
     }
-);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -1472,11 +851,6 @@ app.post(
 |--------------------------------------------------------------------------
 */
 
-app.listen(
-    PORT,
-    () => {
-        console.log(
-            `السيرفر يعمل على http://localhost:${PORT}`
-        );
-    }
-);
+app.listen(PORT, () => {
+    console.log(`السيرفر يعمل على http://localhost:${PORT}`);
+});
