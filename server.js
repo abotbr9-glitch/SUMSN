@@ -620,6 +620,38 @@ async function createShipmentAfterAssignment(orderId, deliveryOptionId) {
     throw lastError;
 }
 
+async function getShipmentLabel(orderId) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0) {
+            await wait(1200 * attempt);
+        }
+
+        try {
+            const label = await shippingRequest(
+                `print/${encodeURIComponent(orderId)}`,
+                undefined,
+                'GET'
+            );
+            const labelUrl =
+                label.printAWBURL ||
+                label.url ||
+                label.data?.printAWBURL ||
+                label.data?.url ||
+                '';
+
+            if (labelUrl) {
+                return labelUrl;
+            }
+        } catch (error) {
+            if (attempt === 4) {
+                console.warn('تعذر جلب رابط البوليصة:', error.message);
+            }
+        }
+    }
+
+    return '';
+}
+
 /*
 |--------------------------------------------------------------------------
 | إحصائيات العدادات
@@ -985,23 +1017,7 @@ app.post('/api/create-shipment', async (req, res) => {
             shipmentId ||
             '';
 
-        let labelUrl = '';
-
-        try {
-            const label = await shippingRequest(
-                `print/${encodeURIComponent(orderId)}`,
-                undefined,
-                'GET'
-            );
-
-            labelUrl =
-                label.printAWBURL ||
-                label.url ||
-                label.data?.printAWBURL ||
-                '';
-        } catch (labelError) {
-            console.warn('تعذر جلب رابط البوليصة:', labelError.message);
-        }
+        const labelUrl = await getShipmentLabel(orderId);
 
         await connectToDatabase();
 
