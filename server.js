@@ -366,7 +366,17 @@ async function getShippingAccessToken() {
 
     if (!response.ok || !token) {
         console.error('تعذر إنشاء Access Token لمزود الشحن:', response.status);
-        throw new Error('SHIPPING_PROVIDER_ERROR');
+        const providerError = new Error('SHIPPING_PROVIDER_ERROR');
+        providerError.providerStatus = response.status;
+        providerError.providerMessage =
+            data.message ||
+            data.error ||
+            data.errorMsg ||
+            data.otoErrorMessage ||
+            raw?.slice(0, 500) ||
+            '';
+
+        throw providerError;
     }
 
     shippingAccessToken = token;
@@ -459,6 +469,155 @@ function quotePayload(
         packageCount: 1,
         currency: 'SAR'
     };
+}
+
+function firstValue(source, names) {
+    for (const name of names) {
+        const value = source?.[name];
+
+        if (value !== undefined && value !== null && String(value).trim()) {
+            return value;
+        }
+    }
+
+    return '';
+}
+
+function normalizeNationalAddress(result, shortCode) {
+    const candidates = [
+        result?.data?.addresses?.[0],
+        result?.addresses?.[0],
+        result?.data?.address,
+        result?.address,
+        result?.data,
+        result
+    ];
+    const source = candidates.find(
+        (candidate) =>
+            candidate &&
+            typeof candidate === 'object' &&
+            !Array.isArray(candidate)
+    ) || {};
+
+    const address = {
+        shortCode,
+        buildingNo: String(firstValue(source, [
+            'buildingNo',
+            'buildingNumber',
+            'BuildingNumber'
+        ])).trim(),
+        secondaryNumber: String(firstValue(source, [
+            'secondaryNumber',
+            'additionalNumber',
+            'SecondaryNumber'
+        ])).trim(),
+        street: String(firstValue(source, [
+            'street',
+            'streetName',
+            'StreetName'
+        ])).trim(),
+        district: String(firstValue(source, [
+            'district',
+            'districtName',
+            'District'
+        ])).trim(),
+        city: String(firstValue(source, [
+            'city',
+            'cityName',
+            'CityName'
+        ])).trim(),
+        state: String(firstValue(source, [
+            'state',
+            'region',
+            'regionName'
+        ])).trim(),
+        postcode: String(firstValue(source, [
+            'postcode',
+            'postalCode',
+            'zipCode',
+            'ZipCode'
+        ])).trim(),
+        lat: firstValue(source, ['lat', 'latitude', 'Latitude']),
+        lon: firstValue(source, ['lon', 'lng', 'longitude', 'Longitude'])
+    };
+
+    address.addressLine = [
+        address.buildingNo,
+        address.street,
+        address.district,
+        address.city,
+        address.postcode,
+        address.secondaryNumber
+    ].filter(Boolean).join(', ');
+
+    if (
+        !address.addressLine ||
+        !address.buildingNo ||
+        !address.street ||
+        !address.district ||
+        !address.city ||
+        !address.postcode
+    ) {
+        throw new Error('INVALID_NATIONAL_ADDRESS');
+    }
+
+    return address;
+}
+
+async function getNationalAddress(shortCode) {
+    try {
+        const result = await shippingRequest(
+            `getNationalAddressFromShortCode?shortCode=${encodeURIComponent(shortCode)}`,
+            undefined,
+            'GET'
+        );
+
+        return normalizeNationalAddress(result, shortCode);
+    } catch (error) {
+        if (error.message === 'INVALID_NATIONAL_ADDRESS') {
+            throw error;
+        }
+
+        const result = await shippingRequest(
+            'getNationalAddressFromShortCode',
+            { shortCode }
+        );
+
+        return normalizeNationalAddress(result, shortCode);
+    }
+}
+
+function wait(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function createShipmentAfterAssignment(orderId, deliveryOptionId) {
+    let lastError;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0) {
+            await wait(1500 * attempt);
+        }
+
+        try {
+            return await shippingRequest(
+                'createShipment',
+                {
+                    orderId,
+                    deliveryOptionId: number(deliveryOptionId)
+                }
+            );
+        } catch (error) {
+            lastError = error;
+            const message = String(error.providerMessage || '').toLowerCase();
+
+            if (!message.includes('not assigned yet')) {
+                throw error;
+            }
+        }
+    }
+
+    throw lastError;
 }
 
 /*
@@ -685,6 +844,11 @@ app.post('/api/create-shipment', async (req, res) => {
     body.receiverShortAddressCode = receiverShortAddressCode;
 
     try {
+        const [senderAddress, receiverAddress] = await Promise.all([
+            getNationalAddress(body.senderShortAddressCode),
+            getNationalAddress(body.receiverShortAddressCode)
+        ]);
+
         const quote = await shippingRequest(
             'checkOTODeliveryFee',
             quotePayload(
@@ -714,10 +878,13 @@ app.post('/api/create-shipment', async (req, res) => {
         const finalPrice = customerPrice(providerCost, body.weight);
         const carrierName = getCarrierDisplayName(selected);
 
-        const orderId = `SUMSN-${Date.now()}-${crypto
-            .randomBytes(3)
-            .toString('hex')
-            .toUpperCase()}`;
+        const requestId = String(body.requestId || '')
+            .replace(/[^A-Za-z0-9-]/g, '')
+            .slice(0, 64);
+        const orderSuffix = requestId
+            ? crypto.createHash('sha256').update(requestId).digest('hex').slice(0, 12)
+            : crypto.randomBytes(6).toString('hex');
+        const orderId = `SUMSN-${orderSuffix.toUpperCase()}`;
 
         const order = {
             orderId,
@@ -741,27 +908,42 @@ app.post('/api/create-shipment', async (req, res) => {
                 senderFullName: body.senderName.trim(),
                 senderMobile: body.senderPhone.trim(),
                 senderCountry: 'SA',
-                senderCity: body.senderCity.trim(),
-                senderShortAddressCode: body.senderShortAddressCode.trim().toUpperCase()
+                senderShortAddressCode: senderAddress.shortCode,
+                senderBuildingNo: senderAddress.buildingNo,
+                sendersecondaryAddressNumber: senderAddress.secondaryNumber,
+                senderState: senderAddress.state,
+                senderCity: senderAddress.city,
+                senderDistrict: senderAddress.district,
+                senderStreet: senderAddress.street,
+                senderPostcode: senderAddress.postcode,
+                senderAddressLine: senderAddress.addressLine,
+                lat: senderAddress.lat,
+                lon: senderAddress.lon
             },
             customer: {
-                name: body.receiverName,
-                email: body.email,
-                mobile: body.receiverPhone,
-                shortAddressCode: body.receiverShortAddressCode.trim().toUpperCase(),
-                city: body.receiverCity,
-                country: 'SA'
+                name: body.receiverName.trim(),
+                email: body.email.trim(),
+                mobile: body.receiverPhone.trim(),
+                country: 'SA',
+                shortAddressCode: receiverAddress.shortCode,
+                buildingNo: receiverAddress.buildingNo,
+                secondaryAddressNumber: receiverAddress.secondaryNumber,
+                state: receiverAddress.state,
+                city: receiverAddress.city,
+                district: receiverAddress.district,
+                street: receiverAddress.street,
+                postcode: receiverAddress.postcode,
+                address: receiverAddress.addressLine,
+                lat: receiverAddress.lat,
+                lon: receiverAddress.lon
             }
         };
 
         await shippingRequest('createOrder', order);
 
-        const shipmentResult = await shippingRequest(
-            'createShipment',
-            {
-                orderId,
-                deliveryOptionId: number(body.deliveryOptionId)
-            }
+        const shipmentResult = await createShipmentAfterAssignment(
+            orderId,
+            body.deliveryOptionId
         );
 
         const shipmentId =
@@ -839,9 +1021,25 @@ app.post('/api/create-shipment', async (req, res) => {
         });
     } catch (error) {
         console.error('خطأ أثناء إنشاء الشحنة:', error);
+
+        const providerMessage = String(error.providerMessage || '').toLowerCase();
+        let message = 'تعذر إنشاء الشحنة حاليًا. حاول مرة أخرى أو تواصل مع الدعم.';
+
+        if (error.message === 'INVALID_NATIONAL_ADDRESS') {
+            message = 'تعذر التحقق من أحد العنوانين المختصرين. تأكد من صحتهما وحاول مجددًا.';
+        } else if (
+            providerMessage.includes('credit') ||
+            providerMessage.includes('balance') ||
+            providerMessage.includes('رصيد')
+        ) {
+            message = 'رصيد حساب الشحن غير كافٍ لإصدار البوليصة.';
+        } else if (providerMessage.includes('not assigned yet')) {
+            message = 'تم إنشاء الطلب لكن OTO لم يعيّنه لشركة الشحن بعد. لا تعِد المحاولة وتواصل مع الدعم.';
+        }
+
         res.status(502).json({
             success: false,
-            message: 'تعذر إنشاء الشحنة حاليًا. حاول مرة أخرى أو تواصل مع الدعم.'
+            message
         });
     }
 });
