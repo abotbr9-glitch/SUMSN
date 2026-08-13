@@ -625,11 +625,11 @@ app.post('/api/create-shipment', async (req, res) => {
         'senderName',
         'senderCity',
         'senderPhone',
-        'senderAddress',
+        'senderShortAddressCode',
         'receiverName',
         'receiverCity',
         'receiverPhone',
-        'receiverAddress',
+        'receiverShortAddressCode',
         'deliveryOptionId',
         'weight',
         'boxLength',
@@ -665,6 +665,24 @@ app.post('/api/create-shipment', async (req, res) => {
     }
 
     const body = req.body;
+    const shortAddressPattern = /^[A-Z]{4}[0-9]{4}$/;
+    const senderShortAddressCode =
+        String(body.senderShortAddressCode).trim().toUpperCase();
+    const receiverShortAddressCode =
+        String(body.receiverShortAddressCode).trim().toUpperCase();
+
+    if (
+        !shortAddressPattern.test(senderShortAddressCode) ||
+        !shortAddressPattern.test(receiverShortAddressCode)
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل عنوانًا مختصرًا صحيحًا من 4 أحرف إنجليزية و4 أرقام.'
+        });
+    }
+
+    body.senderShortAddressCode = senderShortAddressCode;
+    body.receiverShortAddressCode = receiverShortAddressCode;
 
     try {
         const quote = await shippingRequest(
@@ -724,13 +742,13 @@ app.post('/api/create-shipment', async (req, res) => {
                 senderMobile: body.senderPhone.trim(),
                 senderCountry: 'SA',
                 senderCity: body.senderCity.trim(),
-                senderAddressLine: body.senderAddress.trim()
+                senderShortAddressCode: body.senderShortAddressCode.trim().toUpperCase()
             },
             customer: {
                 name: body.receiverName,
                 email: body.email,
                 mobile: body.receiverPhone,
-                address: body.receiverAddress,
+                shortAddressCode: body.receiverShortAddressCode.trim().toUpperCase(),
                 city: body.receiverCity,
                 country: 'SA'
             }
