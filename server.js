@@ -660,7 +660,8 @@ async function sendBrandedEmail({
     subject,
     text,
     html,
-    attachments = []
+    attachments = [],
+    replyTo = SUPPORT_EMAIL
 }) {
     if (!emailServiceConfigured()) {
         throw new Error('EMAIL_NOT_CONFIGURED');
@@ -680,7 +681,7 @@ async function sendBrandedEmail({
                 body: JSON.stringify({
                     from: `SUMSN <${EMAIL_FROM}>`,
                     to: [to],
-                    reply_to: SUPPORT_EMAIL,
+                    reply_to: replyTo,
                     subject,
                     text,
                     html,
@@ -722,7 +723,7 @@ async function sendBrandedEmail({
 
     const result = await transporter.sendMail({
         from: `"SUMSN" <${EMAIL_FROM}>`,
-        replyTo: SUPPORT_EMAIL,
+        replyTo,
         to,
         subject,
         text,
@@ -1599,6 +1600,109 @@ app.get('/api/shipment-label', async (req, res) => {
     } catch (error) {
         console.error('تعذر تحميل البوليصة:', error);
         return res.status(502).send('تعذر تحميل البوليصة حاليًا.');
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| رسائل التواصل
+|--------------------------------------------------------------------------
+*/
+
+app.post('/api/contact', async (req, res) => {
+    if (!emailServiceConfigured()) {
+        return res.status(503).json({
+            success: false,
+            message: 'خدمة التواصل غير متاحة مؤقتًا.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'contact',
+            5,
+            15 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم إرسال رسائل كثيرة. حاول بعد 15 دقيقة.'
+        });
+    }
+
+    const fullName = String(req.body.fullName || '').trim();
+    const email = normalizeEmail(req.body.email);
+    const message = String(req.body.message || '').trim();
+    const website = String(req.body.website || '').trim();
+
+    if (website) {
+        return res.json({
+            success: true,
+            message: 'تم إرسال رسالتك إلى دعم SUMSN.'
+        });
+    }
+
+    if (
+        fullName.length < 2 ||
+        fullName.length > 80
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل اسمًا صحيحًا من حرفين على الأقل.'
+        });
+    }
+
+    if (!validEmail(email)) {
+        return res.status(400).json({
+            success: false,
+            message: 'أدخل بريدًا إلكترونيًا صحيحًا.'
+        });
+    }
+
+    if (
+        message.length < 5 ||
+        message.length > 2000
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'اكتب رسالة بين 5 و2000 حرف.'
+        });
+    }
+
+    const messageCode =
+        crypto.randomBytes(3).toString('hex').toUpperCase();
+    const safeMessage = escapeHtml(message)
+        .replace(/\r?\n/g, '<br>');
+
+    try {
+        await sendBrandedEmail({
+            to: SUPPORT_EMAIL,
+            replyTo: email,
+            subject: `رسالة جديدة عبر SUMSN — ${messageCode}`,
+            text:
+                `الاسم: ${fullName}\n` +
+                `البريد: ${email}\n\n` +
+                message,
+            html: brandedEmailHtml(
+                'رسالة جديدة من الموقع',
+                `<p><strong>الاسم:</strong> ${escapeHtml(fullName)}</p><p><strong>البريد:</strong> ${escapeHtml(email)}</p><p><strong>الرسالة:</strong><br>${safeMessage}</p>`,
+                '',
+                ''
+            )
+        });
+
+        return res.json({
+            success: true,
+            message: 'تم إرسال رسالتك إلى دعم SUMSN.'
+        });
+    } catch (error) {
+        console.error('تعذر إرسال رسالة التواصل:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'تعذر إرسال الرسالة حاليًا. حاول مرة أخرى بعد قليل.'
+        });
     }
 });
 
