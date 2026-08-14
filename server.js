@@ -666,6 +666,8 @@ async function sendBrandedEmail({
         throw new Error('EMAIL_NOT_CONFIGURED');
     }
 
+    const messageReference = crypto.randomUUID();
+
     if (RESEND_API_KEY) {
         const response = await fetch(
             'https://api.resend.com/emails',
@@ -682,6 +684,9 @@ async function sendBrandedEmail({
                     subject,
                     text,
                     html,
+                    headers: {
+                        'X-Entity-Ref-ID': messageReference
+                    },
                     attachments: attachments.map((attachment) => ({
                         filename: attachment.filename,
                         content: Buffer
@@ -722,6 +727,9 @@ async function sendBrandedEmail({
         subject,
         text,
         html,
+        headers: {
+            'X-Entity-Ref-ID': messageReference
+        },
         attachments: attachments.map((attachment) => ({
             filename: attachment.filename,
             content: attachment.content,
@@ -737,12 +745,14 @@ async function sendBrandedEmail({
 }
 
 async function sendVerificationEmail(user, token) {
+    const messageCode =
+        crypto.randomBytes(3).toString('hex').toUpperCase();
     const link =
         `${PUBLIC_BASE_URL}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
 
     return sendBrandedEmail({
         to: user.email,
-        subject: 'تأكيد بريدك في SUMSN',
+        subject: `تأكيد بريدك في SUMSN — ${messageCode}`,
         text:
             `مرحبًا ${user.fullName}،\n\n` +
             `أكد بريدك لبدء استخدام حساب SUMSN:\n${link}\n\n` +
@@ -757,12 +767,14 @@ async function sendVerificationEmail(user, token) {
 }
 
 async function sendPasswordResetEmail(user, token) {
+    const messageCode =
+        crypto.randomBytes(3).toString('hex').toUpperCase();
     const link =
         `${PUBLIC_BASE_URL}/index.html?resetToken=${encodeURIComponent(token)}`;
 
     return sendBrandedEmail({
         to: user.email,
-        subject: 'إعادة تعيين كلمة مرور SUMSN',
+        subject: `إعادة تعيين كلمة مرور SUMSN — ${messageCode}`,
         text:
             `مرحبًا ${user.fullName}،\n\n` +
             `استخدم الرابط التالي لإعادة تعيين كلمة المرور:\n${link}\n\n` +
