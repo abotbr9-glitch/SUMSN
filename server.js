@@ -758,7 +758,7 @@ async function sendVerificationEmail(user, token) {
 
 async function sendPasswordResetEmail(user, token) {
     const link =
-        `${PUBLIC_BASE_URL}/?resetToken=${encodeURIComponent(token)}`;
+        `${PUBLIC_BASE_URL}/index.html?resetToken=${encodeURIComponent(token)}`;
 
     return sendBrandedEmail({
         to: user.email,
