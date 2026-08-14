@@ -96,8 +96,33 @@ const LIVE_SHIPMENT_TEST_EMAIL =
         .trim()
         .toLowerCase();
 
+/*
+|--------------------------------------------------------------------------
+| بوابة الدفع Paylink - الأسرار تبقى في الخادم فقط
+|--------------------------------------------------------------------------
+*/
+
+const PAYLINK_API_ID =
+    String(process.env.PAYLINK_API_ID || '').trim();
+const PAYLINK_SECRET_KEY =
+    String(process.env.PAYLINK_SECRET_KEY || '').trim();
+const PAYLINK_ENVIRONMENT =
+    String(process.env.PAYLINK_ENVIRONMENT || 'pilot')
+        .trim()
+        .toLowerCase() === 'production'
+        ? 'production'
+        : 'pilot';
+const PAYLINK_BASE_URL =
+    PAYLINK_ENVIRONMENT === 'production'
+        ? 'https://restapi.paylink.sa'
+        : 'https://restpilot.paylink.sa';
+const PAYLINK_WEBHOOK_SECRET =
+    String(process.env.PAYLINK_WEBHOOK_SECRET || '').trim();
+
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
+let paylinkAccessToken = '';
+let paylinkAccessTokenExpiresAt = 0;
 let mongoConnectionPromise = null;
 
 /*
@@ -201,6 +226,104 @@ const shipmentSchema = new mongoose.Schema({
 const Shipment =
     mongoose.models.Shipment ||
     mongoose.model('Shipment', shipmentSchema);
+
+/*
+|--------------------------------------------------------------------------
+| مدفوعات Paylink
+|--------------------------------------------------------------------------
+*/
+
+const paymentSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            index: true,
+            default: null
+        },
+        customerEmail: {
+            type: String,
+            lowercase: true,
+            trim: true,
+            default: ''
+        },
+        requestId: {
+            type: String,
+            default: ''
+        },
+        orderNumber: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true
+        },
+        transactionNo: {
+            type: String,
+            default: '',
+            index: true
+        },
+        status: {
+            type: String,
+            default: 'creating',
+            index: true
+        },
+        amount: {
+            type: Number,
+            required: true
+        },
+        providerCost: {
+            type: Number,
+            required: true
+        },
+        carrier: {
+            type: String,
+            required: true
+        },
+        deliveryOptionId: {
+            type: String,
+            required: true
+        },
+        deliveryTime: {
+            type: String,
+            default: ''
+        },
+        paymentUrl: {
+            type: String,
+            default: ''
+        },
+        checkUrl: {
+            type: String,
+            default: ''
+        },
+        shipmentPayload: {
+            type: mongoose.Schema.Types.Mixed,
+            select: false,
+            default: null
+        },
+        shipmentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Shipment',
+            default: null
+        },
+        paymentMethod: {
+            type: String,
+            default: ''
+        },
+        paidAt: Date,
+        fulfilledAt: Date,
+        failureReason: {
+            type: String,
+            default: ''
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+const Payment =
+    mongoose.models.Payment ||
+    mongoose.model('Payment', paymentSchema);
 
 /*
 |--------------------------------------------------------------------------
@@ -424,6 +547,10 @@ function customerAccountsEnabled() {
 
 function emailServiceConfigured() {
     return Boolean(RESEND_API_KEY || transporter);
+}
+
+function paymentGatewayConfigured() {
+    return Boolean(PAYLINK_API_ID && PAYLINK_SECRET_KEY);
 }
 
 function normalizeEmail(value) {
@@ -1324,6 +1451,131 @@ async function shippingRequest(path, body, method = 'POST') {
     }
 
     return data;
+}
+
+/*
+|--------------------------------------------------------------------------
+| طلبات Paylink - خادم إلى خادم فقط
+|--------------------------------------------------------------------------
+*/
+
+async function getPaylinkAccessToken(forceRefresh = false) {
+    if (
+        !forceRefresh &&
+        paylinkAccessToken &&
+        Date.now() < paylinkAccessTokenExpiresAt
+    ) {
+        return paylinkAccessToken;
+    }
+
+    if (!paymentGatewayConfigured()) {
+        throw new Error('PAYMENT_CONFIGURATION_ERROR');
+    }
+
+    const response = await fetch(`${PAYLINK_BASE_URL}/api/auth`, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            apiId: PAYLINK_API_ID,
+            secretKey: PAYLINK_SECRET_KEY,
+            persistToken: false
+        })
+    });
+    const raw = await response.text();
+    let data = {};
+
+    try {
+        data = raw ? JSON.parse(raw) : {};
+    } catch {
+        data = {};
+    }
+
+    if (!response.ok || !data.id_token) {
+        const error = new Error('PAYMENT_PROVIDER_ERROR');
+        error.providerStatus = response.status;
+        error.providerMessage =
+            data.detail ||
+            data.message ||
+            data.title ||
+            raw.slice(0, 500);
+        throw error;
+    }
+
+    paylinkAccessToken = data.id_token;
+    paylinkAccessTokenExpiresAt = Date.now() + (25 * 60 * 1000);
+
+    return paylinkAccessToken;
+}
+
+async function paylinkRequest(path, { method = 'GET', body } = {}) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        const token = await getPaylinkAccessToken(attempt > 0);
+        const response = await fetch(
+            `${PAYLINK_BASE_URL}/api/${path.replace(/^\//, '')}`,
+            {
+                method,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body:
+                    method === 'GET'
+                        ? undefined
+                        : JSON.stringify(body)
+            }
+        );
+        const raw = await response.text();
+        let data = {};
+
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch {
+            data = {};
+        }
+
+        if (response.status === 401 && attempt === 0) {
+            paylinkAccessToken = '';
+            paylinkAccessTokenExpiresAt = 0;
+            continue;
+        }
+
+        if (!response.ok || data.success === false) {
+            const error = new Error('PAYMENT_PROVIDER_ERROR');
+            error.providerStatus = response.status;
+            error.providerMessage =
+                data.detail ||
+                data.message ||
+                data.title ||
+                raw.slice(0, 500);
+            throw error;
+        }
+
+        return data;
+    }
+
+    throw new Error('PAYMENT_PROVIDER_ERROR');
+}
+
+function paylinkWebhookAuthorized(req) {
+    if (!PAYLINK_WEBHOOK_SECRET) {
+        return true;
+    }
+
+    const expected = Buffer.from(
+        `Bearer ${PAYLINK_WEBHOOK_SECRET}`
+    );
+    const received = Buffer.from(
+        String(req.headers.authorization || '')
+    );
+
+    return (
+        expected.length === received.length &&
+        crypto.timingSafeEqual(expected, received)
+    );
 }
 
 function getDeliveryCompanies(data) {
@@ -2382,9 +2634,452 @@ app.post('/api/shipping-rates', async (req, res) => {
 
 /*
 |--------------------------------------------------------------------------
-| إنشاء شحنة حقيقية
+| الدفع ثم إنشاء الشحنة
 |--------------------------------------------------------------------------
 */
+
+function paymentRedirectUrl(state, orderNumber = '') {
+    const url = new URL('/index.html', PUBLIC_BASE_URL);
+    url.searchParams.set('payment', state);
+
+    if (orderNumber) {
+        url.searchParams.set('orderNumber', orderNumber);
+    }
+
+    return url.toString();
+}
+
+function paymentPublicState(payment, shipment = null) {
+    return {
+        success: true,
+        orderNumber: payment.orderNumber,
+        status: payment.status,
+        amount: payment.amount,
+        carrier: payment.carrier,
+        transactionNo: payment.transactionNo,
+        paymentMethod: payment.paymentMethod || '',
+        shipment: shipment
+            ? {
+                orderId: shipment.otoOrderId,
+                shipmentId: shipment.otoShipmentId,
+                trackingNumber: shipment.trackingNumber,
+                carrier: shipment.carrier,
+                finalPrice: shipment.price,
+                emailSent:
+                    shipment.emailDeliveryStatus === 'sent',
+                labelUrl: shipment.labelUrl
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}&token=${labelAccessToken(shipment.otoOrderId)}`
+                    : ''
+            }
+            : null
+    };
+}
+
+async function createPaidShipment(payment) {
+    if (payment.status === 'shipment_created') {
+        return Payment.findById(payment._id);
+    }
+
+    if (!ALLOW_LIVE_SHIPMENTS) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'paid_hold',
+                    paidAt: payment.paidAt || new Date(),
+                    failureReason:
+                        'LIVE_SHIPMENTS_DISABLED'
+                }
+            }
+        );
+
+        return Payment.findById(payment._id);
+    }
+
+    const locked = await Payment.findOneAndUpdate(
+        {
+            _id: payment._id,
+            status: {
+                $in: ['creating', 'pending', 'paid']
+            }
+        },
+        {
+            $set: {
+                status: 'processing',
+                paidAt: payment.paidAt || new Date(),
+                failureReason: ''
+            }
+        },
+        {
+            new: true
+        }
+    ).select('+shipmentPayload');
+
+    if (!locked) {
+        return Payment.findById(payment._id);
+    }
+
+    try {
+        const payload = locked.shipmentPayload;
+        const body = payload?.body;
+        const senderAddress = payload?.senderAddress;
+        const receiverAddress = payload?.receiverAddress;
+
+        if (!body || !senderAddress || !receiverAddress) {
+            throw new Error('PAYMENT_PAYLOAD_MISSING');
+        }
+
+        const accountInfo = await shippingRequest(
+            'accountInfo',
+            undefined,
+            'GET'
+        );
+        const remainingCredit = number(
+            accountInfo.remainingCredit ??
+            accountInfo.data?.remainingCredit,
+            NaN
+        );
+        const remainingFreeShipments = number(
+            accountInfo.remainingFreeShipments ??
+            accountInfo.data?.remainingFreeShipments,
+            0
+        );
+
+        if (
+            Number.isFinite(remainingCredit) &&
+            remainingFreeShipments <= 0 &&
+            remainingCredit < locked.providerCost
+        ) {
+            throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
+        }
+
+        const orderId = locked.orderNumber;
+        const order = {
+            orderId,
+            createShipment: false,
+            deliveryOptionId: number(locked.deliveryOptionId),
+            storeName: 'SUMSN',
+            payment_method: 'paid',
+            amount: locked.amount,
+            amount_due: 0,
+            shippingAmount: locked.providerCost,
+            subtotal: locked.amount,
+            currency: 'SAR',
+            packageCount: 1,
+            packageWeight: number(body.weight),
+            boxLength: number(body.boxLength),
+            boxWidth: number(body.boxWidth),
+            boxHeight: number(body.boxHeight),
+            shippingNotes: body.contentsDescription,
+            item_description: body.contentsDescription,
+            senderInformation: {
+                senderFullName: body.senderName.trim(),
+                senderMobile: body.senderPhone.trim(),
+                senderCountry: 'SA',
+                senderShortAddressCode: senderAddress.shortCode,
+                senderBuildingNo: senderAddress.buildingNo,
+                sendersecondaryAddressNumber:
+                    senderAddress.secondaryNumber,
+                senderState: senderAddress.state,
+                senderCity: senderAddress.city,
+                senderDistrict: senderAddress.district,
+                senderStreet: senderAddress.street,
+                senderPostcode: senderAddress.postcode,
+                senderAddressLine: senderAddress.addressLine,
+                lat: senderAddress.lat,
+                lon: senderAddress.lon
+            },
+            customer: {
+                name: body.receiverName.trim(),
+                email: body.email.trim(),
+                mobile: body.receiverPhone.trim(),
+                country: 'SA',
+                shortAddressCode: receiverAddress.shortCode,
+                buildingNo: receiverAddress.buildingNo,
+                secondaryAddressNumber:
+                    receiverAddress.secondaryNumber,
+                state: receiverAddress.state,
+                city: receiverAddress.city,
+                district: receiverAddress.district,
+                street: receiverAddress.street,
+                postcode: receiverAddress.postcode,
+                address: receiverAddress.addressLine,
+                lat: receiverAddress.lat,
+                lon: receiverAddress.lon
+            }
+        };
+
+        await shippingRequest('createOrder', order);
+
+        const shipmentResult = await createShipmentAfterAssignment(
+            orderId,
+            locked.deliveryOptionId
+        );
+        const providerShipmentId =
+            shipmentResult.shipmentId ||
+            shipmentResult.data?.shipmentId ||
+            shipmentResult.otoId ||
+            '';
+        const trackingNumber =
+            shipmentResult.trackingNumber ||
+            shipmentResult.data?.trackingNumber ||
+            providerShipmentId ||
+            '';
+        const providerLabelUrl = await getShipmentLabel(orderId);
+
+        const savedShipment = await Shipment.create({
+            userId: locked.userId,
+            customerEmail: locked.customerEmail,
+            contentsDescription:
+                String(body.contentsDescription || '').trim(),
+            emailDeliveryStatus:
+                emailServiceConfigured()
+                    ? 'pending'
+                    : 'skipped',
+            fromCity: body.senderCity,
+            toCity: body.receiverCity,
+            weight: number(body.weight),
+            carrier: locked.carrier,
+            price: locked.amount,
+            deliveryTime: locked.deliveryTime,
+            otoOrderId: orderId,
+            otoShipmentId: providerShipmentId,
+            trackingNumber,
+            labelUrl: providerLabelUrl
+        });
+
+        if (emailServiceConfigured()) {
+            let attachment = null;
+
+            if (providerLabelUrl) {
+                try {
+                    attachment = await labelAttachment(
+                        providerLabelUrl,
+                        orderId
+                    );
+                } catch (labelError) {
+                    console.warn(
+                        'تعذر تجهيز مرفق البوليصة:',
+                        labelError.message
+                    );
+                }
+            }
+
+            try {
+                const emailResult = await sendShipmentCreatedEmail({
+                    user: {
+                        email: locked.customerEmail,
+                        fullName:
+                            String(body.receiverName || 'عميل SUMSN')
+                                .trim()
+                    },
+                    carrierName: locked.carrier,
+                    orderId,
+                    trackingNumber,
+                    finalPrice: locked.amount,
+                    attachment
+                });
+
+                savedShipment.emailDeliveryStatus = 'sent';
+                savedShipment.emailMessageId = emailResult.id || '';
+                savedShipment.emailSentAt = new Date();
+                await savedShipment.save();
+            } catch (emailError) {
+                console.error(
+                    'تعذر إرسال بريد البوليصة:',
+                    emailError.message
+                );
+                savedShipment.emailDeliveryStatus = 'failed';
+                await savedShipment.save();
+            }
+        }
+
+        await Payment.updateOne(
+            {
+                _id: locked._id,
+                status: 'processing'
+            },
+            {
+                $set: {
+                    status: 'shipment_created',
+                    shipmentId: savedShipment._id,
+                    fulfilledAt: new Date(),
+                    failureReason: ''
+                },
+                $unset: {
+                    shipmentPayload: 1
+                }
+            }
+        );
+
+        void maybeAlertDatabaseStorage();
+
+        return Payment.findById(locked._id);
+    } catch (error) {
+        console.error(
+            'دفعت العملية لكن تعذر إنشاء الشحنة:',
+            error
+        );
+
+        await Payment.updateOne(
+            {
+                _id: locked._id,
+                status: 'processing'
+            },
+            {
+                $set: {
+                    status: 'manual_review',
+                    failureReason:
+                        String(error.message || 'FULFILLMENT_ERROR')
+                            .slice(0, 200)
+                }
+            }
+        );
+
+        throw error;
+    }
+}
+
+async function verifyPaylinkPayment({
+    orderNumber,
+    transactionNo
+}) {
+    await connectToDatabase();
+
+    const payment = await Payment.findOne({
+        ...(orderNumber ? { orderNumber } : {}),
+        ...(transactionNo ? { transactionNo } : {})
+    });
+
+    if (!payment) {
+        throw new Error('PAYMENT_NOT_FOUND');
+    }
+
+    const effectiveTransactionNo =
+        transactionNo || payment.transactionNo;
+
+    if (
+        !effectiveTransactionNo ||
+        (
+            payment.transactionNo &&
+            String(payment.transactionNo) !==
+                String(effectiveTransactionNo)
+        )
+    ) {
+        throw new Error('PAYMENT_TRANSACTION_MISMATCH');
+    }
+
+    const invoice = await paylinkRequest(
+        `getInvoice/${encodeURIComponent(effectiveTransactionNo)}`
+    );
+    const invoiceOrderNumber =
+        invoice.gatewayOrderRequest?.orderNumber ||
+        invoice.orderNumber ||
+        '';
+    const invoiceAmount = roundMoney(invoice.amount);
+    const status =
+        String(invoice.orderStatus || '').trim().toLowerCase();
+
+    if (
+        invoiceOrderNumber &&
+        String(invoiceOrderNumber) !== payment.orderNumber
+    ) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'manual_review',
+                    failureReason: 'PAYMENT_ORDER_MISMATCH'
+                }
+            }
+        );
+        throw new Error('PAYMENT_ORDER_MISMATCH');
+    }
+
+    if (
+        Math.round(invoiceAmount * 100) !==
+        Math.round(payment.amount * 100)
+    ) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'manual_review',
+                    failureReason: 'PAYMENT_AMOUNT_MISMATCH'
+                }
+            }
+        );
+        throw new Error('PAYMENT_AMOUNT_MISMATCH');
+    }
+
+    if (status === 'paid') {
+        if (
+            ![
+                'shipment_created',
+                'processing',
+                'manual_review',
+                'paid_hold'
+            ].includes(payment.status)
+        ) {
+            payment.status = 'paid';
+        }
+
+        payment.paidAt = payment.paidAt || new Date();
+        payment.paymentMethod =
+            invoice.paymentReceipt?.paymentMethod ||
+            invoice.paymentType ||
+            payment.paymentMethod ||
+            '';
+        await payment.save();
+
+        const completed = await createPaidShipment(payment);
+
+        return {
+            state:
+                completed.status === 'shipment_created'
+                    ? 'success'
+                    : (
+                        completed.status === 'paid_hold'
+                            ? 'review'
+                            : completed.status
+                    ),
+            payment: completed
+        };
+    }
+
+    if (status === 'canceled') {
+        payment.status = 'canceled';
+        await payment.save();
+
+        return {
+            state: 'canceled',
+            payment
+        };
+    }
+
+    if (
+        !['shipment_created', 'processing', 'manual_review']
+            .includes(payment.status)
+    ) {
+        payment.status = 'pending';
+        await payment.save();
+    }
+
+    return {
+        state: payment.status === 'manual_review'
+            ? 'review'
+            : 'pending',
+        payment
+    };
+}
+
+async function currentShipmentForPayment(payment) {
+    if (!payment.shipmentId) {
+        return null;
+    }
+
+    return Shipment.findById(payment.shipmentId);
+}
 
 app.post('/api/create-shipment', async (req, res) => {
     let shipmentUser = null;
@@ -2404,7 +3099,7 @@ app.post('/api/create-shipment', async (req, res) => {
         if (!shipmentUser) {
             return res.status(401).json({
                 success: false,
-                message: 'سجّل الدخول أولًا لإنشاء الشحنة وحفظها في لوحتك.'
+                message: 'سجّل الدخول أولًا لإتمام الدفع وحفظ بوليصتك.'
             });
         }
 
@@ -2426,9 +3121,9 @@ app.post('/api/create-shipment', async (req, res) => {
         'weight',
         'boxLength',
         'boxWidth',
-        'boxHeight'
+        'boxHeight',
+        'requestId'
     ];
-
     const missing = required.filter((field) => !req.body[field]);
 
     if (missing.length) {
@@ -2441,59 +3136,142 @@ app.post('/api/create-shipment', async (req, res) => {
     if (!ALLOW_LIVE_SHIPMENTS) {
         return res.status(403).json({
             success: false,
-            message: 'إصدار الشحنات غير متاح مؤقتًا أثناء مرحلة الاختبار.'
+            message: 'الدفع وإصدار الشحنات غير متاحين مؤقتًا أثناء الاختبار.'
+        });
+    }
+
+    if (!paymentGatewayConfigured()) {
+        return res.status(503).json({
+            success: false,
+            message: 'بوابة الدفع غير جاهزة حاليًا.'
         });
     }
 
     if (
         LIVE_SHIPMENT_TEST_EMAIL &&
-        String(req.body.email).trim().toLowerCase() !==
+        normalizeEmail(req.body.email) !==
             LIVE_SHIPMENT_TEST_EMAIL
     ) {
         return res.status(403).json({
             success: false,
-            message: 'إصدار الشحنات متاح حاليًا لحساب الاختبار فقط.'
+            message: 'الدفع وإصدار الشحنات متاحان حاليًا لحساب الاختبار فقط.'
         });
     }
 
-    const body = req.body;
+    const body = {
+        ...req.body,
+        email: normalizeEmail(req.body.email),
+        contentsDescription:
+            String(req.body.contentsDescription || '').trim(),
+        senderName: String(req.body.senderName || '').trim(),
+        senderCity: String(req.body.senderCity || '').trim(),
+        senderPhone: String(req.body.senderPhone || '').trim(),
+        senderShortAddressCode:
+            String(req.body.senderShortAddressCode || '')
+                .trim()
+                .toUpperCase(),
+        receiverName: String(req.body.receiverName || '').trim(),
+        receiverCity: String(req.body.receiverCity || '').trim(),
+        receiverPhone: String(req.body.receiverPhone || '').trim(),
+        receiverShortAddressCode:
+            String(req.body.receiverShortAddressCode || '')
+                .trim()
+                .toUpperCase(),
+        requestId:
+            String(req.body.requestId || '')
+                .replace(/[^A-Za-z0-9-]/g, '')
+                .slice(0, 64),
+        weight: number(req.body.weight),
+        boxLength: number(req.body.boxLength),
+        boxWidth: number(req.body.boxWidth),
+        boxHeight: number(req.body.boxHeight)
+    };
     const shortAddressPattern = /^[A-Z]{4}[0-9]{4}$/;
-    const senderShortAddressCode =
-        String(body.senderShortAddressCode).trim().toUpperCase();
-    const receiverShortAddressCode =
-        String(body.receiverShortAddressCode).trim().toUpperCase();
 
     if (
-        !shortAddressPattern.test(senderShortAddressCode) ||
-        !shortAddressPattern.test(receiverShortAddressCode)
+        !validEmail(body.email) ||
+        !shortAddressPattern.test(body.senderShortAddressCode) ||
+        !shortAddressPattern.test(body.receiverShortAddressCode) ||
+        body.weight <= 0 ||
+        body.boxLength <= 0 ||
+        body.boxWidth <= 0 ||
+        body.boxHeight <= 0 ||
+        !body.requestId
     ) {
         return res.status(400).json({
             success: false,
-            message: 'أدخل عنوانًا مختصرًا صحيحًا من 4 أحرف إنجليزية و4 أرقام.'
+            message: 'تحقق من البريد والعنوانين المختصرين والوزن والأبعاد.'
         });
     }
 
-    body.senderShortAddressCode = senderShortAddressCode;
-    body.receiverShortAddressCode = receiverShortAddressCode;
+    const identity =
+        shipmentUser?._id ||
+        body.email;
+    const orderSuffix = crypto
+        .createHash('sha256')
+        .update(`${identity}:${body.requestId}`)
+        .digest('hex')
+        .slice(0, 16)
+        .toUpperCase();
+    const orderNumber = `SUMSN-${orderSuffix}`;
 
     try {
-        const [senderAddress, receiverAddress] = await Promise.all([
-            getNationalAddress(body.senderShortAddressCode),
-            getNationalAddress(body.receiverShortAddressCode)
-        ]);
+        await connectToDatabase();
 
+        const existing = await Payment.findOne({
+            orderNumber,
+            userId: shipmentUser?._id || null
+        });
+
+        if (existing) {
+            if (
+                existing.paymentUrl &&
+                ['creating', 'pending'].includes(existing.status)
+            ) {
+                return res.json({
+                    success: true,
+                    paymentRequired: true,
+                    paymentUrl: existing.paymentUrl,
+                    orderNumber: existing.orderNumber,
+                    amount: existing.amount
+                });
+            }
+
+            if (existing.status === 'shipment_created') {
+                const shipment =
+                    await currentShipmentForPayment(existing);
+
+                return res.json(
+                    paymentPublicState(existing, shipment)
+                );
+            }
+
+            return res.status(409).json({
+                success: false,
+                message: 'هذه المحاولة مستخدمة سابقًا. أغلق النافذة واختر العرض مرة أخرى.'
+            });
+        }
+
+        const [senderAddress, receiverAddress] =
+            await Promise.all([
+                getNationalAddress(
+                    body.senderShortAddressCode
+                ),
+                getNationalAddress(
+                    body.receiverShortAddressCode
+                )
+            ]);
         const quote = await shippingRequest(
             'checkOTODeliveryFee',
             quotePayload(
-                body.senderCity.trim(),
-                body.receiverCity.trim(),
+                body.senderCity,
+                body.receiverCity,
                 body.weight,
                 body.boxLength,
                 body.boxWidth,
                 body.boxHeight
             )
         );
-
         const selected = getDeliveryCompanies(quote).find(
             (company) =>
                 String(company.deliveryOptionId) ===
@@ -2503,14 +3281,19 @@ app.post('/api/create-shipment', async (req, res) => {
         if (!selected) {
             return res.status(409).json({
                 success: false,
-                message: 'خيار الشحن المحدد لم يعد متاحًا. أعد جلب الأسعار واختر خيارًا جديدًا.'
+                message: 'خيار الشحن تغير. أعد جلب الأسعار واختر من جديد.'
             });
         }
 
         const providerCost = number(selected.price);
-        const finalPrice = customerPrice(providerCost, body.weight);
+        const finalPrice =
+            customerPrice(providerCost, body.weight);
         const carrierName = getCarrierDisplayName(selected);
-
+        const deliveryTime = cleanPublicText(
+            selected.avgDeliveryTime ||
+            selected.estimatedDeliveryTime ||
+            ''
+        );
         const accountInfo = await shippingRequest(
             'accountInfo',
             undefined,
@@ -2532,216 +3315,252 @@ app.post('/api/create-shipment', async (req, res) => {
             remainingFreeShipments <= 0 &&
             remainingCredit < providerCost
         ) {
-            const balanceError = new Error('INSUFFICIENT_SHIPPING_BALANCE');
-            balanceError.requiredCredit = providerCost;
-            balanceError.remainingCredit = remainingCredit;
-            throw balanceError;
+            throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
         }
 
-        const requestId = String(body.requestId || '')
-            .replace(/[^A-Za-z0-9-]/g, '')
-            .slice(0, 64);
-        const orderSuffix = requestId
-            ? crypto.createHash('sha256').update(requestId).digest('hex').slice(0, 12)
-            : crypto.randomBytes(6).toString('hex');
-        const orderId = `SUMSN-${orderSuffix.toUpperCase()}`;
-
-        const order = {
-            orderId,
-            createShipment: false,
-            deliveryOptionId: number(body.deliveryOptionId),
-            storeName: 'SUMSN',
-            payment_method: 'paid',
-            amount: finalPrice,
-            amount_due: 0,
-            shippingAmount: providerCost,
-            subtotal: finalPrice,
-            currency: 'SAR',
-            packageCount: 1,
-            packageWeight: number(body.weight),
-            boxLength: number(body.boxLength),
-            boxWidth: number(body.boxWidth),
-            boxHeight: number(body.boxHeight),
-            shippingNotes: body.contentsDescription,
-            item_description: body.contentsDescription,
-            senderInformation: {
-                senderFullName: body.senderName.trim(),
-                senderMobile: body.senderPhone.trim(),
-                senderCountry: 'SA',
-                senderShortAddressCode: senderAddress.shortCode,
-                senderBuildingNo: senderAddress.buildingNo,
-                sendersecondaryAddressNumber: senderAddress.secondaryNumber,
-                senderState: senderAddress.state,
-                senderCity: senderAddress.city,
-                senderDistrict: senderAddress.district,
-                senderStreet: senderAddress.street,
-                senderPostcode: senderAddress.postcode,
-                senderAddressLine: senderAddress.addressLine,
-                lat: senderAddress.lat,
-                lon: senderAddress.lon
-            },
-            customer: {
-                name: body.receiverName.trim(),
-                email: body.email.trim(),
-                mobile: body.receiverPhone.trim(),
-                country: 'SA',
-                shortAddressCode: receiverAddress.shortCode,
-                buildingNo: receiverAddress.buildingNo,
-                secondaryAddressNumber: receiverAddress.secondaryNumber,
-                state: receiverAddress.state,
-                city: receiverAddress.city,
-                district: receiverAddress.district,
-                street: receiverAddress.street,
-                postcode: receiverAddress.postcode,
-                address: receiverAddress.addressLine,
-                lat: receiverAddress.lat,
-                lon: receiverAddress.lon
-            }
-        };
-
-        await shippingRequest('createOrder', order);
-
-        const shipmentResult = await createShipmentAfterAssignment(
-            orderId,
-            body.deliveryOptionId
-        );
-
-        const shipmentId =
-            shipmentResult.shipmentId ||
-            shipmentResult.data?.shipmentId ||
-            shipmentResult.otoId ||
-            '';
-
-        const trackingNumber =
-            shipmentResult.trackingNumber ||
-            shipmentResult.data?.trackingNumber ||
-            shipmentId ||
-            '';
-
-        const providerLabelUrl = await getShipmentLabel(orderId);
-        const labelUrl = providerLabelUrl
-            ? `/api/shipment-label?orderId=${encodeURIComponent(orderId)}&token=${labelAccessToken(orderId)}`
-            : '';
-
-        await connectToDatabase();
-
-        const notificationUser =
-            shipmentUser || {
-                email: normalizeEmail(body.email),
-                fullName:
-                    String(body.receiverName || 'عميل SUMSN').trim()
-            };
-        const savedShipment = await Shipment.create({
+        const payment = await Payment.create({
             userId: shipmentUser?._id || null,
-            customerEmail: notificationUser.email,
-            contentsDescription:
-                String(body.contentsDescription || '').trim(),
-            emailDeliveryStatus:
-                emailServiceConfigured()
-                    ? 'pending'
-                    : 'skipped',
-            fromCity: body.senderCity,
-            toCity: body.receiverCity,
-            weight: number(body.weight),
+            customerEmail: body.email,
+            requestId: body.requestId,
+            orderNumber,
+            status: 'creating',
+            amount: finalPrice,
+            providerCost,
             carrier: carrierName,
-            price: finalPrice,
-            deliveryTime: cleanPublicText(
-                selected.avgDeliveryTime ||
-                selected.estimatedDeliveryTime ||
-                ''
-            ),
-            otoOrderId: orderId,
-            otoShipmentId: shipmentId,
-            trackingNumber,
-            labelUrl: providerLabelUrl
+            deliveryOptionId:
+                String(body.deliveryOptionId),
+            deliveryTime,
+            shipmentPayload: {
+                body,
+                senderAddress,
+                receiverAddress
+            }
         });
-
-        let emailSent = false;
-        let labelAttached = false;
-
-        if (emailServiceConfigured()) {
-            let attachment = null;
-
-            if (providerLabelUrl) {
-                try {
-                    attachment = await labelAttachment(
-                        providerLabelUrl,
-                        orderId
-                    );
-                    labelAttached = Boolean(attachment);
-                } catch (labelError) {
-                    console.warn(
-                        'تعذر تجهيز مرفق البوليصة:',
-                        labelError.message
-                    );
+        const callbackUrl = new URL(
+            '/api/payments/paylink/callback',
+            PUBLIC_BASE_URL
+        ).toString();
+        const cancelUrl = new URL(
+            '/api/payments/paylink/cancel',
+            PUBLIC_BASE_URL
+        ).toString();
+        const invoice = await paylinkRequest(
+            'addInvoice',
+            {
+                method: 'POST',
+                body: {
+                    orderNumber,
+                    amount: finalPrice,
+                    callBackUrl: callbackUrl,
+                    cancelUrl,
+                    clientName: body.senderName,
+                    clientEmail: body.email,
+                    clientMobile: body.senderPhone,
+                    currency: 'SAR',
+                    note: `خدمة شحن SUMSN - ${carrierName}`,
+                    products: [
+                        {
+                            title: 'خدمة شحن',
+                            price: finalPrice,
+                            qty: 1,
+                            description:
+                                `${body.senderCity} إلى ${body.receiverCity}`,
+                            isDigital: false
+                        }
+                    ]
                 }
             }
+        );
+        const transactionNo =
+            String(invoice.transactionNo || '');
+        const paymentUrl =
+            invoice.url || invoice.mobileUrl || '';
 
-            try {
-                const emailResult =
-                    await sendShipmentCreatedEmail({
-                        user: notificationUser,
-                        carrierName,
-                        orderId,
-                        trackingNumber:
-                            savedShipment.trackingNumber,
-                        finalPrice,
-                        attachment
-                    });
-
-                savedShipment.emailDeliveryStatus = 'sent';
-                savedShipment.emailMessageId =
-                    emailResult.id || '';
-                savedShipment.emailSentAt = new Date();
-                await savedShipment.save();
-                emailSent = true;
-            } catch (emailError) {
-                console.error(
-                    'تعذر إرسال بريد البوليصة:',
-                    emailError.message
-                );
-
-                savedShipment.emailDeliveryStatus = 'failed';
-                await savedShipment.save();
-            }
+        if (!transactionNo || !paymentUrl) {
+            throw new Error('PAYMENT_INVOICE_INVALID');
         }
 
-        void maybeAlertDatabaseStorage();
+        payment.transactionNo = transactionNo;
+        payment.paymentUrl = paymentUrl;
+        payment.checkUrl = invoice.checkUrl || '';
+        payment.status = 'pending';
+        await payment.save();
 
         res.json({
             success: true,
-            orderId,
-            carrier: carrierName,
-            shipmentId: savedShipment.otoShipmentId,
-            trackingNumber: savedShipment.trackingNumber,
-            labelUrl,
-            finalPrice,
-            emailSent,
-            labelAttached
+            paymentRequired: true,
+            paymentUrl,
+            orderNumber,
+            amount: finalPrice
         });
     } catch (error) {
-        console.error('خطأ أثناء إنشاء الشحنة:', error);
+        console.error('تعذر بدء الدفع:', error);
 
-        const providerMessage = String(error.providerMessage || '').toLowerCase();
-        let message = 'تعذر إنشاء الشحنة حاليًا. حاول مرة أخرى أو تواصل مع الدعم.';
+        await Payment.updateOne(
+            {
+                orderNumber,
+                status: 'creating'
+            },
+            {
+                $set: {
+                    status: 'failed',
+                    failureReason:
+                        String(error.message || 'PAYMENT_START_ERROR')
+                            .slice(0, 200)
+                }
+            }
+        ).catch(() => {});
+
+        let message = 'تعذر فتح صفحة الدفع حاليًا. حاول مرة أخرى.';
 
         if (error.message === 'INVALID_NATIONAL_ADDRESS') {
-            message = 'تعذر التحقق من أحد العنوانين المختصرين. تأكد من صحتهما وحاول مجددًا.';
-        } else if (error.message === 'INSUFFICIENT_SHIPPING_BALANCE') {
-            message = 'رصيد حساب الشحن غير كافٍ لإصدار البوليصة.';
+            message = 'تعذر التحقق من أحد العنوانين المختصرين.';
         } else if (
-            providerMessage.includes('credit') ||
-            providerMessage.includes('balance') ||
-            providerMessage.includes('رصيد')
+            error.message === 'INSUFFICIENT_SHIPPING_BALANCE'
         ) {
             message = 'رصيد حساب الشحن غير كافٍ لإصدار البوليصة.';
-        } else if (providerMessage.includes('not assigned yet')) {
-            message = 'تم إنشاء الطلب لكن شركة الشحن لم تعتمد الإسناد بعد. لا تعِد المحاولة وتواصل مع الدعم.';
+        } else if (
+            error.message === 'PAYMENT_CONFIGURATION_ERROR'
+        ) {
+            message = 'بوابة الدفع غير جاهزة حاليًا.';
         }
 
         res.status(502).json({
             success: false,
             message
+        });
+    }
+});
+
+app.get('/api/payments/paylink/callback', async (req, res) => {
+    const orderNumber =
+        String(req.query.orderNumber || '').trim();
+    const transactionNo =
+        String(req.query.transactionNo || '').trim();
+
+    try {
+        const result = await verifyPaylinkPayment({
+            orderNumber,
+            transactionNo
+        });
+
+        res.redirect(
+            303,
+            paymentRedirectUrl(
+                result.state,
+                result.payment.orderNumber
+            )
+        );
+    } catch (error) {
+        console.error('تعذر تأكيد دفعة Paylink:', error);
+        res.redirect(
+            303,
+            paymentRedirectUrl('review', orderNumber)
+        );
+    }
+});
+
+app.get('/api/payments/paylink/cancel', async (req, res) => {
+    const orderNumber =
+        String(req.query.orderNumber || '').trim();
+    const transactionNo =
+        String(req.query.transactionNo || '').trim();
+
+    if (orderNumber || transactionNo) {
+        try {
+            await verifyPaylinkPayment({
+                orderNumber,
+                transactionNo
+            });
+        } catch (error) {
+            console.warn(
+                'تعذر تحديث حالة الفاتورة الملغاة:',
+                error.message
+            );
+        }
+    }
+
+    res.redirect(
+        303,
+        paymentRedirectUrl('canceled', orderNumber)
+    );
+});
+
+app.post('/api/payments/paylink/webhook', async (req, res) => {
+    if (!paylinkWebhookAuthorized(req)) {
+        return res.status(401).json({
+            success: false
+        });
+    }
+
+    const orderNumber =
+        String(
+            req.body.merchantOrderNumber ||
+            req.body.orderNumber ||
+            ''
+        ).trim();
+    const transactionNo =
+        String(req.body.transactionNo || '').trim();
+
+    if (!orderNumber && !transactionNo) {
+        return res.status(400).json({
+            success: false
+        });
+    }
+
+    try {
+        const result = await verifyPaylinkPayment({
+            orderNumber,
+            transactionNo
+        });
+
+        res.status(200).json({
+            success: true,
+            status: result.payment.status
+        });
+    } catch (error) {
+        console.error('خطأ إشعار Paylink:', error);
+        res.status(500).json({
+            success: false
+        });
+    }
+});
+
+app.get('/api/payments/:orderNumber', async (req, res) => {
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'سجّل الدخول لعرض حالة العملية.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const payment = await Payment.findOne({
+            orderNumber:
+                String(req.params.orderNumber || '').trim(),
+            userId: user._id
+        });
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على عملية الدفع.'
+            });
+        }
+
+        const shipment =
+            await currentShipmentForPayment(payment);
+
+        res.json(paymentPublicState(payment, shipment));
+    } catch (error) {
+        console.error('تعذر جلب حالة الدفع:', error);
+        res.status(500).json({
+            success: false,
+            message: 'تعذر جلب حالة العملية حاليًا.'
         });
     }
 });
