@@ -1882,6 +1882,134 @@ async function getNationalAddress(shortCode) {
     }
 }
 
+const pickupLocationCodeCache = new Set();
+
+function normalizedPhoneDigits(value) {
+    const digits = String(value || '').replace(/\D/g, '');
+
+    if (digits.startsWith('00966')) {
+        return digits.slice(2);
+    }
+
+    if (digits.startsWith('0')) {
+        return `966${digits.slice(1)}`;
+    }
+
+    return digits;
+}
+
+function senderPickupLocationCode(body, senderAddress) {
+    const identity = [
+        senderAddress.shortCode,
+        normalizedPhoneDigits(body.senderPhone),
+        String(body.senderName || '').trim().toLowerCase()
+    ].join('|');
+    const suffix = crypto
+        .createHash('sha256')
+        .update(identity)
+        .digest('hex')
+        .slice(0, 8)
+        .toUpperCase();
+
+    return `SUMSN-${senderAddress.shortCode}-${suffix}`;
+}
+
+function pickupLocationsFromResponse(result) {
+    const sources = [result, result?.data];
+
+    return sources.flatMap((source) => [
+        ...(Array.isArray(source?.warehouses)
+            ? source.warehouses
+            : []),
+        ...(Array.isArray(source?.branches)
+            ? source.branches
+            : [])
+    ]);
+}
+
+async function pickupLocationExists(code) {
+    const result = await shippingRequest(
+        'getPickupLocationList',
+        undefined,
+        'GET'
+    );
+
+    return pickupLocationsFromResponse(result).some(
+        (location) =>
+            String(location?.code || location?.pickupLocationCode || '')
+                .trim()
+                .toUpperCase() === code.toUpperCase()
+    );
+}
+
+async function ensureSenderPickupLocation(body, senderAddress) {
+    const code = senderPickupLocationCode(body, senderAddress);
+
+    if (pickupLocationCodeCache.has(code)) {
+        return code;
+    }
+
+    if (await pickupLocationExists(code)) {
+        pickupLocationCodeCache.add(code);
+        return code;
+    }
+
+    const pickupLocation = {
+        type: 'warehouse',
+        code,
+        name: `SUMSN - ${body.senderName.trim()}`,
+        mobile: body.senderPhone.trim(),
+        address: senderAddress.addressLine,
+        contactName: body.senderName.trim(),
+        contactEmail: body.email.trim(),
+        city: senderAddress.city,
+        country: 'SA',
+        state: senderAddress.state,
+        district: senderAddress.district,
+        street: senderAddress.street,
+        buildingNo: senderAddress.buildingNo,
+        secondaryAddressNumber: senderAddress.secondaryNumber,
+        postcode: senderAddress.postcode,
+        shortAddressCode: senderAddress.shortCode,
+        brandName: 'SUMSN',
+        status: 'active'
+    };
+    const lat = number(senderAddress.lat, NaN);
+    const lon = number(senderAddress.lon, NaN);
+
+    if (Number.isFinite(lat)) {
+        pickupLocation.lat = lat;
+    }
+
+    if (Number.isFinite(lon)) {
+        pickupLocation.lon = lon;
+    }
+
+    try {
+        const created = await shippingRequest(
+            'createPickupLocation',
+            pickupLocation
+        );
+        const createdCode = String(
+            created.pickupLocationCode ||
+            created.data?.pickupLocationCode ||
+            code
+        ).trim();
+
+        pickupLocationCodeCache.add(createdCode);
+        return createdCode;
+    } catch (error) {
+        // إذا وصل طلبان للمرسل نفسه معًا فقد ينجح الإنشاء الأول فقط.
+        // نعيد قراءة المواقع حتى نستخدم الكود الذي أُنشئ بدل الفشل.
+        if (await pickupLocationExists(code)) {
+            pickupLocationCodeCache.add(code);
+            return code;
+        }
+
+        throw error;
+    }
+}
+
 function wait(milliseconds) {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
@@ -2944,8 +3072,13 @@ async function createPaidShipment(payment) {
         }
 
         const orderId = locked.orderNumber;
+        const pickupLocationCode = await ensureSenderPickupLocation(
+            body,
+            senderAddress
+        );
         const order = {
             orderId,
+            pickupLocationCode,
             createShipment: false,
             deliveryOptionId: number(locked.deliveryOptionId),
             storeName: 'SUMSN',
@@ -2962,23 +3095,6 @@ async function createPaidShipment(payment) {
             boxHeight: number(body.boxHeight),
             shippingNotes: body.contentsDescription,
             item_description: body.contentsDescription,
-            senderInformation: {
-                senderFullName: body.senderName.trim(),
-                senderMobile: body.senderPhone.trim(),
-                senderCountry: 'SA',
-                senderShortAddressCode: senderAddress.shortCode,
-                senderBuildingNo: senderAddress.buildingNo,
-                sendersecondaryAddressNumber:
-                    senderAddress.secondaryNumber,
-                senderState: senderAddress.state,
-                senderCity: senderAddress.city,
-                senderDistrict: senderAddress.district,
-                senderStreet: senderAddress.street,
-                senderPostcode: senderAddress.postcode,
-                senderAddressLine: senderAddress.addressLine,
-                lat: senderAddress.lat,
-                lon: senderAddress.lon
-            },
             customer: {
                 name: body.receiverName.trim(),
                 email: body.email.trim(),
