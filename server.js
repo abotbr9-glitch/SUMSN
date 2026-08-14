@@ -576,4 +576,3228 @@ function cleanPublicText(value) {
 }
 
 
-function customerAccountsÛ½½òÚ$z{-®éÜj×w6VæFW$6—G’rÀĞ¢w6VæFW%†öæRrÀĞ¢w6VæFW%6†÷'DFG&W746öFRrÀĞ¢w&V6V—fW$æÖRrÀĞ¢w&V6V—fW$6—G’rÀĞ¢w&V6V—fW%†öæRrÀĞ¢w&V6V—fW%6†÷'DFG&W746öFRrÀĞ¢vFVÆ—fW'”÷F–öä–BrÀĞ¢wvV–v‡BrÀĞ¢v&÷„ÆVæwF‚rÀĞ¢v&÷…v–GF‚rÀĞ¢v&÷„†V–v‡BrÀĞ¢w&WVW7D–BpĞ¢Ó°Ğ¢6öç7BÖ—76–ærÒ&WV—&VBæf–ÇFW"‚†f–VÆB’Óâ&Wæ&öG•¶f–VÆEÒ“°Ğ Ğ¢–b†Ö—76–æræÆVæwF‚’°Ğ¢&WGW&â&W2ç7FGW2ƒC’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}˜­‹ŠÍ˜’Š­‹ŠŠmŠ’ŠÍ˜]˜­‹’Š˜­Š}˜mŠ}Š¢Š}˜M‹MŠİ˜mŠ’Š}˜M˜]‹}˜M˜ŠŠ’âpĞ¢Ò“°Ğ¢ĞĞ Ğ¢–b‚ÄÄõuôÄ•dUõ4„•ÔTåE2’°Ğ¢&WGW&â&W2ç7FGW2ƒC2’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}Š}˜MŠı˜‹’˜Š]‹]ŠıŠ}‹Š}˜M‹MŠİ˜mŠ}Š¢‹­˜­‹˜]Š­Š}Šİ˜­˜b˜]ŠM˜-Š­˜½ŠrŠ=Š½˜mŠ}ŠŠ}˜MŠ}ŠíŠ­ŠŠ}‹âpĞ¢Ò“°Ğ¢ĞĞ Ğ¢–b‚–ÖVçDvFWv”6öæf–wW&VB‚’’°Ğ¢&WGW&â&W2ç7FGW2ƒS2’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}Š˜Š}ŠŠ’Š}˜MŠı˜‹’‹­˜­‹ŠÍŠ}˜}‹-Š’ŠİŠ}˜M˜­˜½ŠrâpĞ¢Ò“°Ğ¢ĞĞ Ğ¢–b€Ğ¢Ä•dUõ4„•ÔTåEõDU5EôTÔ”Âb`Ğ¢æ÷&ÖÆ—¦TVÖ–Â‡&Wæ&öG’æVÖ–Â’ÓĞĞ¢Ä•dUõ4„•ÔTåEõDU5EôTÔ”ÀĞ¢’°Ğ¢&WGW&â&W2ç7FGW2ƒC2’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}Š}˜MŠı˜‹’˜Š]‹]ŠıŠ}‹Š}˜M‹MŠİ˜mŠ}Š¢˜]Š­Š}ŠİŠ}˜bŠİŠ}˜M˜­˜½Šr˜MŠİ‹=Š}Š‚Š}˜MŠ}ŠíŠ­ŠŠ}‹˜˜-‹râpĞ¢Ò“°Ğ¢ĞĞ Ğ¢6öç7B&öG’Ò°Ğ¢ââç&Wæ&öG’ÀĞ¢VÖ–Ã¢æ÷&ÖÆ—¦TVÖ–Â‡&Wæ&öG’æVÖ–Â’ÀĞ¢6öçFVçG4FW67&—F–öã Ğ¢7G&–ær‡&Wæ&öG’æ6öçFVçG4FW67&—F–öâÇÂrr’çG&–Ò‚’ÀĞ¢6VæFW$æÖS¢7G&–ær‡&Wæ&öG’ç6VæFW$æÖRÇÂrr’çG&–Ò‚’ÀĞ¢6VæFW$6—G“¢7G&–ær‡&Wæ&öG’ç6VæFW$6—G’ÇÂrr’çG&–Ò‚’ÀĞ¢6VæFW%†öæS¢7G&–ær‡&Wæ&öG’ç6VæFW%†öæRÇÂrr’çG&–Ò‚’ÀĞ¢6VæFW%6†÷'DFG&W746öFS Ğ¢7G&–ær‡&Wæ&öG’ç6VæFW%6†÷'DFG&W746öFRÇÂrrĞ¢çG&–Ò‚Ğ¢çFõWW$66R‚’ÀĞ¢&V6V—fW$æÖS¢7G&–ær‡&Wæ&öG’ç&V6V—fW$æÖRÇÂrr’çG&–Ò‚’ÀĞ¢&V6V—fW$6—G“¢7G&–ær‡&Wæ&öG’ç&V6V—fW$6—G’ÇÂrr’çG&–Ò‚’ÀĞ¢&V6V—fW%†öæS¢7G&–ær‡&Wæ&öG’ç&V6V—fW%†öæRÇÂrr’çG&–Ò‚’ÀĞ¢&V6V—fW%6†÷'DFG&W746öFS Ğ¢7G&–ær‡&Wæ&öG’ç&V6V—fW%6†÷'DFG&W746öFRÇÂrrĞ¢çG&–Ò‚Ğ¢çFõWW$66R‚’ÀĞ¢&WVW7D–C Ğ¢7G&–ær‡&Wæ&öG’ç&WVW7D–BÇÂrrĞ¢ç&WÆ6R‚õµäÕ¦×£Ó’ÕÒörÂrrĞ¢ç6Æ–6RƒÂcB’ÀĞ¢vV–v‡C¢çVÖ&W"‡&Wæ&öG’çvV–v‡B’ÀĞ¢&÷„ÆVæwFƒ¢çVÖ&W"‡&Wæ&öG’æ&÷„ÆVæwF‚’ÀĞ¢&÷…v–GFƒ¢çVÖ&W"‡&Wæ&öG’æ&÷…v–GF‚’ÀĞ¢&÷„†V–v‡C¢çVÖ&W"‡&Wæ&öG’æ&÷„†V–v‡BĞ¢Ó°Ğ¢6öç7B6†÷'DFG&W75GFW&âÒõå´Õ¥×³GÕ³Ó•×³GÒBó°Ğ Ğ¢–b€Ğ¢fÆ–DVÖ–Â†&öG’æVÖ–Â’ÇÀĞ¢6†÷'DFG&W75GFW&âçFW7B†&öG’ç6VæFW%6†÷'DFG&W746öFR’ÇÀĞ¢6†÷'DFG&W75GFW&âçFW7B†&öG’ç&V6V—fW%6†÷'DFG&W746öFR’ÇÀĞ¢&öG’çvV–v‡BÃÒÇÀĞ¢&öG’æ&÷„ÆVæwF‚ÃÒÇÀĞ¢&öG’æ&÷…v–GF‚ÃÒÇÀĞ¢&öG’æ&÷„†V–v‡BÃÒÇÀĞ¢&öG’ç&WVW7D–@Ğ¢’°Ğ¢&WGW&â&W2ç7FGW2ƒC’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}Š­Šİ˜-˜"˜]˜bŠ}˜MŠ‹˜­Šò˜Š}˜M‹˜m˜Š}˜m˜­˜bŠ}˜M˜]ŠíŠ­‹]‹˜­˜b˜Š}˜M˜‹-˜b˜Š}˜MŠ=Š‹Š}ŠòâpĞ¢Ò“°Ğ¢ĞĞ Ğ¢6öç7B–FVçF—G’ĞĞ¢6†—ÖVçEW6W#òåö–BÇÀĞ¢&öG’æVÖ–Ã°Ğ¢6öç7B÷&FW%7Vff—‚Ò7'—FğĞ¢æ7&VFT†6‚‚w6†#SbrĞ¢çWFFR†G¶–FVçF—G—Ó¢G¶&öG’ç&WVW7D–GÖĞ¢æF–vW7B‚v†W‚rĞ¢ç6Æ–6RƒÂbĞ¢çFõWW$66R‚“°Ğ¢6öç7B÷&FW$çVÖ&W"Ò5TÕ4âÒG¶÷&FW%7Vff—‡Ö°Ğ Ğ¢G'’°Ğ¢v—B6öææV7EFôFF&6R‚“°Ğ Ğ¢6öç7BW†—7F–ærÒv—B–ÖVçBæf–æDöæR‡°Ğ¢÷&FW$çVÖ&W"ÀĞ¢W6W$–C¢6†—ÖVçEW6W#òåö–BÇÂçVÆÀĞ¢Ò“°Ğ Ğ¢–b†W†—7F–ær’°Ğ¢–b€Ğ¢W†—7F–ærç–ÖVçEW&Âb`Ğ¢²v7&VF–ærrÂwVæF–æruÒæ–æ6ÇVFW2†W†—7F–ærç7FGW2Ğ¢’°Ğ¢&WGW&â&W2æ§6öâ‡°Ğ¢7V66W73¢G'VRÀĞ¢–ÖVçE&WV—&VC¢G'VRÀĞ¢–ÖVçEW&Ã¢W†—7F–ærç–ÖVçEW&ÂÀĞ¢÷&FW$çVÖ&W#¢W†—7F–æræ÷&FW$çVÖ&W"ÀĞ¢Ö÷VçC¢W†—7F–æræÖ÷Vç@Ğ¢Ò“°Ğ¢ĞĞ Ğ¢–b†W†—7F–ærç7FGW2ÓÓÒw6†—ÖVçEö7&VFVBr’°Ğ¢6öç7B6†—ÖVçBĞĞ¢v—B7W'&VçE6†—ÖVçDf÷%–ÖVçB†W†—7F–ær“°Ğ Ğ¢&WGW&â&W2æ§6öâ€Ğ¢–ÖVçEV&Æ–57FFR†W†—7F–ærÂ6†—ÖVçBĞ¢“°Ğ¢ĞĞ Ğ¢&WGW&â&W2ç7FGW2ƒC’’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}˜}‹˜rŠ}˜M˜]ŠİŠ}˜˜MŠ’˜]‹=Š­ŠíŠı˜]Š’‹=Š}Š˜-˜½ŠrâŠ=‹­˜M˜"Š}˜M˜mŠ}˜‹Š’˜Š}ŠíŠ­‹Š}˜M‹‹‹b˜]‹Š’Š=Ší‹˜’âpĞ¢Ò“°Ğ¢ĞĞ Ğ¢6öç7B·6VæFW$FG&W72Â&V6V—fW$FG&W75ÒĞĞ¢v—B&öÖ—6RæÆÂ…°Ğ¢vWDæF–öæÄFG&W72€Ğ¢&öG’ç6VæFW%6†÷'DFG&W746öFPĞ¢’ÀĞ¢vWDæF–öæÄFG&W72€Ğ¢&öG’ç&V6V—fW%6†÷'DFG&W746öFPĞ¢Ğ¢Ò“°Ğ¢6öç7BV÷FRÒv—B6†—–æu&WVW7B€Ğ¢v6†V6´õDôFVÆ—fW'”fVRrÀĞ¢V÷FU–ÆöB€Ğ¢&öG’ç6VæFW$6—G’ÀĞ¢&öG’ç&V6V—fW$6—G’ÀĞ¢&öG’çvV–v‡BÀĞ¢&öG’æ&÷„ÆVæwF‚ÀĞ¢&öG’æ&÷…v–GF‚ÀĞ¢&öG’æ&÷„†V–v‡@Ğ¢Ğ¢“°Ğ¢6öç7B6VÆV7FVBÒvWDFVÆ—fW'”6ö×æ–W2‡V÷FR’æf–æB€Ğ¢†6ö×ç’’ÓàĞ¢7G&–ær†6ö×ç’æFVÆ—fW'”÷F–öä–B’ÓÓĞĞ¢7G&–ær†&öG’æFVÆ—fW'”÷F–öä–BĞ¢“°Ğ Ğ¢–b‚6VÆV7FVB’°Ğ¢&WGW&â&W2ç7FGW2ƒC’’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}Ší˜­Š}‹Š}˜M‹MŠİ˜bŠ­‹­˜­‹âŠ=‹ŠòŠÍ˜MŠ‚Š}˜MŠ=‹=‹Š}‹˜Š}ŠíŠ­‹˜]˜bŠÍŠı˜­ŠòâpĞ¢Ò“°Ğ¢ĞĞ Ğ¢6öç7B&÷f–FW$6÷7BÒçVÖ&W"‡6VÆV7FVBç&–6R“°Ğ¢6öç7Bf–æÅ&–6RĞĞ¢7W7FöÖW%&–6R‡&÷f–FW$6÷7BÂ&öG’çvV–v‡B“°Ğ¢6öç7B6'&–W$æÖRÒvWD6'&–W$F—7Æ”æÖR‡6VÆV7FVB“°Ğ¢6öç7BFVÆ—fW'•F–ÖRÒ6ÆVåV&Æ–5FW‡B€Ğ¢6VÆV7FVBæftFVÆ—fW'•F–ÖRÇÀĞ¢6VÆV7FVBæW7F–ÖFVDFVÆ—fW'•F–ÖRÇÀĞ¢rpĞ¢“°Ğ¢6öç7B66÷VçD–æfòÒv—B6†—–æu&WVW7B€Ğ¢v66÷VçD–æfòrÀĞ¢VæFVf–æVBÀĞ¢ttUBpĞ¢“°Ğ¢6öç7B&VÖ–æ–æt7&VF—BÒçVÖ&W"€Ğ¢66÷VçD–æfòç&VÖ–æ–æt7&VF—BóğĞ¢66÷VçD–æfòæFFòç&VÖ–æ–æt7&VF—BÀĞ¢æàĞ¢“°Ğ¢6öç7B&VÖ–æ–ætg&VU6†—ÖVçG2ÒçVÖ&W"€Ğ¢66÷VçD–æfòç&VÖ–æ–ætg&VU6†—ÖVçG2óğĞ¢66÷VçD–æfòæFFòç&VÖ–æ–ætg&VU6†—ÖVçG2ÀĞ¢ Ğ¢“°Ğ Ğ¢–b€Ğ¢çVÖ&W"æ—4f–æ—FR‡&VÖ–æ–æt7&VF—B’b`Ğ¢&VÖ–æ–ætg&VU6†—ÖVçG2ÃÒb`Ğ¢&VÖ–æ–æt7&VF—BÂ&÷f–FW$6÷7@Ğ¢’°Ğ¢F‡&÷ræWrW'&÷"‚t”å5Tdd”4”TåEõ4„•”äuô$Ää4Rr“°Ğ¢ĞĞ Ğ¢6öç7B–ÖVçBÒv—B–ÖVçBæ7&VFR‡°Ğ¢W6W$–C¢6†—ÖVçEW6W#òåö–BÇÂçVÆÂÀĞ¢7W7FöÖW$VÖ–Ã¢&öG’æVÖ–ÂÀĞ¢&WVW7D–C¢&öG’ç&WVW7D–BÀĞ¢÷&FW$çVÖ&W"ÀĞ¢7FGW3¢v7&VF–ærrÀĞ¢Ö÷VçC¢f–æÅ&–6RÀĞ¢&÷f–FW$6÷7BÀĞ¢6'&–W#¢6'&–W$æÖRÀĞ¢FVÆ—fW'”÷F–öä–C Ğ¢7G&–ær†&öG’æFVÆ—fW'”÷F–öä–B’ÀĞ¢FVÆ—fW'•F–ÖRÀĞ¢6†—ÖVçE–ÆöC¢°Ğ¢&öG’ÀĞ¢6VæFW$FG&W72ÀĞ¢&V6V—fW$FG&W70Ğ¢ĞĞ¢Ò“°Ğ¢6öç7B6ÆÆ&6µW&ÂÒæWrU$Â€Ğ¢rö’÷–ÖVçG2÷–Æ–æ²ö6ÆÆ&6²rÀĞ¢T$Ä”5ô$4UõU$ÀĞ¢’çFõ7G&–ær‚“°Ğ¢6öç7B6æ6VÅW&ÂÒæWrU$Â€Ğ¢rö’÷–ÖVçG2÷–Æ–æ²ö6æ6VÂrÀĞ¢T$Ä”5ô$4UõU$ÀĞ¢’çFõ7G&–ær‚“°Ğ¢6öç7B–çfö–6RÒv—B–Æ–æµ&WVW7B€Ğ¢vFD–çfö–6RrÀĞ¢°Ğ¢ÖWF†öC¢uõ5BrÀĞ¢&öG“¢°Ğ¢÷&FW$çVÖ&W"ÀĞ¢Ö÷VçC¢f–æÅ&–6RÀĞ¢6ÆÄ&6µW&Ã¢6ÆÆ&6µW&ÂÀĞ¢6æ6VÅW&ÂÀĞ¢6Æ–VçDæÖS¢&öG’ç6VæFW$æÖRÀĞ¢6Æ–VçDVÖ–Ã¢&öG’æVÖ–ÂÀĞ¢6Æ–VçDÖö&–ÆS¢&öG’ç6VæFW%†öæRÀĞ¢7W'&Væ7“¢u4"rÀĞ¢æ÷FS¢ŠíŠı˜]Š’‹MŠİ˜b5TÕ4âÒG¶6'&–W$æÖWÖÀĞ¢&öGV7G3¢°Ğ¢°Ğ¢F—FÆS¢}ŠíŠı˜]Š’‹MŠİ˜brÀĞ¢&–6S¢f–æÅ&–6RÀĞ¢G“¢ÀĞ¢FW67&—F–öã Ğ¢G¶&öG’ç6VæFW$6—G—ÒŠ]˜M˜’G¶&öG’ç&V6V—fW$6—G—ÖÀĞ¢—4F–v—FÃ¢fÇ6PĞ¢ĞĞ¢ĞĞ¢ĞĞ¢ĞĞ¢“°Ğ¢6öç7BG&ç67F–öäæòĞĞ¢7G&–ær†–çfö–6RçG&ç67F–öäæòÇÂrr“°Ğ¢6öç7B–ÖVçEW&ÂĞĞ¢–çfö–6RçW&ÂÇÂ–çfö–6RæÖö&–ÆUW&ÂÇÂrs°Ğ Ğ¢–b‚G&ç67F–öäæòÇÂ–ÖVçEW&Â’°Ğ¢F‡&÷ræWrW'&÷"‚u”ÔTåEô”ådô”4Uô”ådÄ”Br“°Ğ¢ĞĞ Ğ¢–ÖVçBçG&ç67F–öäæòÒG&ç67F–öäæó°Ğ¢–ÖVçBç–ÖVçEW&ÂÒ–ÖVçEW&Ã°Ğ¢–ÖVçBæ6†V6µW&ÂÒ–çfö–6Ræ6†V6µW&ÂÇÂrs°Ğ¢–ÖVçBç7FGW2ÒwVæF–ærs°Ğ¢v—B–ÖVçBç6fR‚“°Ğ Ğ¢&W2æ§6öâ‡°Ğ¢7V66W73¢G'VRÀĞ¢–ÖVçE&WV—&VC¢G'VRÀĞ¢–ÖVçEW&ÂÀĞ¢÷&FW$çVÖ&W"ÀĞ¢Ö÷VçC¢f–æÅ&–6PĞ¢Ò“°Ğ¢Ò6F6‚†W'&÷"’°Ğ¢6öç6öÆRæW'&÷"‚}Š­‹‹‹ŠŠıŠŠ}˜MŠı˜‹“¢rÂW'&÷"“°Ğ Ğ¢v—B–ÖVçBçWFFTöæR€Ğ¢°Ğ¢÷&FW$çVÖ&W"ÀĞ¢7FGW3¢v7&VF–ærpĞ¢ÒÀĞ¢°Ğ¢G6WC¢°Ğ¢7FGW3¢vf–ÆVBrÀĞ¢f–ÇW&U&V6öã Ğ¢7G&–ær†W'&÷"æÖW76vRÇÂu”ÔTåEõ5D%EôU%$õ"rĞ¢ç6Æ–6RƒÂ#Ğ¢ĞĞ¢ĞĞ¢’æ6F6‚‚‚’Óâ·Ò“°Ğ Ğ¢ÆWBÖW76vRÒ}Š­‹‹‹˜Š­ŠÒ‹]˜ŠİŠ’Š}˜MŠı˜‹’ŠİŠ}˜M˜­˜½ŠrâŠİŠ}˜˜B˜]‹Š’Š=Ší‹˜’âs°Ğ Ğ¢–b†W'&÷"æÖW76vRÓÓÒt”ådÄ”EôäD”ôäÅôDE$U52r’°Ğ¢ÖW76vRÒ}Š­‹‹‹Š}˜MŠ­Šİ˜-˜"˜]˜bŠ=ŠİŠòŠ}˜M‹˜m˜Š}˜m˜­˜bŠ}˜M˜]ŠíŠ­‹]‹˜­˜bâs°Ğ¢ÒVÇ6R–b€Ğ¢W'&÷"æÖW76vRÓÓÒt”å5Tdd”4”TåEõ4„•”äuô$Ää4RpĞ¢’°Ğ¢ÖW76vRÒ}‹‹]˜­ŠòŠİ‹=Š}Š‚Š}˜M‹MŠİ˜b‹­˜­‹˜=Š}˜˜Ò˜MŠ]‹]ŠıŠ}‹Š}˜MŠ˜˜M˜­‹]Š’âs°Ğ¢ÒVÇ6R–b€Ğ¢W'&÷"æÖW76vRÓÓÒu”ÔTåEô4ôäd”uU$D”ôåôU%$õ"pĞ¢’°Ğ¢ÖW76vRÒ}Š˜Š}ŠŠ’Š}˜MŠı˜‹’‹­˜­‹ŠÍŠ}˜}‹-Š’ŠİŠ}˜M˜­˜½Šrâs°Ğ¢ĞĞ Ğ¢&W2ç7FGW2ƒS"’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vPĞ¢Ò“°Ğ¢ĞĞ§Ò“°Ğ Ğ¦ævWB‚rö’÷–ÖVçG2÷–Æ–æ²ö6ÆÆ&6²rÂ7–æ2‡&WÂ&W2’Óâ°Ğ¢6öç7B÷&FW$çVÖ&W"ĞĞ¢7G&–ær‡&WçVW'’æ÷&FW$çVÖ&W"ÇÂrr’çG&–Ò‚“°Ğ¢6öç7BG&ç67F–öäæòĞĞ¢7G&–ær‡&WçVW'’çG&ç67F–öäæòÇÂrr’çG&–Ò‚“°Ğ Ğ¢G'’°Ğ¢6öç7B&W7VÇBÒv—BfW&–g•–Æ–æµ–ÖVçB‡°Ğ¢÷&FW$çVÖ&W"ÀĞ¢G&ç67F–öäæğĞ¢Ò“°Ğ Ğ¢&W2ç&VF—&V7B€Ğ¢32ÀĞ¢–ÖVçE&VF—&V7EW&Â€Ğ¢&W7VÇBç7FFRÀĞ¢&W7VÇBç–ÖVçBæ÷&FW$çVÖ&W Ğ¢Ğ¢“°Ğ¢Ò6F6‚†W'&÷"’°Ğ¢6öç6öÆRæW'&÷"‚}Š­‹‹‹Š­Š=˜=˜­ŠòŠı˜‹Š’–Æ–æ³¢rÂW'&÷"“°Ğ¢&W2ç&VF—&V7B€Ğ¢32ÀĞ¢–ÖVçE&VF—&V7EW&Â‚w&Wf–WrrÂ÷&FW$çVÖ&W"Ğ¢“°Ğ¢ĞĞ§Ò“°Ğ Ğ¦ævWB‚rö’÷–ÖVçG2÷–Æ–æ²ö6æ6VÂrÂ7–æ2‡&WÂ&W2’Óâ°Ğ¢6öç7B÷&FW$çVÖ&W"ĞĞ¢7G&–ær‡&WçVW'’æ÷&FW$çVÖ&W"ÇÂrr’çG&–Ò‚“°Ğ¢6öç7BG&ç67F–öäæòĞĞ¢7G&–ær‡&WçVW'’çG&ç67F–öäæòÇÂrr’çG&–Ò‚“°Ğ Ğ¢–b†÷&FW$çVÖ&W"ÇÂG&ç67F–öäæò’°Ğ¢G'’°Ğ¢v—BfW&–g•–Æ–æµ–ÖVçB‡°Ğ¢÷&FW$çVÖ&W"ÀĞ¢G&ç67F–öäæğĞ¢Ò“°Ğ¢Ò6F6‚†W'&÷"’°Ğ¢6öç6öÆRçv&â€Ğ¢}Š­‹‹‹Š­ŠİŠı˜­Š²ŠİŠ}˜MŠ’Š}˜M˜Š}Š­˜‹Š’Š}˜M˜]˜M‹­Š}Š“¢rÀĞ¢W'&÷"æÖW76vPĞ¢“°Ğ¢ĞĞ¢ĞĞ Ğ¢&W2ç&VF—&V7B€Ğ¢32ÀĞ¢–ÖVçE&VF—&V7EW&Â‚v6æ6VÆVBrÂ÷&FW$çVÖ&W"Ğ¢“°Ğ§Ò“°Ğ Ğ¦ç÷7B‚rö’÷–ÖVçG2÷–Æ–æ²÷vV&†öö²rÂ7–æ2‡&WÂ&W2’Óâ°Ğ¢–b‚–Æ–æµvV&†öö´WF†÷&—¦VB‡&W’’°Ğ¢&WGW&â&W2ç7FGW2ƒC’æ§6öâ‡°Ğ¢7V66W73¢fÇ6PĞ¢Ò“°Ğ¢ĞĞ Ğ¢6öç7B÷&FW$çVÖ&W"ĞĞ¢7G&–ær€Ğ¢&Wæ&öG’æÖW&6†çD÷&FW$çVÖ&W"ÇÀĞ¢&Wæ&öG’æ÷&FW$çVÖ&W"ÇÀĞ¢rpĞ¢’çG&–Ò‚“°Ğ¢6öç7BG&ç67F–öäæòĞĞ¢7G&–ær‡&Wæ&öG’çG&ç67F–öäæòÇÂrr’çG&–Ò‚“°Ğ Ğ¢6öç7B—57V×6ä÷&FW"ĞĞ¢õå5TÕ4âÕ´ÔcÓ•×³gÒBòçFW7B†÷&FW$çVÖ&W"“°Ğ Ğ¢òò–Æ–æ²w2÷'FÂ6VæG26öææV7F—f—G’FW7Bv—F†÷WB&VÂ5TÕ4àĞ¢òò–çfö–6Râ6¶æ÷vÆVFvRF†BFW7BÂ'WBæWfW"gVÆf–ÆÂ6†—ÖVçBg&öÒ—BàĞ¢–b€Ğ¢‚÷&FW$çVÖ&W"bbG&ç67F–öäæò’ÇÀĞ¢†÷&FW$çVÖ&W"bb—57V×6ä÷&FW"Ğ¢’°Ğ¢&WGW&â&W2ç7FGW2ƒ#’æ§6öâ‡°Ğ¢7V66W73¢G'VRÀĞ¢FW7C¢G'VPĞ¢Ò“°Ğ¢ĞĞ Ğ¢G'’°Ğ¢6öç7B&W7VÇBÒv—BfW&–g•–Æ–æµ–ÖVçB‡°Ğ¢÷&FW$çVÖ&W"ÀĞ¢G&ç67F–öäæğĞ¢Ò“°Ğ Ğ¢&W2ç7FGW2ƒ#’æ§6öâ‡°Ğ¢7V66W73¢G'VRÀĞ¢7FGW3¢&W7VÇBç–ÖVçBç7FGW0Ğ¢Ò“°Ğ¢Ò6F6‚†W'&÷"’°Ğ¢6öç6öÆRæW'&÷"‚}Ší‹}Š2Š]‹M‹Š}‹–Æ–æ³¢rÂW'&÷"“°Ğ¢&W2ç7FGW2ƒS’æ§6öâ‡°Ğ¢7V66W73¢fÇ6PĞ¢Ò“°Ğ¢ĞĞ§Ò“°Ğ Ğ¦ævWB‚rö’÷–ÖVçG2ó¦÷&FW$çVÖ&W"rÂ7–æ2‡&WÂ&W2’Óâ°Ğ¢G'’°Ğ¢6öç7BW6W"Òv—BWF†VçF–6FVEW6W"‡&W“°Ğ Ğ¢–b‚W6W"’°Ğ¢&WGW&â&W2ç7FGW2ƒC’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}‹=ŠÍ™˜BŠ}˜MŠıŠí˜˜B˜M‹‹‹bŠİŠ}˜MŠ’Š}˜M‹˜]˜M˜­Š’âpĞ¢Ò“°Ğ¢ĞĞ Ğ¢v—B6öææV7EFôFF&6R‚“°Ğ Ğ¢6öç7B–ÖVçBÒv—B–ÖVçBæf–æDöæR‡°Ğ¢÷&FW$çVÖ&W# Ğ¢7G&–ær‡&Wç&×2æ÷&FW$çVÖ&W"ÇÂrr’çG&–Ò‚’ÀĞ¢W6W$–C¢W6W"åö–@Ğ¢Ò“°Ğ Ğ¢–b‚–ÖVçB’°Ğ¢&WGW&â&W2ç7FGW2ƒCB’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}˜M˜R˜­Š­˜RŠ}˜M‹Š½˜‹‹˜M˜’‹˜]˜M˜­Š’Š}˜MŠı˜‹’âpĞ¢Ò“°Ğ¢ĞĞ Ğ¢6öç7B6†—ÖVçBĞĞ¢v—B7W'&VçE6†—ÖVçDf÷%–ÖVçB‡–ÖVçB“°Ğ Ğ¢&W2æ§6öâ‡–ÖVçEV&Æ–57FFR‡–ÖVçBÂ6†—ÖVçB’“°Ğ¢Ò6F6‚†W'&÷"’°Ğ¢6öç6öÆRæW'&÷"‚}Š­‹‹‹ŠÍ˜MŠ‚ŠİŠ}˜MŠ’Š}˜MŠı˜‹“¢rÂW'&÷"“°Ğ¢&W2ç7FGW2ƒS’æ§6öâ‡°Ğ¢7V66W73¢fÇ6RÀĞ¢ÖW76vS¢}Š­‹‹‹ŠÍ˜MŠ‚ŠİŠ}˜MŠ’Š}˜M‹˜]˜M˜­Š’ŠİŠ}˜M˜­˜½ŠrâpĞ¢Ò“°Ğ¢ĞĞ§Ò“°Ğ Ğ¢ò Ğ§ÂÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒĞĞ§ÂŠ­‹M‹­˜­˜BŠ}˜M‹=˜­‹˜‹Ğ§ÂÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒĞĞ¢¢ğĞ Ğ¦æÆ—7FVâ…õ%BÂ‚’Óâ°Ğ¢6öç6öÆRæÆör†Š}˜M‹=˜­‹˜‹˜­‹˜]˜B‹˜M˜’‡GG¢òöÆö6Æ†÷7C¢Gµõ%GÖ“°Ğ§Ò“°Ğ 
+function customerAccountsEnabled() {
+    return ENABLE_CUSTOMER_ACCOUNTS && Boolean(AUTH_SECRET);
+}
+
+function emailServiceConfigured() {
+    return Boolean(RESEND_API_KEY || transporter);
+}
+
+function paymentGatewayConfigured() {
+    return Boolean(PAYLINK_API_ID && PAYLINK_SECRET_KEY);
+}
+
+function r2StorageConfigured() {
+    return Boolean(
+        R2_ACCESS_KEY_ID &&
+        R2_SECRET_ACCESS_KEY &&
+        R2_ACCOUNT_ID &&
+        R2_BUCKET_NAME
+    );
+}
+
+function r2StorageClient() {
+    if (!r2StorageConfigured()) {
+        throw new Error('R2_CONFIGURATION_ERROR');
+    }
+
+    if (!r2Client) {
+        r2Client = new S3Client({
+            region: 'auto',
+            endpoint:
+                `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+            forcePathStyle: true,
+            credentials: {
+                accessKeyId: R2_ACCESS_KEY_ID,
+                secretAccessKey: R2_SECRET_ACCESS_KEY
+            }
+        });
+    }
+
+    return r2Client;
+}
+
+function shipmentLabelObjectKey(userId, orderId) {
+    const owner = String(userId || 'unassigned')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+    const order = String(orderId || 'shipment')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+
+    return `shipment-labels/${owner}/${order}.pdf`;
+}
+
+async function r2BodyBuffer(body) {
+    if (!body) {
+        return Buffer.alloc(0);
+    }
+
+    if (typeof body.transformToByteArray === 'function') {
+        return Buffer.from(await body.transformToByteArray());
+    }
+
+    const chunks = [];
+
+    for await (const chunk of body) {
+        chunks.push(Buffer.from(chunk));
+    }
+
+    return Buffer.concat(chunks);
+}
+
+async function saveLabelToR2({
+    objectKey,
+    content,
+    contentType = 'application/pdf'
+}) {
+    if (!Buffer.isBuffer(content) || content.length === 0) {
+        throw new Error('LABEL_CONTENT_EMPTY');
+    }
+
+    if (content.length > MAX_LABEL_BYTES) {
+        throw new Error('LABEL_TOO_LARGE');
+    }
+
+    await r2StorageClient().send(
+        new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: objectKey,
+            Body: content,
+            ContentType: contentType,
+            CacheControl: 'private, no-store'
+        })
+    );
+}
+
+async function readLabelFromR2(objectKey) {
+    if (!objectKey || !r2StorageConfigured()) {
+        return null;
+    }
+
+    try {
+        const result = await r2StorageClient().send(
+            new GetObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: objectKey
+            })
+        );
+        const content = await r2BodyBuffer(result.Body);
+
+        if (!content.length || content.length > MAX_LABEL_BYTES) {
+            throw new Error(
+                content.length ? 'LABEL_TOO_LARGE' : 'LABEL_CONTENT_EMPTY'
+            );
+        }
+
+        return {
+            content,
+            contentType: result.ContentType || 'application/pdf'
+        };
+    } catch (error) {
+        if (
+            error?.name === 'NoSuchKey' ||
+            error?.$metadata?.httpStatusCode === 404
+        ) {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
+function normalizeEmail(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function validEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function passwordDigest(password, salt) {
+    return new Promise((resolve, reject) => {
+        crypto.scrypt(
+            String(password),
+            salt,
+            64,
+            {
+                N: 16384,
+                r: 8,
+                p: 1,
+                maxmem: 64 * 1024 * 1024
+            },
+            (error, derivedKey) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve(derivedKey.toString('hex'));
+            }
+        );
+    });
+}
+
+async function createPasswordRecord(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+
+    return {
+        salt,
+        hash: await passwordDigest(password, salt)
+    };
+}
+
+async function passwordMatches(password, salt, expectedHash) {
+    const actualHash = await passwordDigest(password, salt);
+    const actual = Buffer.from(actualHash, 'hex');
+    const expected = Buffer.from(String(expectedHash || ''), 'hex');
+
+    return (
+        actual.length === expected.length &&
+        crypto.timingSafeEqual(actual, expected)
+    );
+}
+
+function createActionToken() {
+    const token = crypto.randomBytes(32).toString('hex');
+
+    return {
+        token,
+        hash: crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex')
+    };
+}
+
+function actionTokenHash(token) {
+    return crypto
+        .createHash('sha256')
+        .update(String(token || ''))
+        .digest('hex');
+}
+
+function encodeSessionPart(value) {
+    return Buffer.from(JSON.stringify(value)).toString('base64url');
+}
+
+function signSessionPart(encodedPayload) {
+    return crypto
+        .createHmac('sha256', AUTH_SECRET)
+        .update(encodedPayload)
+        .digest('base64url');
+}
+
+function createSessionToken(user) {
+    const encodedPayload = encodeSessionPart({
+        userId: String(user._id),
+        version: number(user.sessionVersion),
+        expiresAt: Date.now() + SESSION_MAX_AGE_MS
+    });
+
+    return `${encodedPayload}.${signSessionPart(encodedPayload)}`;
+}
+
+function parseCookies(req) {
+    return String(req.headers.cookie || '')
+        .split(';')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .reduce((cookies, part) => {
+            const separator = part.indexOf('=');
+
+            if (separator > 0) {
+                cookies[part.slice(0, separator)] =
+                    decodeURIComponent(part.slice(separator + 1));
+            }
+
+            return cookies;
+        }, {});
+}
+
+function readSession(req) {
+    if (!customerAccountsEnabled()) {
+        return null;
+    }
+
+    const token = parseCookies(req)[SESSION_COOKIE_NAME];
+
+    if (!token) {
+        return null;
+    }
+
+    const [encodedPayload, signature] = token.split('.');
+
+    if (!encodedPayload || !signature) {
+        return null;
+    }
+
+    const expected = Buffer.from(signSessionPart(encodedPayload));
+    const received = Buffer.from(signature);
+
+    if (
+        expected.length !== received.length ||
+        !crypto.timingSafeEqual(expected, received)
+    ) {
+        return null;
+    }
+
+    try {
+        const payload = JSON.parse(
+            Buffer.from(encodedPayload, 'base64url').toString('utf8')
+        );
+
+        if (
+            !payload.userId ||
+            number(payload.expiresAt) <= Date.now()
+        ) {
+            return null;
+        }
+
+        return payload;
+    } catch {
+        return null;
+    }
+}
+
+async function authenticatedUser(req) {
+    const session = readSession(req);
+
+    if (!session) {
+        return null;
+    }
+
+    await connectToDatabase();
+
+    const user = await User.findById(session.userId);
+
+    if (
+        !user ||
+        !user.emailVerifiedAt ||
+        number(user.sessionVersion) !== number(session.version)
+    ) {
+        return null;
+    }
+
+    return user;
+}
+
+function setSessionCookie(res, user) {
+    res.cookie(
+        SESSION_COOKIE_NAME,
+        createSessionToken(user),
+        {
+            httpOnly: true,
+            secure:
+                process.env.NODE_ENV === 'production' ||
+                PUBLIC_BASE_URL.startsWith('https://'),
+            sameSite: 'lax',
+            maxAge: SESSION_MAX_AGE_MS,
+            path: '/'
+        }
+    );
+}
+
+function clearSessionCookie(res) {
+    res.clearCookie(SESSION_COOKIE_NAME, {
+        httpOnly: true,
+        secure:
+            process.env.NODE_ENV === 'production' ||
+            PUBLIC_BASE_URL.startsWith('https://'),
+        sameSite: 'lax',
+        path: '/'
+    });
+}
+
+function publicUser(user) {
+    return {
+        id: String(user._id),
+        fullName: user.fullName,
+        email: user.email,
+        emailVerified: Boolean(user.emailVerifiedAt)
+    };
+}
+
+function brandedEmailHtml(title, bodyHtml, buttonText, buttonUrl) {
+    const action = buttonUrl
+        ? `<p style="margin:26px 0;text-align:center"><a href="${escapeHtml(buttonUrl)}" style="display:inline-block;padding:13px 24px;border-radius:12px;background:#1769ff;color:#fff;text-decoration:none;font-weight:800">${escapeHtml(buttonText)}</a></p>`
+        : '';
+
+    return `<!doctype html><html lang="ar" dir="rtl"><body style="margin:0;background:#f5f7fb;font-family:Tahoma,Arial,sans-serif;color:#101828"><div style="max-width:620px;margin:28px auto;padding:0 14px"><div style="padding:18px 24px;border-radius:18px 18px 0 0;background:#0b1f41;color:#fff;font-size:24px;font-weight:900;letter-spacing:1px">SUMSN</div><div style="padding:26px 24px;border:1px solid #e5eaf2;border-top:0;border-radius:0 0 18px 18px;background:#fff"><h1 style="margin:0 0 16px;font-size:22px;color:#0b1f41">${escapeHtml(title)}</h1><div style="font-size:15px;line-height:1.9;color:#475467">${bodyHtml}</div>${action}<p style="margin:26px 0 0;padding-top:16px;border-top:1px solid #eef1f5;color:#98a2b3;font-size:12px">Ù‡Ø°Ù‡ Ø±Ø³Ø§Ù„Ø© Ø¢Ù„ÙŠØ© Ù…Ù† SUMSN. Ù„Ù„Ø±Ø¯ Ø£Ùˆ Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯Ø© ØªÙˆØ§ØµÙ„ Ø¹Ø¨Ø± ${escapeHtml(SUPPORT_EMAIL)}.</p></div></div></body></html>`;
+}
+
+async function sendBrandedEmail({
+    to,
+    subject,
+    text,
+    html,
+    attachments = [],
+    replyTo = SUPPORT_EMAIL
+}) {
+    if (!emailServiceConfigured()) {
+        throw new Error('EMAIL_NOT_CONFIGURED');
+    }
+
+    const messageReference = crypto.randomUUID();
+
+    if (RESEND_API_KEY) {
+        const response = await fetch(
+            'https://api.resend.com/emails',
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${RESEND_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: `SUMSN <${EMAIL_FROM}>`,
+                    to: [to],
+                    reply_to: replyTo,
+                    subject,
+                    text,
+                    html,
+                    headers: {
+                        'X-Entity-Ref-ID': messageReference
+                    },
+                    attachments: attachments.map((attachment) => ({
+                        filename: attachment.filename,
+                        content: Buffer
+                            .from(attachment.content)
+                            .toString('base64')
+                    }))
+                })
+            }
+        );
+
+        const raw = await response.text();
+        let result = {};
+
+        try {
+            result = raw ? JSON.parse(raw) : {};
+        } catch {
+            result = {};
+        }
+
+        if (!response.ok) {
+            const error = new Error('EMAIL_SEND_ERROR');
+            error.providerMessage =
+                result.message ||
+                result.error ||
+                'ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¨Ø±ÙŠØ¯.';
+            throw error;
+        }
+
+        return {
+            id: result.id || ''
+        };
+    }
+
+    const result = await transporter.sendMail({
+        from: `"SUMSN" <${EMAIL_FROM}>`,
+        replyTo,
+        to,
+        subject,
+        text,
+        html,
+        headers: {
+            'X-Entity-Ref-ID': messageReference
+        },
+        attachments: attachments.map((attachment) => ({
+            filename: attachment.filename,
+            content: attachment.content,
+            contentType:
+                attachment.contentType ||
+                'application/pdf'
+        }))
+    });
+
+    return {
+        id: result.messageId || ''
+    };
+}
+
+async function sendVerificationEmail(user, token) {
+    const messageCode =
+        crypto.randomBytes(3).toString('hex').toUpperCase();
+    const link =
+        `${PUBLIC_BASE_URL}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+
+    return sendBrandedEmail({
+        to: user.email,
+        subject: `ØªØ£ÙƒÙŠØ¯ Ø¨Ø±ÙŠØ¯Ùƒ ÙÙŠ SUMSN â€” ${messageCode}`,
+        text:
+            `Ù…Ø±Ø­Ø¨Ù‹Ø§ ${user.fullName}ØŒ\n\n` +
+            `Ø£ÙƒØ¯ Ø¨Ø±ÙŠØ¯Ùƒ Ù„Ø¨Ø¯Ø¡ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø­Ø³Ø§Ø¨ SUMSN:\n${link}\n\n` +
+            'ØªÙ†ØªÙ‡ÙŠ ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ø±Ø§Ø¨Ø· Ø®Ù„Ø§Ù„ 24 Ø³Ø§Ø¹Ø©.',
+        html: brandedEmailHtml(
+            'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ',
+            `<p>Ù…Ø±Ø­Ø¨Ù‹Ø§ ${escapeHtml(user.fullName)}ØŒ</p><p>Ø§Ø¶ØºØ· Ø§Ù„Ø²Ø± Ø§Ù„ØªØ§Ù„ÙŠ Ù„ØªØ£ÙƒÙŠØ¯ Ø¨Ø±ÙŠØ¯Ùƒ ÙˆØ¨Ø¯Ø¡ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø­Ø³Ø§Ø¨ SUMSN.</p><p>ØªÙ†ØªÙ‡ÙŠ ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ø±Ø§Ø¨Ø· Ø®Ù„Ø§Ù„ 24 Ø³Ø§Ø¹Ø©.</p>`,
+            'ØªØ£ÙƒÙŠØ¯ Ø¨Ø±ÙŠØ¯ÙŠ',
+            link
+        )
+    });
+}
+
+async function sendPasswordResetEmail(user, token) {
+    const messageCode =
+        crypto.randomBytes(3).toString('hex').toUpperCase();
+    const link =
+        `${PUBLIC_BASE_URL}/index.html?resetToken=${encodeURIComponent(token)}`;
+
+    return sendBrandedEmail({
+        to: user.email,
+        subject: `Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± SUMSN â€” ${messageCode}`,
+        text:
+            `Ù…Ø±Ø­Ø¨Ù‹Ø§ ${user.fullName}ØŒ\n\n` +
+            `Ø§Ø³ØªØ®Ø¯Ù… Ø§Ù„Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ§Ù„ÙŠ Ù„Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±:\n${link}\n\n` +
+            'ØªÙ†ØªÙ‡ÙŠ ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ø±Ø§Ø¨Ø· Ø®Ù„Ø§Ù„ Ø³Ø§Ø¹Ø©. ØªØ¬Ø§Ù‡Ù„ Ø§Ù„Ø±Ø³Ø§Ù„Ø© Ø¥Ù† Ù„Ù… ØªØ·Ù„Ø¨ Ø°Ù„Ùƒ.',
+        html: brandedEmailHtml(
+            'Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±',
+            `<p>Ù…Ø±Ø­Ø¨Ù‹Ø§ ${escapeHtml(user.fullName)}ØŒ</p><p>ÙˆØµÙ„Ù†Ø§ Ø·Ù„Ø¨ Ù„Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø­Ø³Ø§Ø¨Ùƒ.</p><p>ØªÙ†ØªÙ‡ÙŠ ØµÙ„Ø§Ø­ÙŠØ© Ø§Ù„Ø±Ø§Ø¨Ø· Ø®Ù„Ø§Ù„ Ø³Ø§Ø¹Ø©. ØªØ¬Ø§Ù‡Ù„ Ø§Ù„Ø±Ø³Ø§Ù„Ø© Ø¥Ù† Ù„Ù… ØªØ·Ù„Ø¨ Ø°Ù„Ùƒ.</p>`,
+            'ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø¬Ø¯ÙŠØ¯Ø©',
+            link
+        )
+    });
+}
+
+async function labelAttachment(providerLabelUrl, orderId) {
+    if (!providerLabelUrl) {
+        return null;
+    }
+
+    const response = await fetch(providerLabelUrl);
+
+    if (!response.ok) {
+        throw new Error('LABEL_DOWNLOAD_ERROR');
+    }
+
+    const content = Buffer.from(await response.arrayBuffer());
+
+    if (content.length > MAX_LABEL_BYTES) {
+        throw new Error('LABEL_TOO_LARGE');
+    }
+
+    return {
+        filename: `${orderId}.pdf`,
+        content,
+        contentType:
+            response.headers.get('content-type') ||
+            'application/pdf'
+    };
+}
+
+async function sendShipmentCreatedEmail({
+    user,
+    carrierName,
+    orderId,
+    trackingNumber,
+    finalPrice,
+    attachment
+}) {
+    const attachmentText = attachment
+        ? 'Ø³ØªØ¬Ø¯ Ø¨ÙˆÙ„ÙŠØµØ© Ø§Ù„Ø´Ø­Ù† PDF Ù…Ø±ÙÙ‚Ø© Ù…Ø¹ Ù‡Ø°Ù‡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©.'
+        : 'Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ© Ù‚ÙŠØ¯ Ø§Ù„ØªØ¬Ù‡ÙŠØ² ÙˆÙŠÙ…ÙƒÙ† ÙØªØ­Ù‡Ø§ Ù…Ù† Ù„ÙˆØ­Ø© Ø­Ø³Ø§Ø¨Ùƒ Ø¹Ù†Ø¯ Ø¬Ø§Ù‡Ø²ÙŠØªÙ‡Ø§.';
+
+    return sendBrandedEmail({
+        to: user.email,
+        subject: `Ø¨ÙˆÙ„ÙŠØµØ© Ø´Ø­Ù†ØªÙƒ ${orderId}`,
+        text:
+            `Ù…Ø±Ø­Ø¨Ù‹Ø§ ${user.fullName}ØŒ\n\n` +
+            'ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø´Ø­Ù†ØªÙƒ Ø¨Ù†Ø¬Ø§Ø­ Ø¹Ø¨Ø± SUMSN.\n' +
+            `Ø´Ø±ÙƒØ© Ø§Ù„Ø´Ø­Ù†: ${carrierName}\n` +
+            `Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨: ${orderId}\n` +
+            `Ø±Ù‚Ù… Ø§Ù„ØªØªØ¨Ø¹: ${trackingNumber || 'Ø³ÙŠØªÙ… ØªÙˆÙÙŠØ±Ù‡ Ù‚Ø±ÙŠØ¨Ù‹Ø§'}\n` +
+            `Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ: ${finalPrice.toFixed(2)} Ø±ÙŠØ§Ù„\n\n` +
+            attachmentText,
+        html: brandedEmailHtml(
+            'ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø´Ø­Ù†ØªÙƒ Ø¨Ù†Ø¬Ø§Ø­',
+            `<p>Ù…Ø±Ø­Ø¨Ù‹Ø§ ${escapeHtml(user.fullName)}ØŒ</p><p>ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø´Ø­Ù†ØªÙƒ Ø¨Ù†Ø¬Ø§Ø­ Ø¹Ø¨Ø± SUMSN.</p><table style="width:100%;border-collapse:collapse;margin:18px 0"><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">Ø´Ø±ÙƒØ© Ø§Ù„Ø´Ø­Ù†</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(carrierName)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">Ø±Ù‚Ù… Ø§Ù„Ø·Ù„Ø¨</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(orderId)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">Ø±Ù‚Ù… Ø§Ù„ØªØªØ¨Ø¹</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(trackingNumber || 'Ø³ÙŠØªÙ… ØªÙˆÙÙŠØ±Ù‡ Ù‚Ø±ÙŠØ¨Ù‹Ø§')}</td></tr><tr><td style="padding:8px">Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ</td><td style="padding:8px;font-weight:700">${escapeHtml(finalPrice.toFixed(2))} Ø±ÙŠØ§Ù„</td></tr></table><p>${escapeHtml(attachmentText)}</p>`,
+            '',
+            ''
+        ),
+        attachments: attachment ? [attachment] : []
+    });
+}
+
+const authAttempts = new Map();
+
+function authRateLimited(req, action, maximum, windowMs) {
+    const forwarded = String(req.headers['x-forwarded-for'] || '')
+        .split(',')[0]
+        .trim();
+    const address =
+        forwarded ||
+        req.socket?.remoteAddress ||
+        'unknown';
+    const key = `${action}:${address}`;
+    const now = Date.now();
+    const current = authAttempts.get(key);
+
+    if (!current || current.resetAt <= now) {
+        authAttempts.set(key, {
+            count: 1,
+            resetAt: now + windowMs
+        });
+        return false;
+    }
+
+    current.count += 1;
+
+    return current.count > maximum;
+}
+
+async function initializePlatformStats() {
+    const exists = await PlatformStat.exists({
+        _id: 'global'
+    });
+
+    if (exists) {
+        return;
+    }
+
+    const [totalOperations, priceStats] = await Promise.all([
+        SearchLog.countDocuments(),
+        SearchLog.aggregate([
+            {
+                $unwind: '$prices'
+            },
+            {
+                $group: {
+                    _id: null,
+                    priceSum: {
+                        $sum: '$prices.price'
+                    },
+                    priceCount: {
+                        $sum: 1
+                    },
+                    maxCost: {
+                        $max: '$prices.price'
+                    }
+                }
+            }
+        ])
+    ]);
+    const current = priceStats[0] || {};
+
+    await PlatformStat.updateOne(
+        {
+            _id: 'global'
+        },
+        {
+            $setOnInsert: {
+                totalOperations,
+                priceSum: number(current.priceSum),
+                priceCount: number(current.priceCount),
+                maxCost: number(current.maxCost),
+                updatedAt: new Date()
+            }
+        },
+        {
+            upsert: true
+        }
+    );
+}
+
+async function recordSearchStatistics(rates) {
+    await initializePlatformStats();
+
+    const priceSum = rates.reduce(
+        (sum, rate) => sum + number(rate.price),
+        0
+    );
+    const maxCost = rates.reduce(
+        (highest, rate) =>
+            Math.max(highest, number(rate.price)),
+        0
+    );
+
+    await PlatformStat.updateOne(
+        {
+            _id: 'global'
+        },
+        {
+            $inc: {
+                totalOperations: 1,
+                priceSum,
+                priceCount: rates.length
+            },
+            $max: {
+                maxCost
+            },
+            $set: {
+                updatedAt: new Date()
+            }
+        }
+    );
+}
+
+let lastStorageCheckAt = 0;
+
+async function maybeAlertDatabaseStorage() {
+    const now = Date.now();
+
+    if (
+        now - lastStorageCheckAt <
+        6 * 60 * 60 * 1000
+    ) {
+        return;
+    }
+
+    lastStorageCheckAt = now;
+
+    try {
+        const stats =
+            await mongoose.connection.db.command({
+                dbStats: 1
+            });
+        const usedBytes =
+            number(stats.dataSize) +
+            number(stats.indexSize);
+        const usedPercent =
+            MONGO_STORAGE_LIMIT_BYTES > 0
+                ? (usedBytes / MONGO_STORAGE_LIMIT_BYTES) * 100
+                : 0;
+
+        if (usedPercent < 70) {
+            return;
+        }
+
+        console.warn(
+            `Ø§Ø³ØªØ®Ø¯Ø§Ù… MongoDB ÙˆØµÙ„ Ø¥Ù„Ù‰ ${usedPercent.toFixed(1)}%`
+        );
+
+        const platform =
+            await PlatformStat.findById('global');
+        const lastAlert =
+            platform?.lastStorageAlertAt
+                ? new Date(platform.lastStorageAlertAt).getTime()
+                : 0;
+
+        if (
+            !emailServiceConfigured() ||
+            now - lastAlert < 24 * 60 * 60 * 1000
+        ) {
+            return;
+        }
+
+        await sendBrandedEmail({
+            to: SUPPORT_EMAIL,
+            subject: 'ØªÙ†Ø¨ÙŠÙ‡ Ù…Ø³Ø§Ø­Ø© Ù‚Ø§Ø¹Ø¯Ø© Ø¨ÙŠØ§Ù†Ø§Øª SUMSN',
+            text:
+                `ÙˆØµÙ„ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¥Ù„Ù‰ ${usedPercent.toFixed(1)}%. Ø±Ø§Ø¬Ø¹ MongoDB Atlas Ù‚Ø¨Ù„ Ø¨Ù„ÙˆØº Ø§Ù„Ø­Ø¯ Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠ.`,
+            html: brandedEmailHtml(
+                'ØªÙ†Ø¨ÙŠÙ‡ Ù…Ø³Ø§Ø­Ø© Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª',
+                `<p>ÙˆØµÙ„ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ù‚Ø§Ø¹Ø¯Ø© Ø¨ÙŠØ§Ù†Ø§Øª SUMSN Ø¥Ù„Ù‰ <strong>${escapeHtml(usedPercent.toFixed(1))}%</strong>.</p><p>Ø±Ø§Ø¬Ø¹ MongoDB Atlas ÙˆÙ†Ø¸Ù‘Ù Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù‚Ø¯ÙŠÙ…Ø© Ø£Ùˆ Ù‚Ù… Ø¨Ø§Ù„ØªØ±Ù‚ÙŠØ© Ù‚Ø¨Ù„ Ø¨Ù„ÙˆØº Ø§Ù„Ø­Ø¯ Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠ.</p>`,
+                '',
+                ''
+            )
+        });
+
+        await PlatformStat.updateOne(
+            {
+                _id: 'global'
+            },
+            {
+                $set: {
+                    lastStorageAlertAt: new Date()
+                }
+            },
+            {
+                upsert: true
+            }
+        );
+    } catch (error) {
+        console.warn(
+            'ØªØ¹Ø°Ø± ÙØ­Øµ Ù…Ø³Ø§Ø­Ø© MongoDB:',
+            error.message
+        );
+    }
+}
+
+function normalizeCarrierCode(value) {
+    if (!value) {
+        return '';
+    }
+
+    const normalized = String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    if (normalized.includes('smsa')) return 'SMSA';
+    if (normalized.includes('aramex')) return 'Aramex';
+    if (normalized.includes('redbox')) return 'RedBox';
+    if (normalized.includes('spl') || normalized.includes('saudipost')) return 'SPL';
+    if (normalized.includes('dhl')) return 'DHL';
+    if (normalized.includes('naqel')) return 'Ù†Ø§Ù‚Ù„';
+    if (normalized.includes('imile')) return 'iMile';
+    if (normalized.includes('jt') || normalized.includes('j&t')) return 'J&T Express';
+    if (normalized.includes('aymakan')) return 'Aymakan';
+    if (normalized.includes('ups')) return 'UPS';
+
+    return '';
+}
+
+function looksTechnicalName(value) {
+    if (!value) {
+        return true;
+    }
+
+    const text = String(value).trim();
+
+    return (
+        /[A-Z].*[A-Z]/.test(text) ||
+        /v\d+/i.test(text) ||
+        /\d/.test(text) ||
+        text.length > 45
+    );
+}
+
+function getCarrierDisplayName(company) {
+    const optionName = cleanPublicText(company?.deliveryOptionName);
+    const optionMapped = normalizeCarrierCode(optionName);
+
+    if (optionMapped) {
+        return optionMapped;
+    }
+
+    const companyName = cleanPublicText(company?.deliveryCompanyName);
+    const companyMapped = normalizeCarrierCode(companyName);
+
+    if (companyMapped) {
+        return companyMapped;
+    }
+
+    if (optionName && !looksTechnicalName(optionName)) {
+        return optionName;
+    }
+
+    if (companyName && !looksTechnicalName(companyName)) {
+        return companyName;
+    }
+
+    return 'Ø´Ø±ÙƒØ© Ø´Ø­Ù†';
+}
+
+function getDeliveryServiceLabel(company) {
+    const pickingType = String(
+        company?.pickingType ||
+        company?.pickupType ||
+        company?.collectionType ||
+        ''
+    )
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    const deliveryType = String(
+        company?.deliveryType ||
+        company?.destinationDeliveryType ||
+        company?.dropOffType ||
+        ''
+    )
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    const descriptiveText = [
+        company?.serviceName,
+        company?.shippingMethod,
+        company?.deliveryOptionName
+    ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
+
+    const serviceDetails = `${pickingType} ${deliveryType} ${descriptiveText}`;
+    const destinationHasChoice =
+        deliveryType.includes('tocustomerdoorsteporpickupbycustomer');
+    const originFromDoor =
+        pickingType.includes('pickupbydc') ||
+        /doortodoor|doortobranch/.test(serviceDetails);
+    const originAtBranch =
+        pickingType.includes('branchdropoff') ||
+        /branchtodoor|branchtobranch/.test(serviceDetails);
+    const destinationAtDoor =
+        !destinationHasChoice &&
+        (
+            deliveryType.includes('tocustomerdoorstep') ||
+            /doortodoor|branchtodoor/.test(serviceDetails)
+        );
+    const destinationAtBranch =
+        !destinationHasChoice &&
+        (
+            deliveryType.includes('pickupbycustomer') ||
+            /doortobranch|branchtobranch/.test(serviceDetails)
+        );
+
+    if (destinationHasChoice) {
+        if (originFromDoor) {
+            return 'Ø§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„Ø¨Ø§Ø¨ØŒ ÙˆØ§Ù„ØªØ³Ù„ÙŠÙ… Ù„Ù„Ø¨Ø§Ø¨ Ø£Ùˆ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„ÙØ±Ø¹';
+        }
+
+        if (originAtBranch) {
+            return 'ØªØ³Ù„ÙŠÙ… Ø§Ù„Ø´Ø­Ù†Ø© Ù„Ù„ÙØ±Ø¹ØŒ ÙˆØ§Ù„ØªØ³Ù„ÙŠÙ… Ù„Ù„Ø¨Ø§Ø¨ Ø£Ùˆ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„ÙØ±Ø¹';
+        }
+
+        return 'Ø§Ù„ØªØ³Ù„ÙŠÙ… Ù„Ù„Ø¨Ø§Ø¨ Ø£Ùˆ Ø§Ù„Ø§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„ÙØ±Ø¹';
+    }
+
+    if (originFromDoor && destinationAtDoor) {
+        return 'Ø§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„Ø¨Ø§Ø¨ ÙˆØªØ³Ù„ÙŠÙ… Ù„Ø¨Ø§Ø¨ Ø§Ù„Ù…Ø³ØªÙ„Ù…';
+    }
+
+    if (originFromDoor && destinationAtBranch) {
+        return 'Ø§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„Ø¨Ø§Ø¨ ÙˆØ§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ù…Ø³ØªÙ„Ù… Ù…Ù† Ø§Ù„ÙØ±Ø¹';
+    }
+
+    if (originAtBranch && destinationAtDoor) {
+        return 'ØªØ³Ù„ÙŠÙ… Ø§Ù„Ø´Ø­Ù†Ø© Ù„Ù„ÙØ±Ø¹ ÙˆØªÙˆØµÙŠÙ„Ù‡Ø§ Ù„Ø¨Ø§Ø¨ Ø§Ù„Ù…Ø³ØªÙ„Ù…';
+    }
+
+    if (originAtBranch && destinationAtBranch) {
+        return 'ØªØ³Ù„ÙŠÙ… ÙˆØ§Ø³ØªÙ„Ø§Ù… Ù…Ù† Ø§Ù„ÙØ±Ø¹';
+    }
+
+    if (originFromDoor) {
+        return 'Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø´Ø­Ù†Ø© Ù…Ù† Ø¨Ø§Ø¨ Ø§Ù„Ù…Ø±Ø³Ù„';
+    }
+
+    if (originAtBranch) {
+        return 'ØªØ³Ù„ÙŠÙ… Ø§Ù„Ø´Ø­Ù†Ø© Ù„ÙØ±Ø¹ Ø§Ù„Ø´Ø±ÙƒØ©';
+    }
+
+    if (destinationAtDoor) {
+        return 'ØªÙˆØµÙŠÙ„ Ø§Ù„Ø´Ø­Ù†Ø© Ù„Ø¨Ø§Ø¨ Ø§Ù„Ù…Ø³ØªÙ„Ù…';
+    }
+
+    if (destinationAtBranch) {
+        return 'Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ù…Ø³ØªÙ„Ù… Ù…Ù† Ø§Ù„ÙØ±Ø¹';
+    }
+
+    return 'ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø®Ø¯Ù…Ø© Ø­Ø³Ø¨ Ø´Ø±ÙƒØ© Ø§Ù„Ø´Ø­Ù†';
+}
+
+/*
+|--------------------------------------------------------------------------
+| Access Token
+|--------------------------------------------------------------------------
+*/
+
+async function getShippingAccessToken() {
+    if (
+        shippingAccessToken &&
+        Date.now() < shippingAccessTokenExpiresAt
+    ) {
+        return shippingAccessToken;
+    }
+
+    if (!SHIPPING_REFRESH_TOKEN) {
+        throw new Error('SHIPPING_CONFIGURATION_ERROR');
+    }
+
+    const response = await fetch(
+        `${SHIPPING_BASE_URL}/refreshToken`,
+        {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                refresh_token: SHIPPING_REFRESH_TOKEN
+            })
+        }
+    );
+
+    const raw = await response.text();
+
+    let data;
+    try {
+        data = raw ? JSON.parse(raw) : {};
+    } catch {
+        data = {};
+    }
+
+    const token =
+        data.access_token ||
+        data.accessToken ||
+        data.data?.access_token ||
+        data.data?.accessToken;
+
+    if (!response.ok || !token) {
+        console.error('ØªØ¹Ø°Ø± Ø¥Ù†Ø´Ø§Ø¡ Access Token Ù„Ù…Ø²ÙˆØ¯ Ø§Ù„Ø´Ø­Ù†:', response.status);
+        const providerError = new Error('SHIPPING_PROVIDER_ERROR');
+        providerError.providerStatus = response.status;
+        providerError.providerMessage =
+            data.message ||
+            data.error ||
+            data.errorMsg ||
+            data.otoErrorMessage ||
+            raw?.slice(0, 500) ||
+            '';
+
+        throw providerError;
+    }
+
+    shippingAccessToken = token;
+    shippingAccessTokenExpiresAt = Date.now() + (55 * 60 * 1000);
+
+    return shippingAccessToken;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Ø·Ù„Ø¨ Ø¯Ø§Ø®Ù„ÙŠ Ù„Ù…Ø²ÙˆØ¯ Ø§Ù„Ø´Ø­Ù†
+|--------------------------------------------------------------------------
+*/
+
+async function shippingRequest(path, body, method = 'POST') {
+    const accessToken = await getShippingAccessToken();
+
+    const response = await fetch(
+        `${SHIPPING_BASE_URL}/${path}`,
+        {
+            method,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body:
+                method === 'GET'
+                    ? undefined
+                    : JSON.stringify(body)
+        }
+    );
+
+    const raw = await response.text();
+
+    let data;
+    try {
+        data = raw ? JSON.parse(raw) : {};
+    } catch {
+        data = {};
+    }
+
+    if (!response.ok || data.success === false) {
+        console.error('Ø®Ø·Ø£ Ø¯Ø§Ø®Ù„ÙŠ Ù…Ù† Ù…Ø²ÙˆØ¯ Ø§Ù„Ø´Ø­Ù†:', {
+            status: response.status,
+            message:
+                data.message ||
+                data.error ||
+                data.errorMsg ||
+                raw?.slice(0, 500)
+        });
+
+        throw new Error('SHIPPING_PROVIDER_ERROR');
+    }
+
+    return data;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Ø·Ù„Ø¨Ø§Øª Paylink - Ø®Ø§Ø¯Ù… Ø¥Ù„Ù‰ Ø®Ø§Ø¯Ù… ÙÙ‚Ø·
+|--------------------------------------------------------------------------
+*/
+
+async function getPaylinkAccessToken(forceRefresh = false) {
+    if (
+        !forceRefresh &&
+        paylinkAccessToken &&
+        Date.now() < paylinkAccessTokenExpiresAt
+    ) {
+        return paylinkAccessToken;
+    }
+
+    if (!paymentGatewayConfigured()) {
+        throw new Error('PAYMENT_CONFIGURATION_ERROR');
+    }
+
+    const response = await fetch(`${PAYLINK_BASE_URL}/api/auth`, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            apiId: PAYLINK_API_ID,
+            secretKey: PAYLINK_SECRET_KEY,
+            persistToken: false
+        })
+    });
+    const raw = await response.text();
+    let data = {};
+
+    try {
+        data = raw ? JSON.parse(raw) : {};
+    } catch {
+        data = {};
+    }
+
+    if (!response.ok || !data.id_token) {
+        const error = new Error('PAYMENT_PROVIDER_ERROR');
+        error.providerStatus = response.status;
+        error.providerMessage =
+            data.detail ||
+            data.message ||
+            data.title ||
+            raw.slice(0, 500);
+        throw error;
+    }
+
+    paylinkAccessToken = data.id_token;
+    paylinkAccessTokenExpiresAt = Date.now() + (25 * 60 * 1000);
+
+    return paylinkAccessToken;
+}
+
+async function paylinkRequest(path, { method = 'GET', body } = {}) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        const token = await getPaylinkAccessToken(attempt > 0);
+        const response = await fetch(
+            `${PAYLINK_BASE_URL}/api/${path.replace(/^\//, '')}`,
+            {
+                method,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body:
+                    method === 'GET'
+                        ? undefined
+                        : JSON.stringify(body)
+            }
+        );
+        const raw = await response.text();
+        let data = {};
+
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch {
+            data = {};
+        }
+
+        if (response.status === 401 && attempt === 0) {
+            paylinkAccessToken = '';
+            paylinkAccessTokenExpiresAt = 0;
+            continue;
+        }
+
+        if (!response.ok || data.success === false) {
+            const error = new Error('PAYMENT_PROVIDER_ERROR');
+            error.providerStatus = response.status;
+            error.providerMessage =
+                data.detail ||
+                data.message ||
+                data.title ||
+                raw.slice(0, 500);
+            throw error;
+        }
+
+        return data;
+    }
+
+    throw new Error('PAYMENT_PROVIDER_ERROR');
+}
+
+function paylinkWebhookAuthorized(req) {
+    if (!PAYLINK_WEBHOOK_SECRET) {
+        return true;
+    }
+
+    const expected = Buffer.from(
+        `Bearer ${PAYLINK_WEBHOOK_SECRET}`
+    );
+    const received = Buffer.from(
+        String(req.headers.authorization || '')
+    );
+
+    return (
+        expected.length === received.length &&
+        crypto.timingSafeEqual(expected, received)
+    );
+}
+
+function getDeliveryCompanies(data) {
+    const candidates = [
+        data?.deliveryCompany,
+        data?.deliveryCompanies,
+        data?.data?.deliveryCompany,
+        data?.data?.deliveryCompanies,
+        data?.rates,
+        data?.results,
+        data?.data
+    ];
+
+    return candidates.find(Array.isArray) || [];
+}
+
+function quotePayload(
+    originCity,
+    destinationCity,
+    weight,
+    boxLength,
+    boxWidth,
+    boxHeight
+) {
+    return {
+        originCity,
+        destinationCity,
+        originCountry: 'SA',
+        destinationCountry: 'SA',
+        weight: number(weight),
+        length: number(boxLength),
+        width: number(boxWidth),
+        height: number(boxHeight),
+        packageCount: 1,
+        currency: 'SAR'
+    };
+}
+
+function firstValue(source, names) {
+    for (const name of names) {
+        const value = source?.[name];
+
+        if (value !== undefined && value !== null && String(value).trim()) {
+            return value;
+        }
+    }
+
+    return '';
+}
+
+function normalizeNationalAddress(result, shortCode) {
+    const candidates = [
+        result?.data?.addresses?.[0],
+        result?.addresses?.[0],
+        result?.data?.address,
+        result?.address,
+        result?.data,
+        result
+    ];
+    const source = candidates.find(
+        (candidate) =>
+            candidate &&
+            typeof candidate === 'object' &&
+            !Array.isArray(candidate)
+    ) || {};
+
+    const address = {
+        shortCode,
+        buildingNo: String(firstValue(source, [
+            'buildingNo',
+            'buildingNumber',
+            'BuildingNumber'
+        ])).trim(),
+        secondaryNumber: String(firstValue(source, [
+            'secondaryNumber',
+            'additionalNumber',
+            'SecondaryNumber'
+        ])).trim(),
+        street: String(firstValue(source, [
+            'street',
+            'streetName',
+            'StreetName'
+        ])).trim(),
+        district: String(firstValue(source, [
+            'district',
+            'districtName',
+            'District'
+        ])).trim(),
+        city: String(firstValue(source, [
+            'city',
+            'cityName',
+            'CityName'
+        ])).trim(),
+        state: String(firstValue(source, [
+            'state',
+            'region',
+            'regionName'
+        ])).trim(),
+        postcode: String(firstValue(source, [
+            'postcode',
+            'postalCode',
+            'zipCode',
+            'ZipCode'
+        ])).trim(),
+        lat: firstValue(source, ['lat', 'latitude', 'Latitude']),
+        lon: firstValue(source, ['lon', 'lng', 'longitude', 'Longitude'])
+    };
+
+    address.addressLine = [
+        address.buildingNo,
+        address.street,
+        address.district,
+        address.city,
+        address.postcode,
+        address.secondaryNumber
+    ].filter(Boolean).join(', ');
+
+    if (
+        !address.addressLine ||
+        !address.buildingNo ||
+        !address.street ||
+        !address.district ||
+        !address.city ||
+        !address.postcode
+    ) {
+        throw new Error('INVALID_NATIONAL_ADDRESS');
+    }
+
+    return address;
+}
+
+async function getNationalAddress(shortCode) {
+    try {
+        const result = await shippingRequest(
+            `getNationalAddressFromShortCode?shortCode=${encodeURIComponent(shortCode)}`,
+            undefined,
+            'GET'
+        );
+
+        return normalizeNationalAddress(result, shortCode);
+    } catch (error) {
+        if (error.message === 'INVALID_NATIONAL_ADDRESS') {
+            throw error;
+        }
+
+        const result = await shippingRequest(
+            'getNationalAddressFromShortCode',
+            { shortCode }
+        );
+
+        return normalizeNationalAddress(result, shortCode);
+    }
+}
+
+function wait(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function createShipmentAfterAssignment(orderId, deliveryOptionId) {
+    let lastError;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0) {
+            await wait(1500 * attempt);
+        }
+
+        try {
+            return await shippingRequest(
+                'createShipment',
+                {
+                    orderId,
+                    deliveryOptionId: number(deliveryOptionId)
+                }
+            );
+        } catch (error) {
+            lastError = error;
+            const message = String(error.providerMessage || '').toLowerCase();
+
+            if (!message.includes('not assigned yet')) {
+                throw error;
+            }
+        }
+    }
+
+    throw lastError;
+}
+
+async function getShipmentLabel(orderId) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0) {
+            await wait(1200 * attempt);
+        }
+
+        try {
+            const label = await shippingRequest(
+                `print/${encodeURIComponent(orderId)}`,
+                undefined,
+                'GET'
+            );
+            const labelUrl =
+                label.printAWBURL ||
+                label.url ||
+                label.data?.printAWBURL ||
+                label.data?.url ||
+                '';
+
+            if (labelUrl) {
+                return labelUrl;
+            }
+        } catch (error) {
+            if (attempt === 4) {
+                console.warn('ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø±Ø§Ø¨Ø· Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ©:', error.message);
+            }
+        }
+    }
+
+    return '';
+}
+
+app.get('/api/shipment-label', async (req, res) => {
+    const orderId = String(req.query.orderId || '');
+
+    if (!/^SUMSN-[A-F0-9]{16}$/.test(orderId)) {
+        return res.status(403).send('Ø§Ù„Ø±Ø§Ø¨Ø· ØºÙŠØ± ØµØ§Ù„Ø­.');
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).send('Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„ÙØªØ­ Ø¨ÙˆÙ„ÙŠØµØªÙƒ.');
+        }
+
+        const shipment = await Shipment.findOne({
+            otoOrderId: orderId,
+            userId: user._id
+        });
+
+        if (!shipment) {
+            return res.status(404).send('Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ©.');
+        }
+
+        let storedLabel = null;
+
+        if (shipment.labelObjectKey) {
+            try {
+                storedLabel = await readLabelFromR2(
+                    shipment.labelObjectKey
+                );
+            } catch (storageError) {
+                console.warn(
+                    'ØªØ¹Ø°Ø± Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ© Ù…Ù† R2ØŒ Ø³ØªØªÙ… Ù…Ø­Ø§ÙˆÙ„Ø© Ø§Ø³ØªØ¹Ø§Ø¯ØªÙ‡Ø§:',
+                    storageError.message
+                );
+            }
+        }
+
+        if (!storedLabel) {
+            const providerLabelUrl =
+                shipment.labelUrl ||
+                await getShipmentLabel(orderId);
+
+            if (!providerLabelUrl) {
+                return res.status(404).send('Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ© ØºÙŠØ± Ø¬Ø§Ù‡Ø²Ø© Ø¨Ø¹Ø¯.');
+            }
+
+            const attachment = await labelAttachment(
+                providerLabelUrl,
+                orderId
+            );
+
+            storedLabel = {
+                content: attachment.content,
+                contentType: attachment.contentType
+            };
+
+            if (r2StorageConfigured()) {
+                const objectKey =
+                    shipment.labelObjectKey ||
+                    shipmentLabelObjectKey(user._id, orderId);
+
+                try {
+                    await saveLabelToR2({
+                        objectKey,
+                        content: storedLabel.content,
+                        contentType: storedLabel.contentType
+                    });
+
+                    shipment.labelObjectKey = objectKey;
+                    shipment.labelContentType = storedLabel.contentType;
+                    shipment.labelSize = storedLabel.content.length;
+                    shipment.labelStoredAt = new Date();
+                    shipment.labelUrl = providerLabelUrl;
+                    await shipment.save();
+                } catch (storageError) {
+                    console.error(
+                        'ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ© ÙÙŠ R2:',
+                        storageError.message
+                    );
+                }
+            }
+        }
+
+        res.set({
+            'Content-Type': storedLabel.contentType,
+            'Content-Disposition': `inline; filename="${orderId}.pdf"`,
+            'Cache-Control': 'private, no-store',
+            'X-Content-Type-Options': 'nosniff'
+        });
+
+        return res.send(storedLabel.content);
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ©:', error);
+        return res.status(502).send('ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ© Ø­Ø§Ù„ÙŠÙ‹Ø§.');
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„ØªÙˆØ§ØµÙ„
+|--------------------------------------------------------------------------
+*/
+
+app.post('/api/contact', async (req, res) => {
+    if (!emailServiceConfigured()) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ø®Ø¯Ù…Ø© Ø§Ù„ØªÙˆØ§ØµÙ„ ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ù…Ø¤Ù‚ØªÙ‹Ø§.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'contact',
+            5,
+            15 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ø¦Ù„ ÙƒØ«ÙŠØ±Ø©. Ø­Ø§ÙˆÙ„ Ø¨Ø¹Ø¯ 15 Ø¯Ù‚ÙŠÙ‚Ø©.'
+        });
+    }
+
+    const fullName = String(req.body.fullName || '').trim();
+    const email = normalizeEmail(req.body.email);
+    const message = String(req.body.message || '').trim();
+    const website = String(req.body.website || '').trim();
+
+    if (website) {
+        return res.json({
+            success: true,
+            message: 'ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„ØªÙƒ Ø¥Ù„Ù‰ Ø¯Ø¹Ù… SUMSN.'
+        });
+    }
+
+    if (
+        fullName.length < 2 ||
+        fullName.length > 80
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø§Ø³Ù…Ù‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§ Ù…Ù† Ø­Ø±ÙÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„.'
+        });
+    }
+
+    if (!validEmail(email)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ù‹Ø§ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠÙ‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§.'
+        });
+    }
+
+    if (
+        message.length < 5 ||
+        message.length > 2000
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„Ø© Ø¨ÙŠÙ† 5 Ùˆ2000 Ø­Ø±Ù.'
+        });
+    }
+
+    const messageCode =
+        crypto.randomBytes(3).toString('hex').toUpperCase();
+    const safeMessage = escapeHtml(message)
+        .replace(/\r?\n/g, '<br>');
+
+    try {
+        await sendBrandedEmail({
+            to: SUPPORT_EMAIL,
+            replyTo: email,
+            subject: `Ø±Ø³Ø§Ù„Ø© Ø¬Ø¯ÙŠØ¯Ø© Ø¹Ø¨Ø± SUMSN â€” ${messageCode}`,
+            text:
+                `Ø§Ù„Ø§Ø³Ù…: ${fullName}\n` +
+                `Ø§Ù„Ø¨Ø±ÙŠØ¯: ${email}\n\n` +
+                message,
+            html: brandedEmailHtml(
+                'Ø±Ø³Ø§Ù„Ø© Ø¬Ø¯ÙŠØ¯Ø© Ù…Ù† Ø§Ù„Ù…ÙˆÙ‚Ø¹',
+                `<p><strong>Ø§Ù„Ø§Ø³Ù…:</strong> ${escapeHtml(fullName)}</p><p><strong>Ø§Ù„Ø¨Ø±ÙŠØ¯:</strong> ${escapeHtml(email)}</p><p><strong>Ø§Ù„Ø±Ø³Ø§Ù„Ø©:</strong><br>${safeMessage}</p>`,
+                '',
+                ''
+            )
+        });
+
+        return res.json({
+            success: true,
+            message: 'ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„ØªÙƒ Ø¥Ù„Ù‰ Ø¯Ø¹Ù… SUMSN.'
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© Ø§Ù„ØªÙˆØ§ØµÙ„:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø±Ø³Ø§Ù„Ø© Ø­Ø§Ù„ÙŠÙ‹Ø§. Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰ Ø¨Ø¹Ø¯ Ù‚Ù„ÙŠÙ„.'
+        });
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡
+|--------------------------------------------------------------------------
+*/
+
+app.get('/api/auth/config', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
+    res.json({
+        success: true,
+        enabled: customerAccountsEnabled(),
+        emailReady: emailServiceConfigured(),
+        supportEmail: SUPPORT_EMAIL
+    });
+});
+
+app.get('/api/auth/me', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
+    if (!customerAccountsEnabled()) {
+        return res.json({
+            success: true,
+            user: null
+        });
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        return res.json({
+            success: true,
+            user: user ? publicUser(user) : null
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± Ù‚Ø±Ø§Ø¡Ø© Ø¬Ù„Ø³Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª ØºÙŠØ± Ù…ØªØ§Ø­ Ù…Ø¤Ù‚ØªÙ‹Ø§ Ø­ØªÙ‰ Ø§ÙƒØªÙ…Ø§Ù„ Ø¥Ø¹Ø¯Ø§Ø¯ Ø§Ù„Ø¨Ø±ÙŠØ¯.'
+        });
+    }
+
+    if (!emailServiceConfigured()) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ø®Ø¯Ù…Ø© Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„ØªØ­Ù‚Ù‚ ØºÙŠØ± Ù…Ù‡ÙŠØ£Ø© Ø¨Ø¹Ø¯.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'register',
+            8,
+            60 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'ØªÙ… ØªØ¬Ø§ÙˆØ² Ø¹Ø¯Ø¯ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø§Øª. Ø­Ø§ÙˆÙ„ Ø¨Ø¹Ø¯ Ø³Ø§Ø¹Ø©.'
+        });
+    }
+
+    const fullName =
+        String(req.body.fullName || '').trim();
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || '');
+
+    if (fullName.length < 2 || fullName.length > 80) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø§Ø³Ù…Ù‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§ Ù…Ù† Ø­Ø±ÙÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„.'
+        });
+    }
+
+    if (!validEmail(email)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ù‹Ø§ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠÙ‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§.'
+        });
+    }
+
+    if (password.length < 8 || password.length > 128) {
+        return res.status(400).json({
+            success: false,
+            message: 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 8 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„.'
+        });
+    }
+
+    try {
+        await connectToDatabase();
+
+        const existing = await User.findOne({
+            email
+        }).select(
+            '+passwordSalt +passwordHash +verificationTokenHash +verificationTokenExpiresAt'
+        );
+
+        if (existing?.emailVerifiedAt) {
+            return res.status(409).json({
+                success: false,
+                message: 'Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ù…Ø³Ø¬Ù„ Ø¨Ø§Ù„ÙØ¹Ù„. Ø§Ø³ØªØ®Ø¯Ù… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„.'
+            });
+        }
+
+        const passwordRecord =
+            await createPasswordRecord(password);
+        const verification = createActionToken();
+        const verificationExpiresAt =
+            new Date(Date.now() + 24 * 60 * 60 * 1000);
+        let user;
+
+        if (existing) {
+            existing.fullName = fullName;
+            existing.passwordSalt =
+                passwordRecord.salt;
+            existing.passwordHash =
+                passwordRecord.hash;
+            existing.verificationTokenHash =
+                verification.hash;
+            existing.verificationTokenExpiresAt =
+                verificationExpiresAt;
+            user = await existing.save();
+        } else {
+            user = await User.create({
+                fullName,
+                email,
+                passwordSalt:
+                    passwordRecord.salt,
+                passwordHash:
+                    passwordRecord.hash,
+                verificationTokenHash:
+                    verification.hash,
+                verificationTokenExpiresAt:
+                    verificationExpiresAt
+            });
+        }
+
+        await sendVerificationEmail(
+            user,
+            verification.token
+        );
+        void maybeAlertDatabaseStorage();
+
+        return res.status(201).json({
+            success: true,
+            message: 'ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨. Ø§ÙØªØ­ Ø¨Ø±ÙŠØ¯Ùƒ ÙˆØ§Ø¶ØºØ· Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ­Ù‚Ù‚.'
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¹Ù…ÙŠÙ„:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© Ø§Ù„ØªØ­Ù‚Ù‚ Ø­Ø§Ù„ÙŠÙ‹Ø§. Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰ Ø¨Ø¹Ø¯ Ù‚Ù„ÙŠÙ„.'
+        });
+    }
+});
+
+app.get('/api/auth/verify-email', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.redirect(
+            303,
+            '/?account=unavailable'
+        );
+    }
+
+    const token = String(req.query.token || '');
+
+    if (!token) {
+        return res.redirect(
+            303,
+            '/?account=invalid'
+        );
+    }
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            verificationTokenHash:
+                actionTokenHash(token),
+            verificationTokenExpiresAt: {
+                $gt: new Date()
+            }
+        }).select(
+            '+verificationTokenHash +verificationTokenExpiresAt'
+        );
+
+        if (!user) {
+            return res.redirect(
+                303,
+                '/?account=invalid'
+            );
+        }
+
+        user.emailVerifiedAt = new Date();
+        user.verificationTokenHash = '';
+        user.verificationTokenExpiresAt = null;
+        await user.save();
+
+        setSessionCookie(res, user);
+
+        return res.redirect(
+            303,
+            '/?account=verified'
+        );
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± ØªØ£ÙƒÙŠØ¯ Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¹Ù…ÙŠÙ„:', error);
+
+        return res.redirect(
+            303,
+            '/?account=error'
+        );
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ ØºÙŠØ± Ù…ØªØ§Ø­ Ù…Ø¤Ù‚ØªÙ‹Ø§.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'login',
+            12,
+            15 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'Ù…Ø­Ø§ÙˆÙ„Ø§Øª ÙƒØ«ÙŠØ±Ø©. Ø­Ø§ÙˆÙ„ Ø¨Ø¹Ø¯ 15 Ø¯Ù‚ÙŠÙ‚Ø©.'
+        });
+    }
+
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || '');
+
+    if (!validEmail(email) || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø§Ù„Ø¨Ø±ÙŠØ¯ ÙˆÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±.'
+        });
+    }
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            email
+        }).select('+passwordSalt +passwordHash');
+
+        if (
+            !user ||
+            !await passwordMatches(
+                password,
+                user.passwordSalt,
+                user.passwordHash
+            )
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©.'
+            });
+        }
+
+        if (!user.emailVerifiedAt) {
+            return res.status(403).json({
+                success: false,
+                message: 'Ø£ÙƒØ¯ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ Ø£ÙˆÙ„Ù‹Ø§ Ù…Ù† Ø§Ù„Ø±Ø³Ø§Ù„Ø© Ø§Ù„Ù…Ø±Ø³Ù„Ø© Ø¥Ù„ÙŠÙƒ.'
+            });
+        }
+
+        setSessionCookie(res, user);
+
+        return res.json({
+            success: true,
+            user: publicUser(user)
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± ØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„ Ø§Ù„Ø¹Ù…ÙŠÙ„:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    clearSessionCookie(res);
+
+    res.json({
+        success: true
+    });
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+    if (
+        !customerAccountsEnabled() ||
+        !emailServiceConfigured()
+    ) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ø§Ø³ØªØ¹Ø§Ø¯Ø© ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ù…Ø¤Ù‚ØªÙ‹Ø§.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'forgot',
+            6,
+            60 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'ØªÙ… ØªØ¬Ø§ÙˆØ² Ø¹Ø¯Ø¯ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø§Øª. Ø­Ø§ÙˆÙ„ Ø¨Ø¹Ø¯ Ø³Ø§Ø¹Ø©.'
+        });
+    }
+
+    const email = normalizeEmail(req.body.email);
+
+    if (!validEmail(email)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ù‹Ø§ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠÙ‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§.'
+        });
+    }
+
+    const genericResponse = {
+        success: true,
+        message: 'Ø¥Ø°Ø§ ÙƒØ§Ù† Ø§Ù„Ø¨Ø±ÙŠØ¯ Ù…Ø³Ø¬Ù„Ù‹Ø§ ÙØ³ØªØµÙ„Ùƒ Ø±Ø³Ø§Ù„Ø© Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø®Ù„Ø§Ù„ Ø¯Ù‚Ø§Ø¦Ù‚.'
+    };
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            email,
+            emailVerifiedAt: {
+                $ne: null
+            }
+        }).select(
+            '+resetTokenHash +resetTokenExpiresAt'
+        );
+
+        if (!user) {
+            return res.json(genericResponse);
+        }
+
+        const reset = createActionToken();
+        user.resetTokenHash = reset.hash;
+        user.resetTokenExpiresAt =
+            new Date(Date.now() + 60 * 60 * 1000);
+        await user.save();
+
+        await sendPasswordResetEmail(
+            user,
+            reset.token
+        );
+
+        return res.json(genericResponse);
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø§Ø³ØªØ¹Ø§Ø¯Ø© ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ù„Ø© Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ø§Ø³ØªØ¹Ø§Ø¯Ø© ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ù…Ø¤Ù‚ØªÙ‹Ø§.'
+        });
+    }
+
+    const token = String(req.body.token || '');
+    const password = String(req.body.password || '');
+
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø±Ø§Ø¨Ø· Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø© ØºÙŠØ± ØµØ§Ù„Ø­.'
+        });
+    }
+
+    if (password.length < 8 || password.length > 128) {
+        return res.status(400).json({
+            success: false,
+            message: 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù† ØªÙƒÙˆÙ† 8 Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„.'
+        });
+    }
+
+    try {
+        await connectToDatabase();
+
+        const user = await User.findOne({
+            resetTokenHash:
+                actionTokenHash(token),
+            resetTokenExpiresAt: {
+                $gt: new Date()
+            }
+        }).select(
+            '+passwordSalt +passwordHash +resetTokenHash +resetTokenExpiresAt'
+        );
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ø±Ø§Ø¨Ø· Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ù…Ù†ØªÙ‡ÙŠ Ø£Ùˆ ØºÙŠØ± ØµØ§Ù„Ø­.'
+            });
+        }
+
+        const passwordRecord =
+            await createPasswordRecord(password);
+        user.passwordSalt = passwordRecord.salt;
+        user.passwordHash = passwordRecord.hash;
+        user.resetTokenHash = '';
+        user.resetTokenExpiresAt = null;
+        user.sessionVersion =
+            number(user.sessionVersion) + 1;
+        await user.save();
+
+        setSessionCookie(res, user);
+
+        return res.json({
+            success: true,
+            user: publicUser(user),
+            message: 'ØªÙ… ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙˆØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„Ùƒ.'
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± ØªØºÙŠÙŠØ± ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+app.get('/api/account/shipments', async (req, res) => {
+    res.set('Cache-Control', 'private, no-store');
+
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ù„ÙˆØ­Ø© Ø§Ù„Ø­Ø³Ø§Ø¨ ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ù…Ø¤Ù‚ØªÙ‹Ø§.'
+        });
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ø¹Ø±Ø¶ Ø¨ÙˆØ§Ù„ØµÙƒ.'
+            });
+        }
+
+        const shipments = await Shipment.find({
+            userId: user._id
+        })
+            .sort({
+                createdAt: -1
+            })
+            .limit(100)
+            .lean();
+
+        return res.json({
+            success: true,
+            shipments: shipments.map((shipment) => ({
+                id: String(shipment._id),
+                orderId: shipment.otoOrderId || '',
+                carrier: shipment.carrier,
+                fromCity: shipment.fromCity,
+                toCity: shipment.toCity,
+                weight: shipment.weight,
+                price: shipment.price,
+                deliveryTime: shipment.deliveryTime,
+                trackingNumber:
+                    shipment.trackingNumber || '',
+                emailDeliveryStatus:
+                    shipment.emailDeliveryStatus || 'skipped',
+                createdAt: shipment.createdAt,
+                labelUrl: shipment.otoOrderId
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}`
+                    : ''
+            }))
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø¨ÙˆØ§Ù„Øµ Ø§Ù„Ø¹Ù…ÙŠÙ„:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙˆØ§Ù„Øµ Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø§Ù„Ø¹Ø¯Ø§Ø¯Ø§Øª
+|--------------------------------------------------------------------------
+*/
+
+app.get('/api/dashboard-stats', async (req, res) => {
+    try {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+
+        await connectToDatabase();
+        await initializePlatformStats();
+
+        const stats =
+            await PlatformStat.findById('global').lean();
+        const avgCost =
+            number(stats?.priceCount) > 0
+                ? roundMoney(
+                    number(stats.priceSum) /
+                    number(stats.priceCount)
+                )
+                : 0;
+        const maxCost =
+            roundMoney(stats?.maxCost || 0);
+
+        void maybeAlertDatabaseStorage();
+
+        res.json({
+            success: true,
+            totalOperations:
+                number(stats?.totalOperations),
+            avgCost,
+            maxCost
+        });
+    } catch (error) {
+        console.error('Ø®Ø·Ø£ ÙÙŠ Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª:', error);
+        res.status(500).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø§Ù„Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Ø§Ø³ØªØ¹Ù„Ø§Ù… Ø£Ø³Ø¹Ø§Ø± Ø§Ù„Ø´Ø­Ù†
+|--------------------------------------------------------------------------
+*/
+
+app.post('/api/shipping-rates', async (req, res) => {
+    const {
+        origin_city,
+        destination_city,
+        weight,
+        boxLength = 30,
+        boxWidth = 30,
+        boxHeight = 30
+    } = req.body;
+
+    if (!origin_city || !destination_city || number(weight) <= 0) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ù…Ø¯ÙŠÙ†ØªÙŠ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ ÙˆØ§Ù„ÙˆØµÙˆÙ„ ÙˆØ§Ù„ÙˆØ²Ù†.'
+        });
+    }
+
+    if (
+        number(boxLength) <= 0 ||
+        number(boxWidth) <= 0 ||
+        number(boxHeight) <= 0
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ø£Ø¯Ø®Ù„ Ø£Ø¨Ø¹Ø§Ø¯ Ø§Ù„Ø´Ø­Ù†Ø© Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­.'
+        });
+    }
+
+    try {
+        const providerResult = await shippingRequest(
+            'checkOTODeliveryFee',
+            quotePayload(
+                origin_city.trim(),
+                destination_city.trim(),
+                weight,
+                boxLength,
+                boxWidth,
+                boxHeight
+            )
+        );
+
+        const companies = getDeliveryCompanies(providerResult);
+
+        const rates = companies
+            .filter(
+                (company) =>
+                    company.deliveryOptionId &&
+                    Number.isFinite(number(company.price, NaN))
+            )
+            .map((company) => ({
+                carrier: getCarrierDisplayName(company),
+                serviceMode: getDeliveryServiceLabel(company),
+                price: customerPrice(company.price, weight),
+                deliveryTime: cleanPublicText(
+                    company.avgDeliveryTime ||
+                    company.estimatedDeliveryTime ||
+                    'Ø­Ø³Ø¨ Ø´Ø±ÙƒØ© Ø§Ù„Ø´Ø­Ù†'
+                ),
+                deliveryOptionId: String(company.deliveryOptionId)
+            }))
+            .sort((first, second) => first.price - second.price);
+
+        if (!rates.length) {
+            return res.status(422).json({
+                success: false,
+                message: 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø´Ø±ÙƒØ§Øª Ø´Ø­Ù† Ù…ØªØ§Ø­Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³Ø§Ø± Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+            });
+        }
+
+        try {
+            await connectToDatabase();
+
+            await recordSearchStatistics(rates);
+
+            await SearchLog.create({
+                fromCity: origin_city.trim(),
+                toCity: destination_city.trim(),
+                weight: number(weight),
+                boxLength: number(boxLength),
+                boxWidth: number(boxWidth),
+                boxHeight: number(boxHeight),
+                prices: rates.map((rate) => ({
+                    carrier: rate.carrier,
+                    price: rate.price,
+                    deliveryTime: rate.deliveryTime
+                }))
+            });
+
+            void maybeAlertDatabaseStorage();
+        } catch (saveError) {
+            console.error('ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø³Ø¬Ù„ Ø§Ù„Ø§Ø³ØªØ¹Ù„Ø§Ù…:', saveError);
+        }
+
+        res.json({
+            success: true,
+            rates
+        });
+    } catch (error) {
+        console.error('Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø¬Ù„Ø¨ Ø£Ø³Ø¹Ø§Ø± Ø§Ù„Ø´Ø­Ù†:', error.message);
+        res.status(502).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø£Ø³Ø¹Ø§Ø± Ø§Ù„Ø´Ø­Ù† Ø­Ø§Ù„ÙŠÙ‹Ø§. Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰ Ø¨Ø¹Ø¯ Ù‚Ù„ÙŠÙ„.'
+        });
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| Ø§Ù„Ø¯ÙØ¹ Ø«Ù… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø´Ø­Ù†Ø©
+|--------------------------------------------------------------------------
+*/
+
+function paymentRedirectUrl(state, orderNumber = '') {
+    const url = new URL('/index.html', PUBLIC_BASE_URL);
+    url.searchParams.set('payment', state);
+
+    if (orderNumber) {
+        url.searchParams.set('orderNumber', orderNumber);
+    }
+
+    return url.toString();
+}
+
+function paymentPublicState(payment, shipment = null) {
+    return {
+        success: true,
+        orderNumber: payment.orderNumber,
+        status: payment.status,
+        amount: payment.amount,
+        carrier: payment.carrier,
+        transactionNo: payment.transactionNo,
+        paymentMethod: payment.paymentMethod || '',
+        shipment: shipment
+            ? {
+                orderId: shipment.otoOrderId,
+                shipmentId: shipment.otoShipmentId,
+                trackingNumber: shipment.trackingNumber,
+                carrier: shipment.carrier,
+                finalPrice: shipment.price,
+                emailSent:
+                    shipment.emailDeliveryStatus === 'sent',
+                labelUrl: shipment.otoOrderId
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}`
+                    : ''
+            }
+            : null
+    };
+}
+
+async function createPaidShipment(payment) {
+    if (payment.status === 'shipment_created') {
+        return Payment.findById(payment._id);
+    }
+
+    if (!ALLOW_LIVE_SHIPMENTS) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'paid_hold',
+                    paidAt: payment.paidAt || new Date(),
+                    failureReason:
+                        'LIVE_SHIPMENTS_DISABLED'
+                }
+            }
+        );
+
+        return Payment.findById(payment._id);
+    }
+
+    const locked = await Payment.findOneAndUpdate(
+        {
+            _id: payment._id,
+            status: {
+                $in: ['creating', 'pending', 'paid']
+            }
+        },
+        {
+            $set: {
+                status: 'processing',
+                paidAt: payment.paidAt || new Date(),
+                failureReason: ''
+            }
+        },
+        {
+            new: true
+        }
+    ).select('+shipmentPayload');
+
+    if (!locked) {
+        return Payment.findById(payment._id);
+    }
+
+    try {
+        const payload = locked.shipmentPayload;
+        const body = payload?.body;
+        const senderAddress = payload?.senderAddress;
+        const receiverAddress = payload?.receiverAddress;
+
+        if (!body || !senderAddress || !receiverAddress) {
+            throw new Error('PAYMENT_PAYLOAD_MISSING');
+        }
+
+        const accountInfo = await shippingRequest(
+            'accountInfo',
+            undefined,
+            'GET'
+        );
+        const remainingCredit = number(
+            accountInfo.remainingCredit ??
+            accountInfo.data?.remainingCredit,
+            NaN
+        );
+        const remainingFreeShipments = number(
+            accountInfo.remainingFreeShipments ??
+            accountInfo.data?.remainingFreeShipments,
+            0
+        );
+
+        if (
+            Number.isFinite(remainingCredit) &&
+            remainingFreeShipments <= 0 &&
+            remainingCredit < locked.providerCost
+        ) {
+            throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
+        }
+
+        const orderId = locked.orderNumber;
+        const order = {
+            orderId,
+            createShipment: false,
+            deliveryOptionId: number(locked.deliveryOptionId),
+            storeName: 'SUMSN',
+            payment_method: 'paid',
+            amount: locked.amount,
+            amount_due: 0,
+            shippingAmount: locked.providerCost,
+            subtotal: locked.amount,
+            currency: 'SAR',
+            packageCount: 1,
+            packageWeight: number(body.weight),
+            boxLength: number(body.boxLength),
+            boxWidth: number(body.boxWidth),
+            boxHeight: number(body.boxHeight),
+            shippingNotes: body.contentsDescription,
+            item_description: body.contentsDescription,
+            senderInformation: {
+                senderFullName: body.senderName.trim(),
+                senderMobile: body.senderPhone.trim(),
+                senderCountry: 'SA',
+                senderShortAddressCode: senderAddress.shortCode,
+                senderBuildingNo: senderAddress.buildingNo,
+                sendersecondaryAddressNumber:
+                    senderAddress.secondaryNumber,
+                senderState: senderAddress.state,
+                senderCity: senderAddress.city,
+                senderDistrict: senderAddress.district,
+                senderStreet: senderAddress.street,
+                senderPostcode: senderAddress.postcode,
+                senderAddressLine: senderAddress.addressLine,
+                lat: senderAddress.lat,
+                lon: senderAddress.lon
+            },
+            customer: {
+                name: body.receiverName.trim(),
+                email: body.email.trim(),
+                mobile: body.receiverPhone.trim(),
+                country: 'SA',
+                shortAddressCode: receiverAddress.shortCode,
+                buildingNo: receiverAddress.buildingNo,
+                secondaryAddressNumber:
+                    receiverAddress.secondaryNumber,
+                state: receiverAddress.state,
+                city: receiverAddress.city,
+                district: receiverAddress.district,
+                street: receiverAddress.street,
+                postcode: receiverAddress.postcode,
+                address: receiverAddress.addressLine,
+                lat: receiverAddress.lat,
+                lon: receiverAddress.lon
+            }
+        };
+
+        await shippingRequest('createOrder', order);
+
+        const shipmentResult = await createShipmentAfterAssignment(
+            orderId,
+            locked.deliveryOptionId
+        );
+        const providerShipmentId =
+            shipmentResult.shipmentId ||
+            shipmentResult.data?.shipmentId ||
+            shipmentResult.otoId ||
+            '';
+        const trackingNumber =
+            shipmentResult.trackingNumber ||
+            shipmentResult.data?.trackingNumber ||
+            providerShipmentId ||
+            '';
+        const providerLabelUrl = await getShipmentLabel(orderId);
+        let attachment = null;
+        let labelStorage = {};
+
+        if (providerLabelUrl) {
+            try {
+                attachment = await labelAttachment(
+                    providerLabelUrl,
+                    orderId
+                );
+            } catch (labelError) {
+                console.warn(
+                    'ØªØ¹Ø°Ø± ØªØ¬Ù‡ÙŠØ² Ù…Ù„Ù Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ©:',
+                    labelError.message
+                );
+            }
+        }
+
+        if (attachment && r2StorageConfigured()) {
+            const objectKey = shipmentLabelObjectKey(
+                locked.userId,
+                orderId
+            );
+
+            try {
+                await saveLabelToR2({
+                    objectKey,
+                    content: attachment.content,
+                    contentType: attachment.contentType
+                });
+
+                labelStorage = {
+                    labelObjectKey: objectKey,
+                    labelContentType: attachment.contentType,
+                    labelSize: attachment.content.length,
+                    labelStoredAt: new Date()
+                };
+            } catch (storageError) {
+                console.error(
+                    'ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ© ÙÙŠ R2:',
+                    storageError.message
+                );
+            }
+        }
+
+        const savedShipment = await Shipment.create({
+            userId: locked.userId,
+            customerEmail: locked.customerEmail,
+            contentsDescription:
+                String(body.contentsDescription || '').trim(),
+            emailDeliveryStatus:
+                emailServiceConfigured()
+                    ? 'pending'
+                    : 'skipped',
+            fromCity: body.senderCity,
+            toCity: body.receiverCity,
+            weight: number(body.weight),
+            carrier: locked.carrier,
+            price: locked.amount,
+            deliveryTime: locked.deliveryTime,
+            otoOrderId: orderId,
+            otoShipmentId: providerShipmentId,
+            trackingNumber,
+            labelUrl: providerLabelUrl,
+            ...labelStorage
+        });
+
+        if (emailServiceConfigured()) {
+            try {
+                const emailResult = await sendShipmentCreatedEmail({
+                    user: {
+                        email: locked.customerEmail,
+                        fullName:
+                            String(body.receiverName || 'Ø¹Ù…ÙŠÙ„ SUMSN')
+                                .trim()
+                    },
+                    carrierName: locked.carrier,
+                    orderId,
+                    trackingNumber,
+                    finalPrice: locked.amount,
+                    attachment
+                });
+
+                savedShipment.emailDeliveryStatus = 'sent';
+                savedShipment.emailMessageId = emailResult.id || '';
+                savedShipment.emailSentAt = new Date();
+                await savedShipment.save();
+            } catch (emailError) {
+                console.error(
+                    'ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ©:',
+                    emailError.message
+                );
+                savedShipment.emailDeliveryStatus = 'failed';
+                await savedShipment.save();
+            }
+        }
+
+        await Payment.updateOne(
+            {
+                _id: locked._id,
+                status: 'processing'
+            },
+            {
+                $set: {
+                    status: 'shipment_created',
+                    shipmentId: savedShipment._id,
+                    fulfilledAt: new Date(),
+                    failureReason: ''
+                },
+                $unset: {
+                    shipmentPayload: 1
+                }
+            }
+        );
+
+        void maybeAlertDatabaseStorage();
+
+        return Payment.findById(locked._id);
+    } catch (error) {
+        console.error(
+            'Ø¯ÙØ¹Øª Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ù„ÙƒÙ† ØªØ¹Ø°Ø± Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø´Ø­Ù†Ø©:',
+            error
+        );
+
+        await Payment.updateOne(
+            {
+                _id: locked._id,
+                status: 'processing'
+            },
+            {
+                $set: {
+                    status: 'manual_review',
+                    failureReason:
+                        String(error.message || 'FULFILLMENT_ERROR')
+                            .slice(0, 200)
+                }
+            }
+        );
+
+        throw error;
+    }
+}
+
+async function verifyPaylinkPayment({
+    orderNumber,
+    transactionNo
+}) {
+    await connectToDatabase();
+
+    const payment = await Payment.findOne({
+        ...(orderNumber ? { orderNumber } : {}),
+        ...(transactionNo ? { transactionNo } : {})
+    });
+
+    if (!payment) {
+        throw new Error('PAYMENT_NOT_FOUND');
+    }
+
+    const effectiveTransactionNo =
+        transactionNo || payment.transactionNo;
+
+    if (
+        !effectiveTransactionNo ||
+        (
+            payment.transactionNo &&
+            String(payment.transactionNo) !==
+                String(effectiveTransactionNo)
+        )
+    ) {
+        throw new Error('PAYMENT_TRANSACTION_MISMATCH');
+    }
+
+    const invoice = await paylinkRequest(
+        `getInvoice/${encodeURIComponent(effectiveTransactionNo)}`
+    );
+    const invoiceOrderNumber =
+        invoice.gatewayOrderRequest?.orderNumber ||
+        invoice.orderNumber ||
+        '';
+    const invoiceAmount = roundMoney(invoice.amount);
+    const status =
+        String(invoice.orderStatus || '').trim().toLowerCase();
+
+    if (
+        invoiceOrderNumber &&
+        String(invoiceOrderNumber) !== payment.orderNumber
+    ) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'manual_review',
+                    failureReason: 'PAYMENT_ORDER_MISMATCH'
+                }
+            }
+        );
+        throw new Error('PAYMENT_ORDER_MISMATCH');
+    }
+
+    if (
+        Math.round(invoiceAmount * 100) !==
+        Math.round(payment.amount * 100)
+    ) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'manual_review',
+                    failureReason: 'PAYMENT_AMOUNT_MISMATCH'
+                }
+            }
+        );
+        throw new Error('PAYMENT_AMOUNT_MISMATCH');
+    }
+
+    if (status === 'paid') {
+        if (
+            ![
+                'shipment_created',
+                'processing',
+                'manual_review',
+                'paid_hold'
+            ].includes(payment.status)
+        ) {
+            payment.status = 'paid';
+        }
+
+        payment.paidAt = payment.paidAt || new Date();
+        payment.paymentMethod =
+            invoice.paymentReceipt?.paymentMethod ||
+            invoice.paymentType ||
+            payment.paymentMethod ||
+            '';
+        await payment.save();
+
+        const completed = await createPaidShipment(payment);
+
+        return {
+            state:
+                completed.status === 'shipment_created'
+                    ? 'success'
+                    : (
+                        completed.status === 'paid_hold'
+                            ? 'review'
+                            : completed.status
+                    ),
+            payment: completed
+        };
+    }
+
+    if (status === 'canceled') {
+        payment.status = 'canceled';
+        await payment.save();
+
+        return {
+            state: 'canceled',
+            payment
+        };
+    }
+
+    if (
+        !['shipment_created', 'processing', 'manual_review']
+            .includes(payment.status)
+    ) {
+        payment.status = 'pending';
+        await payment.save();
+    }
+
+    return {
+        state: payment.status === 'manual_review'
+            ? 'review'
+            : 'pending',
+        payment
+    };
+}
+
+async function currentShipmentForPayment(payment) {
+    if (!payment.shipmentId) {
+        return null;
+    }
+
+    return Shipment.findById(payment.shipmentId);
+}
+
+app.post('/api/create-shipment', async (req, res) => {
+    let shipmentUser = null;
+
+    if (customerAccountsEnabled()) {
+        try {
+            shipmentUser = await authenticatedUser(req);
+        } catch (error) {
+            console.error('ØªØ¹Ø°Ø± Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø¬Ù„Ø³Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„:', error);
+
+            return res.status(500).json({
+                success: false,
+                message: 'ØªØ¹Ø°Ø± Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ø­Ø³Ø§Ø¨ Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+            });
+        }
+
+        if (!shipmentUser) {
+            return res.status(401).json({
+                success: false,
+                message: 'Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø£ÙˆÙ„Ù‹Ø§ Ù„Ø¥ØªÙ…Ø§Ù… Ø§Ù„Ø¯ÙØ¹ ÙˆØ­ÙØ¸ Ø¨ÙˆÙ„ÙŠØµØªÙƒ.'
+            });
+        }
+
+        req.body.email = shipmentUser.email;
+    }
+
+    const required = [
+        'email',
+        'contentsDescription',
+        'senderName',
+        'senderCity',
+        'senderPhone',
+        'senderShortAddressCode',
+        'receiverName',
+        'receiverCity',
+        'receiverPhone',
+        'receiverShortAddressCode',
+        'deliveryOptionId',
+        'weight',
+        'boxLength',
+        'boxWidth',
+        'boxHeight',
+        'requestId'
+    ];
+    const missing = required.filter((field) => !req.body[field]);
+
+    if (missing.length) {
+        return res.status(400).json({
+            success: false,
+            message: 'ÙŠØ±Ø¬Ù‰ ØªØ¹Ø¨Ø¦Ø© Ø¬Ù…ÙŠØ¹ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø´Ø­Ù†Ø© Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©.'
+        });
+    }
+
+    if (!ALLOW_LIVE_SHIPMENTS) {
+        return res.status(403).json({
+            success: false,
+            message: 'Ø§Ù„Ø¯ÙØ¹ ÙˆØ¥ØµØ¯Ø§Ø± Ø§Ù„Ø´Ø­Ù†Ø§Øª ØºÙŠØ± Ù…ØªØ§Ø­ÙŠÙ† Ù…Ø¤Ù‚ØªÙ‹Ø§ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±.'
+        });
+    }
+
+    if (!paymentGatewayConfigured()) {
+        return res.status(503).json({
+            success: false,
+            message: 'Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹ ØºÙŠØ± Ø¬Ø§Ù‡Ø²Ø© Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+
+    if (
+        LIVE_SHIPMENT_TEST_EMAIL &&
+        normalizeEmail(req.body.email) !==
+            LIVE_SHIPMENT_TEST_EMAIL
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: 'Ø§Ù„Ø¯ÙØ¹ ÙˆØ¥ØµØ¯Ø§Ø± Ø§Ù„Ø´Ø­Ù†Ø§Øª Ù…ØªØ§Ø­Ø§Ù† Ø­Ø§Ù„ÙŠÙ‹Ø§ Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø± ÙÙ‚Ø·.'
+        });
+    }
+
+    const body = {
+        ...req.body,
+        email: normalizeEmail(req.body.email),
+        contentsDescription:
+            String(req.body.contentsDescription || '').trim(),
+        senderName: String(req.body.senderName || '').trim(),
+        senderCity: String(req.body.senderCity || '').trim(),
+        senderPhone: String(req.body.senderPhone || '').trim(),
+        senderShortAddressCode:
+            String(req.body.senderShortAddressCode || '')
+                .trim()
+                .toUpperCase(),
+        receiverName: String(req.body.receiverName || '').trim(),
+        receiverCity: String(req.body.receiverCity || '').trim(),
+        receiverPhone: String(req.body.receiverPhone || '').trim(),
+        receiverShortAddressCode:
+            String(req.body.receiverShortAddressCode || '')
+                .trim()
+                .toUpperCase(),
+        requestId:
+            String(req.body.requestId || '')
+                .replace(/[^A-Za-z0-9-]/g, '')
+                .slice(0, 64),
+        weight: number(req.body.weight),
+        boxLength: number(req.body.boxLength),
+        boxWidth: number(req.body.boxWidth),
+        boxHeight: number(req.body.boxHeight)
+    };
+    const shortAddressPattern = /^[A-Z]{4}[0-9]{4}$/;
+
+    if (
+        !validEmail(body.email) ||
+        !shortAddressPattern.test(body.senderShortAddressCode) ||
+        !shortAddressPattern.test(body.receiverShortAddressCode) ||
+        body.weight <= 0 ||
+        body.boxLength <= 0 ||
+        body.boxWidth <= 0 ||
+        body.boxHeight <= 0 ||
+        !body.requestId
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: 'ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ø¨Ø±ÙŠØ¯ ÙˆØ§Ù„Ø¹Ù†ÙˆØ§Ù†ÙŠÙ† Ø§Ù„Ù…Ø®ØªØµØ±ÙŠÙ† ÙˆØ§Ù„ÙˆØ²Ù† ÙˆØ§Ù„Ø£Ø¨Ø¹Ø§Ø¯.'
+        });
+    }
+
+    const identity =
+        shipmentUser?._id ||
+        body.email;
+    const orderSuffix = crypto
+        .createHash('sha256')
+        .update(`${identity}:${body.requestId}`)
+        .digest('hex')
+        .slice(0, 16)
+        .toUpperCase();
+    const orderNumber = `SUMSN-${orderSuffix}`;
+
+    try {
+        await connectToDatabase();
+
+        const existing = await Payment.findOne({
+            orderNumber,
+            userId: shipmentUser?._id || null
+        });
+
+        if (existing) {
+            if (
+                existing.paymentUrl &&
+                ['creating', 'pending'].includes(existing.status)
+            ) {
+                return res.json({
+                    success: true,
+                    paymentRequired: true,
+                    paymentUrl: existing.paymentUrl,
+                    orderNumber: existing.orderNumber,
+                    amount: existing.amount
+                });
+            }
+
+            if (existing.status === 'shipment_created') {
+                const shipment =
+                    await currentShipmentForPayment(existing);
+
+                return res.json(
+                    paymentPublicState(existing, shipment)
+                );
+            }
+
+            return res.status(409).json({
+                success: false,
+                message: 'Ù‡Ø°Ù‡ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø³ØªØ®Ø¯Ù…Ø© Ø³Ø§Ø¨Ù‚Ù‹Ø§. Ø£ØºÙ„Ù‚ Ø§Ù„Ù†Ø§ÙØ°Ø© ÙˆØ§Ø®ØªØ± Ø§Ù„Ø¹Ø±Ø¶ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.'
+            });
+        }
+
+        const [senderAddress, receiverAddress] =
+            await Promise.all([
+                getNationalAddress(
+                    body.senderShortAddressCode
+                ),
+                getNationalAddress(
+                    body.receiverShortAddressCode
+                )
+            ]);
+        const quote = await shippingRequest(
+            'checkOTODeliveryFee',
+            quotePayload(
+                body.senderCity,
+                body.receiverCity,
+                body.weight,
+                body.boxLength,
+                body.boxWidth,
+                body.boxHeight
+            )
+        );
+        const selected = getDeliveryCompanies(quote).find(
+            (company) =>
+                String(company.deliveryOptionId) ===
+                String(body.deliveryOptionId)
+        );
+
+        if (!selected) {
+            return res.status(409).json({
+                success: false,
+                message: 'Ø®ÙŠØ§Ø± Ø§Ù„Ø´Ø­Ù† ØªØºÙŠØ±. Ø£Ø¹Ø¯ Ø¬Ù„Ø¨ Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ÙˆØ§Ø®ØªØ± Ù…Ù† Ø¬Ø¯ÙŠØ¯.'
+            });
+        }
+
+        const providerCost = number(selected.price);
+        const finalPrice =
+            customerPrice(providerCost, body.weight);
+        const carrierName = getCarrierDisplayName(selected);
+        const deliveryTime = cleanPublicText(
+            selected.avgDeliveryTime ||
+            selected.estimatedDeliveryTime ||
+            ''
+        );
+        const accountInfo = await shippingRequest(
+            'accountInfo',
+            undefined,
+            'GET'
+        );
+        const remainingCredit = number(
+            accountInfo.remainingCredit ??
+            accountInfo.data?.remainingCredit,
+            NaN
+        );
+        const remainingFreeShipments = number(
+            accountInfo.remainingFreeShipments ??
+            accountInfo.data?.remainingFreeShipments,
+            0
+        );
+
+        if (
+            Number.isFinite(remainingCredit) &&
+            remainingFreeShipments <= 0 &&
+            remainingCredit < providerCost
+        ) {
+            throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
+        }
+
+        const payment = await Payment.create({
+            userId: shipmentUser?._id || null,
+            customerEmail: body.email,
+            requestId: body.requestId,
+            orderNumber,
+            status: 'creating',
+            amount: finalPrice,
+            providerCost,
+            carrier: carrierName,
+            deliveryOptionId:
+                String(body.deliveryOptionId),
+            deliveryTime,
+            shipmentPayload: {
+                body,
+                senderAddress,
+                receiverAddress
+            }
+        });
+        const callbackUrl = new URL(
+            '/api/payments/paylink/callback',
+            PUBLIC_BASE_URL
+        ).toString();
+        const cancelUrl = new URL(
+            '/api/payments/paylink/cancel',
+            PUBLIC_BASE_URL
+        ).toString();
+        const invoice = await paylinkRequest(
+            'addInvoice',
+            {
+                method: 'POST',
+                body: {
+                    orderNumber,
+                    amount: finalPrice,
+                    callBackUrl: callbackUrl,
+                    cancelUrl,
+                    clientName: body.senderName,
+                    clientEmail: body.email,
+                    clientMobile: body.senderPhone,
+                    currency: 'SAR',
+                    note: `Ø®Ø¯Ù…Ø© Ø´Ø­Ù† SUMSN - ${carrierName}`,
+                    products: [
+                        {
+                            title: 'Ø®Ø¯Ù…Ø© Ø´Ø­Ù†',
+                            price: finalPrice,
+                            qty: 1,
+                            description:
+                                `${body.senderCity} Ø¥Ù„Ù‰ ${body.receiverCity}`,
+                            isDigital: false
+                        }
+                    ]
+                }
+            }
+        );
+        const transactionNo =
+            String(invoice.transactionNo || '');
+        const paymentUrl =
+            invoice.url || invoice.mobileUrl || '';
+
+        if (!transactionNo || !paymentUrl) {
+            throw new Error('PAYMENT_INVOICE_INVALID');
+        }
+
+        payment.transactionNo = transactionNo;
+        payment.paymentUrl = paymentUrl;
+        payment.checkUrl = invoice.checkUrl || '';
+        payment.status = 'pending';
+        await payment.save();
+
+        res.json({
+            success: true,
+            paymentRequired: true,
+            paymentUrl,
+            orderNumber,
+            amount: finalPrice
+        });
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± Ø¨Ø¯Ø¡ Ø§Ù„Ø¯ÙØ¹:', error);
+
+        await Payment.updateOne(
+            {
+                orderNumber,
+                status: 'creating'
+            },
+            {
+                $set: {
+                    status: 'failed',
+                    failureReason:
+                        String(error.message || 'PAYMENT_START_ERROR')
+                            .slice(0, 200)
+                }
+            }
+        ).catch(() => {});
+
+        let message = 'ØªØ¹Ø°Ø± ÙØªØ­ ØµÙØ­Ø© Ø§Ù„Ø¯ÙØ¹ Ø­Ø§Ù„ÙŠÙ‹Ø§. Ø­Ø§ÙˆÙ„ Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.';
+
+        if (error.message === 'INVALID_NATIONAL_ADDRESS') {
+            message = 'ØªØ¹Ø°Ø± Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø£Ø­Ø¯ Ø§Ù„Ø¹Ù†ÙˆØ§Ù†ÙŠÙ† Ø§Ù„Ù…Ø®ØªØµØ±ÙŠÙ†.';
+        } else if (
+            error.message === 'INSUFFICIENT_SHIPPING_BALANCE'
+        ) {
+            message = 'Ø±ØµÙŠØ¯ Ø­Ø³Ø§Ø¨ Ø§Ù„Ø´Ø­Ù† ØºÙŠØ± ÙƒØ§ÙÙ Ù„Ø¥ØµØ¯Ø§Ø± Ø§Ù„Ø¨ÙˆÙ„ÙŠØµØ©.';
+        } else if (
+            error.message === 'PAYMENT_CONFIGURATION_ERROR'
+        ) {
+            message = 'Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ø¯ÙØ¹ ØºÙŠØ± Ø¬Ø§Ù‡Ø²Ø© Ø­Ø§Ù„ÙŠÙ‹Ø§.';
+        }
+
+        res.status(502).json({
+            success: false,
+            message
+        });
+    }
+});
+
+app.get('/api/payments/paylink/callback', async (req, res) => {
+    const orderNumber =
+        String(req.query.orderNumber || '').trim();
+    const transactionNo =
+        String(req.query.transactionNo || '').trim();
+
+    try {
+        const result = await verifyPaylinkPayment({
+            orderNumber,
+            transactionNo
+        });
+
+        res.redirect(
+            303,
+            paymentRedirectUrl(
+                result.state,
+                result.payment.orderNumber
+            )
+        );
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± ØªØ£ÙƒÙŠØ¯ Ø¯ÙØ¹Ø© Paylink:', error);
+        res.redirect(
+            303,
+            paymentRedirectUrl('review', orderNumber)
+        );
+    }
+});
+
+app.get('/api/payments/paylink/cancel', async (req, res) => {
+    const orderNumber =
+        String(req.query.orderNumber || '').trim();
+    const transactionNo =
+        String(req.query.transactionNo || '').trim();
+
+    if (orderNumber || transactionNo) {
+        try {
+            await verifyPaylinkPayment({
+                orderNumber,
+                transactionNo
+            });
+        } catch (error) {
+            console.warn(
+                'ØªØ¹Ø°Ø± ØªØ­Ø¯ÙŠØ« Ø­Ø§Ù„Ø© Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø§Ù„Ù…Ù„ØºØ§Ø©:',
+                error.message
+            );
+        }
+    }
+
+    res.redirect(
+        303,
+        paymentRedirectUrl('canceled', orderNumber)
+    );
+});
+
+app.post('/api/payments/paylink/webhook', async (req, res) => {
+    if (!paylinkWebhookAuthorized(req)) {
+        return res.status(401).json({
+            success: false
+        });
+    }
+
+    const orderNumber =
+        String(
+            req.body.merchantOrderNumber ||
+            req.body.orderNumber ||
+            ''
+        ).trim();
+    const transactionNo =
+        String(req.body.transactionNo || '').trim();
+
+    const isSumsnOrder =
+        /^SUMSN-[A-F0-9]{16}$/.test(orderNumber);
+
+    // Paylink's portal sends a connectivity test without a real SUMSN
+    // invoice. Acknowledge that test, but never fulfill a shipment from it.
+    if (
+        (!orderNumber && !transactionNo) ||
+        (orderNumber && !isSumsnOrder)
+    ) {
+        return res.status(200).json({
+            success: true,
+            test: true
+        });
+    }
+
+    try {
+        const result = await verifyPaylinkPayment({
+            orderNumber,
+            transactionNo
+        });
+
+        res.status(200).json({
+            success: true,
+            status: result.payment.status
+        });
+    } catch (error) {
+        console.error('Ø®Ø·Ø£ Ø¥Ø´Ø¹Ø§Ø± Paylink:', error);
+        res.status(500).json({
+            success: false
+        });
+    }
+});
+
+app.get('/api/payments/:orderNumber', async (req, res) => {
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ø¹Ø±Ø¶ Ø­Ø§Ù„Ø© Ø§Ù„Ø¹Ù…Ù„ÙŠØ©.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const payment = await Payment.findOne({
+            orderNumber:
+                String(req.params.orderNumber || '').trim(),
+            userId: user._id
+        });
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø¹Ù…Ù„ÙŠØ© Ø§Ù„Ø¯ÙØ¹.'
+            });
+        }
+
+        const shipment =
+            await currentShipmentForPayment(payment);
+
+        res.json(paymentPublicState(payment, shipment));
+    } catch (error) {
+        console.error('ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø­Ø§Ù„Ø© Ø§Ù„Ø¯ÙØ¹:', error);
+        res.status(500).json({
+            success: false,
+            message: 'ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø­Ø§Ù„Ø© Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø­Ø§Ù„ÙŠÙ‹Ø§.'
+        });
+    }
+});
+
+/*
+|--------------------------------------------------------------------------
+| ØªØ´ØºÙŠÙ„ Ø§Ù„Ø³ÙŠØ±ÙØ±
+|--------------------------------------------------------------------------
+*/
+
+app.listen(PORT, () => {
+    console.log(`Ø§Ù„Ø³ÙŠØ±ÙØ± ÙŠØ¹Ù…Ù„ Ø¹Ù„Ù‰ http://localhost:${PORT}`);
+});
