@@ -3502,9 +3502,18 @@ app.post('/api/payments/paylink/webhook', async (req, res) => {
     const transactionNo =
         String(req.body.transactionNo || '').trim();
 
-    if (!orderNumber && !transactionNo) {
-        return res.status(400).json({
-            success: false
+    const isSumsnOrder =
+        /^SUMSN-[A-F0-9]{16}$/.test(orderNumber);
+
+    // Paylink's portal sends a connectivity test without a real SUMSN
+    // invoice. Acknowledge that test, but never fulfill a shipment from it.
+    if (
+        (!orderNumber && !transactionNo) ||
+        (orderNumber && !isSumsnOrder)
+    ) {
+        return res.status(200).json({
+            success: true,
+            test: true
         });
     }
 
