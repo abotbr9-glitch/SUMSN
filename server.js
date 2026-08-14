@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const {
+    GetObjectCommand,
+    PutObjectCommand,
+    S3Client
+} = require('@aws-sdk/client-s3');
 
 dotenv.config();
 
@@ -98,6 +103,22 @@ const LIVE_SHIPMENT_TEST_EMAIL =
 
 /*
 |--------------------------------------------------------------------------
+| تخزين بوالص الشحن في Cloudflare R2 - خاص وغير متاح للعامة
+|--------------------------------------------------------------------------
+*/
+
+const R2_ACCESS_KEY_ID =
+    String(process.env.R2_ACCESS_KEY_ID || '').trim();
+const R2_SECRET_ACCESS_KEY =
+    String(process.env.R2_SECRET_ACCESS_KEY || '').trim();
+const R2_ACCOUNT_ID =
+    String(process.env.R2_ACCOUNT_ID || '').trim();
+const R2_BUCKET_NAME =
+    String(process.env.R2_BUCKET_NAME || '').trim();
+const MAX_LABEL_BYTES = 25 * 1024 * 1024;
+
+/*
+|--------------------------------------------------------------------------
 | بوابة الدفع Paylink - الأسرار تبقى في الخادم فقط
 |--------------------------------------------------------------------------
 */
@@ -124,6 +145,7 @@ let shippingAccessTokenExpiresAt = 0;
 let paylinkAccessToken = '';
 let paylinkAccessTokenExpiresAt = 0;
 let mongoConnectionPromise = null;
+let r2Client = null;
 
 /*
 |--------------------------------------------------------------------------
@@ -217,6 +239,19 @@ const shipmentSchema = new mongoose.Schema({
     otoShipmentId: String,
     trackingNumber: String,
     labelUrl: String,
+    labelObjectKey: {
+        type: String,
+        default: ''
+    },
+    labelContentType: {
+        type: String,
+        default: 'application/pdf'
+    },
+    labelSize: {
+        type: Number,
+        default: 0
+    },
+    labelStoredAt: Date,
     createdAt: {
         type: Date,
         default: Date.now
@@ -551,6 +586,123 @@ function emailServiceConfigured() {
 
 function paymentGatewayConfigured() {
     return Boolean(PAYLINK_API_ID && PAYLINK_SECRET_KEY);
+}
+
+function r2StorageConfigured() {
+    return Boolean(
+        R2_ACCESS_KEY_ID &&
+        R2_SECRET_ACCESS_KEY &&
+        R2_ACCOUNT_ID &&
+        R2_BUCKET_NAME
+    );
+}
+
+function r2StorageClient() {
+    if (!r2StorageConfigured()) {
+        throw new Error('R2_CONFIGURATION_ERROR');
+    }
+
+    if (!r2Client) {
+        r2Client = new S3Client({
+            region: 'auto',
+            endpoint:
+                `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+            forcePathStyle: true,
+            credentials: {
+                accessKeyId: R2_ACCESS_KEY_ID,
+                secretAccessKey: R2_SECRET_ACCESS_KEY
+            }
+        });
+    }
+
+    return r2Client;
+}
+
+function shipmentLabelObjectKey(userId, orderId) {
+    const owner = String(userId || 'unassigned')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+    const order = String(orderId || 'shipment')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+
+    return `shipment-labels/${owner}/${order}.pdf`;
+}
+
+async function r2BodyBuffer(body) {
+    if (!body) {
+        return Buffer.alloc(0);
+    }
+
+    if (typeof body.transformToByteArray === 'function') {
+        return Buffer.from(await body.transformToByteArray());
+    }
+
+    const chunks = [];
+
+    for await (const chunk of body) {
+        chunks.push(Buffer.from(chunk));
+    }
+
+    return Buffer.concat(chunks);
+}
+
+async function saveLabelToR2({
+    objectKey,
+    content,
+    contentType = 'application/pdf'
+}) {
+    if (!Buffer.isBuffer(content) || content.length === 0) {
+        throw new Error('LABEL_CONTENT_EMPTY');
+    }
+
+    if (content.length > MAX_LABEL_BYTES) {
+        throw new Error('LABEL_TOO_LARGE');
+    }
+
+    await r2StorageClient().send(
+        new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: objectKey,
+            Body: content,
+            ContentType: contentType,
+            CacheControl: 'private, no-store'
+        })
+    );
+}
+
+async function readLabelFromR2(objectKey) {
+    if (!objectKey || !r2StorageConfigured()) {
+        return null;
+    }
+
+    try {
+        const result = await r2StorageClient().send(
+            new GetObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: objectKey
+            })
+        );
+        const content = await r2BodyBuffer(result.Body);
+
+        if (!content.length || content.length > MAX_LABEL_BYTES) {
+            throw new Error(
+                content.length ? 'LABEL_TOO_LARGE' : 'LABEL_CONTENT_EMPTY'
+            );
+        }
+
+        return {
+            content,
+            contentType: result.ContentType || 'application/pdf'
+        };
+    } catch (error) {
+        if (
+            error?.name === 'NoSuchKey' ||
+            error?.$metadata?.httpStatusCode === 404
+        ) {
+            return null;
+        }
+
+        throw error;
+    }
 }
 
 function normalizeEmail(value) {
@@ -929,7 +1081,7 @@ async function labelAttachment(providerLabelUrl, orderId) {
 
     const content = Buffer.from(await response.arrayBuffer());
 
-    if (content.length > 25 * 1024 * 1024) {
+    if (content.length > MAX_LABEL_BYTES) {
         throw new Error('LABEL_TOO_LARGE');
     }
 
@@ -1795,60 +1947,98 @@ async function getShipmentLabel(orderId) {
     return '';
 }
 
-function labelAccessToken(orderId) {
-    return crypto
-        .createHmac('sha256', SHIPPING_REFRESH_TOKEN || 'disabled')
-        .update(orderId)
-        .digest('hex');
-}
-
-function isValidLabelAccessToken(orderId, token) {
-    const expected = Buffer.from(labelAccessToken(orderId));
-    const received = Buffer.from(String(token || ''));
-
-    return (
-        expected.length === received.length &&
-        crypto.timingSafeEqual(expected, received)
-    );
-}
-
 app.get('/api/shipment-label', async (req, res) => {
     const orderId = String(req.query.orderId || '');
-    const token = String(req.query.token || '');
 
-    if (
-        !orderId.startsWith('SUMSN-') ||
-        !isValidLabelAccessToken(orderId, token)
-    ) {
+    if (!/^SUMSN-[A-F0-9]{16}$/.test(orderId)) {
         return res.status(403).send('الرابط غير صالح.');
     }
 
     try {
-        const providerLabelUrl = await getShipmentLabel(orderId);
+        const user = await authenticatedUser(req);
 
-        if (!providerLabelUrl) {
-            return res.status(404).send('البوليصة غير جاهزة بعد.');
+        if (!user) {
+            return res.status(401).send('سجّل الدخول لفتح بوليصتك.');
         }
 
-        const labelResponse = await fetch(providerLabelUrl);
+        const shipment = await Shipment.findOne({
+            otoOrderId: orderId,
+            userId: user._id
+        });
 
-        if (!labelResponse.ok) {
-            throw new Error('LABEL_DOWNLOAD_ERROR');
+        if (!shipment) {
+            return res.status(404).send('لم يتم العثور على البوليصة.');
         }
 
-        const labelBytes = Buffer.from(await labelResponse.arrayBuffer());
-        const contentType =
-            labelResponse.headers.get('content-type') ||
-            'application/pdf';
+        let storedLabel = null;
+
+        if (shipment.labelObjectKey) {
+            try {
+                storedLabel = await readLabelFromR2(
+                    shipment.labelObjectKey
+                );
+            } catch (storageError) {
+                console.warn(
+                    'تعذر قراءة البوليصة من R2، ستتم محاولة استعادتها:',
+                    storageError.message
+                );
+            }
+        }
+
+        if (!storedLabel) {
+            const providerLabelUrl =
+                shipment.labelUrl ||
+                await getShipmentLabel(orderId);
+
+            if (!providerLabelUrl) {
+                return res.status(404).send('البوليصة غير جاهزة بعد.');
+            }
+
+            const attachment = await labelAttachment(
+                providerLabelUrl,
+                orderId
+            );
+
+            storedLabel = {
+                content: attachment.content,
+                contentType: attachment.contentType
+            };
+
+            if (r2StorageConfigured()) {
+                const objectKey =
+                    shipment.labelObjectKey ||
+                    shipmentLabelObjectKey(user._id, orderId);
+
+                try {
+                    await saveLabelToR2({
+                        objectKey,
+                        content: storedLabel.content,
+                        contentType: storedLabel.contentType
+                    });
+
+                    shipment.labelObjectKey = objectKey;
+                    shipment.labelContentType = storedLabel.contentType;
+                    shipment.labelSize = storedLabel.content.length;
+                    shipment.labelStoredAt = new Date();
+                    shipment.labelUrl = providerLabelUrl;
+                    await shipment.save();
+                } catch (storageError) {
+                    console.error(
+                        'تعذر حفظ البوليصة في R2:',
+                        storageError.message
+                    );
+                }
+            }
+        }
 
         res.set({
-            'Content-Type': contentType,
+            'Content-Type': storedLabel.contentType,
             'Content-Disposition': `inline; filename="${orderId}.pdf"`,
             'Cache-Control': 'private, no-store',
             'X-Content-Type-Options': 'nosniff'
         });
 
-        return res.send(labelBytes);
+        return res.send(storedLabel.content);
     } catch (error) {
         console.error('تعذر تحميل البوليصة:', error);
         return res.status(502).send('تعذر تحميل البوليصة حاليًا.');
@@ -2463,7 +2653,7 @@ app.get('/api/account/shipments', async (req, res) => {
                     shipment.emailDeliveryStatus || 'skipped',
                 createdAt: shipment.createdAt,
                 labelUrl: shipment.otoOrderId
-                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}&token=${labelAccessToken(shipment.otoOrderId)}`
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}`
                     : ''
             }))
         });
@@ -2667,8 +2857,8 @@ function paymentPublicState(payment, shipment = null) {
                 finalPrice: shipment.price,
                 emailSent:
                     shipment.emailDeliveryStatus === 'sent',
-                labelUrl: shipment.labelUrl
-                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}&token=${labelAccessToken(shipment.otoOrderId)}`
+                labelUrl: shipment.otoOrderId
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}`
                     : ''
             }
             : null
@@ -2826,6 +3016,49 @@ async function createPaidShipment(payment) {
             providerShipmentId ||
             '';
         const providerLabelUrl = await getShipmentLabel(orderId);
+        let attachment = null;
+        let labelStorage = {};
+
+        if (providerLabelUrl) {
+            try {
+                attachment = await labelAttachment(
+                    providerLabelUrl,
+                    orderId
+                );
+            } catch (labelError) {
+                console.warn(
+                    'تعذر تجهيز ملف البوليصة:',
+                    labelError.message
+                );
+            }
+        }
+
+        if (attachment && r2StorageConfigured()) {
+            const objectKey = shipmentLabelObjectKey(
+                locked.userId,
+                orderId
+            );
+
+            try {
+                await saveLabelToR2({
+                    objectKey,
+                    content: attachment.content,
+                    contentType: attachment.contentType
+                });
+
+                labelStorage = {
+                    labelObjectKey: objectKey,
+                    labelContentType: attachment.contentType,
+                    labelSize: attachment.content.length,
+                    labelStoredAt: new Date()
+                };
+            } catch (storageError) {
+                console.error(
+                    'تعذر حفظ البوليصة في R2:',
+                    storageError.message
+                );
+            }
+        }
 
         const savedShipment = await Shipment.create({
             userId: locked.userId,
@@ -2845,26 +3078,11 @@ async function createPaidShipment(payment) {
             otoOrderId: orderId,
             otoShipmentId: providerShipmentId,
             trackingNumber,
-            labelUrl: providerLabelUrl
+            labelUrl: providerLabelUrl,
+            ...labelStorage
         });
 
         if (emailServiceConfigured()) {
-            let attachment = null;
-
-            if (providerLabelUrl) {
-                try {
-                    attachment = await labelAttachment(
-                        providerLabelUrl,
-                        orderId
-                    );
-                } catch (labelError) {
-                    console.warn(
-                        'تعذر تجهيز مرفق البوليصة:',
-                        labelError.message
-                    );
-                }
-            }
-
             try {
                 const emailResult = await sendShipmentCreatedEmail({
                     user: {
