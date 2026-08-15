@@ -110,7 +110,7 @@
   const addressLookupSequence={sender:0,receiver:0};
   const addressLookupTimers={sender:null,receiver:null};
   function setAddressStatus(kind,message,error=false){const element=$(`#${kind}AddressStatus`);element.textContent=message||'';element.classList.toggle('error',Boolean(error))}
-  function resetAddressVerification(kind){const input=$(`#${kind}ShortAddressCode`);const city=$(`#${kind}City`);delete input.dataset.verifiedCode;city.value='';setAddressStatus(kind,'')}
+  function resetAddressVerification(kind){addressLookupSequence[kind]+=1;const input=$(`#${kind}ShortAddressCode`);const city=$(`#${kind}City`);delete input.dataset.verifiedCode;city.value='';setAddressStatus(kind,'')}
   async function verifyShortAddress(kind){
     const input=$(`#${kind}ShortAddressCode`);
     const city=$(`#${kind}City`);
