@@ -3415,6 +3415,91 @@ async function currentShipmentForPayment(payment) {
     return Shipment.findById(payment.shipmentId);
 }
 
+app.post('/api/national-address', async (req, res) => {
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'خدمة حسابات العملاء غير مفعّلة حاليًا.'
+        });
+    }
+
+    let user = null;
+
+    try {
+        user = await authenticatedUser(req);
+    } catch (error) {
+        console.error('تعذر التحقق من جلسة العميل:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'تعذر التحقق من الحساب حاليًا.'
+        });
+    }
+
+    if (!user) {
+        return res.status(401).json({
+            success: false,
+            message: 'سجّل الدخول أولًا للتحقق من العنوان المختصر.'
+        });
+    }
+
+    if (
+        authRateLimited(
+            req,
+            'national-address',
+            20,
+            15 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم تجاوز عدد محاولات التحقق. حاول بعد قليل.'
+        });
+    }
+
+    const shortCode = String(
+        req.body?.shortCode || ''
+    ).trim().toUpperCase();
+
+    if (!/^[A-Z]{4}[0-9]{4}$/.test(shortCode)) {
+        return res.status(400).json({
+            success: false,
+            message: 'صيغة العنوان المختصر غير صحيحة.'
+        });
+    }
+
+    try {
+        const address = await getNationalAddress(shortCode);
+
+        return res.json({
+            success: true,
+            address: {
+                shortCode: address.shortCode,
+                city: address.city,
+                district: address.district,
+                street: address.street,
+                buildingNo: address.buildingNo,
+                secondaryNumber: address.secondaryNumber,
+                postcode: address.postcode
+            }
+        });
+    } catch (error) {
+        if (error.message === 'INVALID_NATIONAL_ADDRESS') {
+            return res.status(400).json({
+                success: false,
+                message: 'تعذر العثور على عنوان وطني مكتمل لهذا الرمز.'
+            });
+        }
+
+        console.error('تعذر التحقق من العنوان المختصر:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'تعذر التحقق من العنوان المختصر حاليًا.'
+        });
+    }
+});
+
 app.post('/api/create-shipment', async (req, res) => {
     let shipmentUser = null;
 
@@ -3595,6 +3680,9 @@ app.post('/api/create-shipment', async (req, res) => {
                     body.receiverShortAddressCode
                 )
             ]);
+        body.senderCity = senderAddress.city;
+        body.receiverCity = receiverAddress.city;
+
         const quote = await shippingRequest(
             'checkOTODeliveryFee',
             quotePayload(
