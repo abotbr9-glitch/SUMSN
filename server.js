@@ -1797,11 +1797,13 @@ function normalizeNationalAddress(result, shortCode) {
     const address = {
         shortCode,
         buildingNo: String(firstValue(source, [
+            'buildingName',
             'buildingNo',
             'buildingNumber',
             'BuildingNumber'
         ])).trim(),
         secondaryNumber: String(firstValue(source, [
+            'secondary',
             'secondaryNumber',
             'additionalNumber',
             'SecondaryNumber'
@@ -1812,16 +1814,17 @@ function normalizeNationalAddress(result, shortCode) {
             'StreetName'
         ])).trim(),
         district: String(firstValue(source, [
-            'district',
             'districtName',
+            'district',
             'District'
         ])).trim(),
         city: String(firstValue(source, [
-            'city',
             'cityName',
+            'city',
             'CityName'
         ])).trim(),
         state: String(firstValue(source, [
+            'stateName',
             'state',
             'region',
             'regionName'
@@ -1860,26 +1863,12 @@ function normalizeNationalAddress(result, shortCode) {
 }
 
 async function getNationalAddress(shortCode) {
-    try {
-        const result = await shippingRequest(
-            `getNationalAddressFromShortCode?shortCode=${encodeURIComponent(shortCode)}`,
-            undefined,
-            'GET'
-        );
+    const result = await shippingRequest(
+        'getNationalAddressFromShortCode',
+        { shortAddressCode: shortCode }
+    );
 
-        return normalizeNationalAddress(result, shortCode);
-    } catch (error) {
-        if (error.message === 'INVALID_NATIONAL_ADDRESS') {
-            throw error;
-        }
-
-        const result = await shippingRequest(
-            'getNationalAddressFromShortCode',
-            { shortCode }
-        );
-
-        return normalizeNationalAddress(result, shortCode);
-    }
+    return normalizeNationalAddress(result, shortCode);
 }
 
 const pickupLocationCodeCache = new Set();
