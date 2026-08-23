@@ -13,8 +13,8 @@ dotenv.config();
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '7mb' }));
+app.use(express.urlencoded({ extended: true, limit: '7mb' }));
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
@@ -119,31 +119,28 @@ const MAX_LABEL_BYTES = 25 * 1024 * 1024;
 
 /*
 |--------------------------------------------------------------------------
-| بوابة الدفع Paylink - الأسرار تبقى في الخادم فقط
+| التحويل البنكي اليدوي - البيانات الحساسة تبقى في الخادم فقط
 |--------------------------------------------------------------------------
 */
 
-const PAYLINK_API_ID =
-    String(process.env.PAYLINK_API_ID || '').trim();
-const PAYLINK_SECRET_KEY =
-    String(process.env.PAYLINK_SECRET_KEY || '').trim();
-const PAYLINK_ENVIRONMENT =
-    String(process.env.PAYLINK_ENVIRONMENT || 'pilot')
+const BANK_TRANSFER_BANK_NAME =
+    String(process.env.BANK_TRANSFER_BANK_NAME || '').trim();
+const BANK_TRANSFER_BENEFICIARY_NAME =
+    String(process.env.BANK_TRANSFER_BENEFICIARY_NAME || '').trim();
+const BANK_TRANSFER_IBAN =
+    String(process.env.BANK_TRANSFER_IBAN || '')
+        .replace(/\s+/g, '')
+        .toUpperCase();
+const BANK_TRANSFER_ADMIN_EMAIL =
+    String(process.env.BANK_TRANSFER_ADMIN_EMAIL || '')
         .trim()
-        .toLowerCase() === 'production'
-        ? 'production'
-        : 'pilot';
-const PAYLINK_BASE_URL =
-    PAYLINK_ENVIRONMENT === 'production'
-        ? 'https://restapi.paylink.sa'
-        : 'https://restpilot.paylink.sa';
-const PAYLINK_WEBHOOK_SECRET =
-    String(process.env.PAYLINK_WEBHOOK_SECRET || '').trim();
+        .toLowerCase();
+const MAX_RECEIPT_BYTES =
+    Number(process.env.MAX_RECEIPT_MB || 5) * 1024 * 1024;
+const BANK_TRANSFER_PROCESSING_TIMEOUT_MS = 10 * 60 * 1000;
 
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
-let paylinkAccessToken = '';
-let paylinkAccessTokenExpiresAt = 0;
 let mongoConnectionPromise = null;
 let r2Client = null;
 
@@ -235,7 +232,10 @@ const shipmentSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
-    otoOrderId: String,
+    otoOrderId: {
+        type: String,
+        index: true
+    },
     otoShipmentId: String,
     trackingNumber: String,
     labelUrl: String,
@@ -264,7 +264,7 @@ const Shipment =
 
 /*
 |--------------------------------------------------------------------------
-| مدفوعات Paylink
+| طلبات التحويل البنكي
 |--------------------------------------------------------------------------
 */
 
@@ -292,14 +292,9 @@ const paymentSchema = new mongoose.Schema(
             unique: true,
             index: true
         },
-        transactionNo: {
-            type: String,
-            default: '',
-            index: true
-        },
         status: {
             type: String,
-            default: 'creating',
+            default: 'awaiting_transfer',
             index: true
         },
         amount: {
@@ -322,14 +317,6 @@ const paymentSchema = new mongoose.Schema(
             type: String,
             default: ''
         },
-        paymentUrl: {
-            type: String,
-            default: ''
-        },
-        checkUrl: {
-            type: String,
-            default: ''
-        },
         shipmentPayload: {
             type: mongoose.Schema.Types.Mixed,
             select: false,
@@ -341,6 +328,50 @@ const paymentSchema = new mongoose.Schema(
             default: null
         },
         paymentMethod: {
+            type: String,
+            default: 'bank_transfer'
+        },
+        receiptObjectKey: {
+            type: String,
+            default: ''
+        },
+        receiptContentType: {
+            type: String,
+            default: ''
+        },
+        receiptSize: {
+            type: Number,
+            default: 0
+        },
+        receiptUploadedAt: Date,
+        submittedAt: Date,
+        reviewedAt: Date,
+        reviewedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
+        reviewNote: {
+            type: String,
+            default: ''
+        },
+        issuanceAttempts: {
+            type: Number,
+            default: 0
+        },
+        lastIssuanceAt: Date,
+        providerOrderCreatedAt: Date,
+        providerShipmentRequestedAt: Date,
+        providerShipmentCreatedAt: Date,
+        providerShipmentId: {
+            type: String,
+            default: ''
+        },
+        providerTrackingNumber: {
+            type: String,
+            default: ''
+        },
+        providerLabelUrl: {
             type: String,
             default: ''
         },
@@ -584,10 +615,6 @@ function emailServiceConfigured() {
     return Boolean(RESEND_API_KEY || transporter);
 }
 
-function paymentGatewayConfigured() {
-    return Boolean(PAYLINK_API_ID && PAYLINK_SECRET_KEY);
-}
-
 function r2StorageConfigured() {
     return Boolean(
         R2_ACCESS_KEY_ID &&
@@ -595,6 +622,45 @@ function r2StorageConfigured() {
         R2_ACCOUNT_ID &&
         R2_BUCKET_NAME
     );
+}
+
+function bankTransferConfigured() {
+    return Boolean(
+        BANK_TRANSFER_BANK_NAME &&
+        BANK_TRANSFER_BENEFICIARY_NAME &&
+        /^SA\d{22}$/.test(BANK_TRANSFER_IBAN) &&
+        validEmail(BANK_TRANSFER_ADMIN_EMAIL) &&
+        r2StorageConfigured()
+    );
+}
+
+function isBankTransferAdmin(user) {
+    return Boolean(
+        user &&
+        validEmail(BANK_TRANSFER_ADMIN_EMAIL) &&
+        normalizeEmail(user.email) === BANK_TRANSFER_ADMIN_EMAIL
+    );
+}
+
+function formatIban(value) {
+    return String(value || '')
+        .replace(/\s+/g, '')
+        .replace(/(.{4})/g, '$1 ')
+        .trim();
+}
+
+function sameOriginRequest(req) {
+    const origin = String(req.headers.origin || '').trim();
+
+    if (!origin) {
+        return true;
+    }
+
+    try {
+        return new URL(origin).origin === new URL(PUBLIC_BASE_URL).origin;
+    } catch {
+        return false;
+    }
 }
 
 function r2StorageClient() {
@@ -625,6 +691,122 @@ function shipmentLabelObjectKey(userId, orderId) {
         .replace(/[^a-zA-Z0-9_-]/g, '');
 
     return `shipment-labels/${owner}/${order}.pdf`;
+}
+
+function transferReceiptObjectKey(userId, orderId, extension) {
+    const owner = String(userId || 'unassigned')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+    const order = String(orderId || 'transfer')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeExtension = String(extension || 'bin')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toLowerCase();
+
+    return `bank-transfer-receipts/${owner}/${order}.${safeExtension}`;
+}
+
+function parseReceiptDataUrl(value) {
+    const match = String(value || '').match(
+        /^data:(application\/pdf|image\/png|image\/jpeg);base64,([A-Za-z0-9+/=]+)$/
+    );
+
+    if (!match) {
+        throw new Error('RECEIPT_TYPE_INVALID');
+    }
+
+    const contentType = match[1];
+    const content = Buffer.from(match[2], 'base64');
+
+    if (!content.length) {
+        throw new Error('RECEIPT_EMPTY');
+    }
+
+    if (content.length > MAX_RECEIPT_BYTES) {
+        throw new Error('RECEIPT_TOO_LARGE');
+    }
+
+    const validMagic =
+        (
+            contentType === 'application/pdf' &&
+            content.subarray(0, 5).toString('ascii') === '%PDF-'
+        ) ||
+        (
+            contentType === 'image/png' &&
+            content.subarray(0, 8).equals(
+                Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
+            )
+        ) ||
+        (
+            contentType === 'image/jpeg' &&
+            content[0] === 0xff &&
+            content[1] === 0xd8 &&
+            content[content.length - 2] === 0xff &&
+            content[content.length - 1] === 0xd9
+        );
+
+    if (!validMagic) {
+        throw new Error('RECEIPT_CONTENT_INVALID');
+    }
+
+    return {
+        content,
+        contentType,
+        extension:
+            contentType === 'application/pdf'
+                ? 'pdf'
+                : (contentType === 'image/png' ? 'png' : 'jpg')
+    };
+}
+
+async function saveTransferReceiptToR2({
+    objectKey,
+    content,
+    contentType
+}) {
+    await r2StorageClient().send(
+        new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: objectKey,
+            Body: content,
+            ContentType: contentType,
+            CacheControl: 'private, no-store'
+        })
+    );
+}
+
+async function readTransferReceiptFromR2(objectKey) {
+    if (!objectKey || !r2StorageConfigured()) {
+        return null;
+    }
+
+    try {
+        const result = await r2StorageClient().send(
+            new GetObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: objectKey
+            })
+        );
+        const content = await r2BodyBuffer(result.Body);
+
+        if (!content.length || content.length > MAX_RECEIPT_BYTES) {
+            throw new Error('RECEIPT_CONTENT_INVALID');
+        }
+
+        return {
+            content,
+            contentType:
+                result.ContentType || 'application/octet-stream'
+        };
+    } catch (error) {
+        if (
+            error?.name === 'NoSuchKey' ||
+            error?.$metadata?.httpStatusCode === 404
+        ) {
+            return null;
+        }
+
+        throw error;
+    }
 }
 
 async function r2BodyBuffer(body) {
@@ -922,7 +1104,8 @@ function publicUser(user) {
         id: String(user._id),
         fullName: user.fullName,
         email: user.email,
-        emailVerified: Boolean(user.emailVerifiedAt)
+        emailVerified: Boolean(user.emailVerifiedAt),
+        isBankTransferAdmin: isBankTransferAdmin(user)
     };
 }
 
@@ -1124,6 +1307,36 @@ async function sendShipmentCreatedEmail({
             ''
         ),
         attachments: attachment ? [attachment] : []
+    });
+}
+
+async function sendTransferSubmittedEmail(payment) {
+    if (
+        !emailServiceConfigured() ||
+        !validEmail(BANK_TRANSFER_ADMIN_EMAIL)
+    ) {
+        return null;
+    }
+
+    const reviewUrl =
+        `${PUBLIC_BASE_URL}/admin-transfers.html`;
+
+    return sendBrandedEmail({
+        to: BANK_TRANSFER_ADMIN_EMAIL,
+        subject:
+            `تحويل بنكي بانتظار المراجعة — ${payment.orderNumber}`,
+        text:
+            'تم رفع إيصال تحويل بنكي جديد في SUMSN.\n\n' +
+            `رقم الطلب: ${payment.orderNumber}\n` +
+            `البريد: ${payment.customerEmail}\n` +
+            `المبلغ: ${number(payment.amount).toFixed(2)} ريال\n\n` +
+            `راجع دخول المبلغ في تطبيق البنك ثم افتح لوحة المراجعة:\n${reviewUrl}`,
+        html: brandedEmailHtml(
+            'تحويل بنكي بانتظار المراجعة',
+            `<p>رفع العميل إيصال تحويل بنكي جديد.</p><table style="width:100%;border-collapse:collapse;margin:18px 0"><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">رقم الطلب</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(payment.orderNumber)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eef1f5">البريد</td><td style="padding:8px;border-bottom:1px solid #eef1f5;font-weight:700">${escapeHtml(payment.customerEmail)}</td></tr><tr><td style="padding:8px">المبلغ</td><td style="padding:8px;font-weight:700">${escapeHtml(number(payment.amount).toFixed(2))} ريال</td></tr></table><p><strong>لا تعتمد الإيصال وحده.</strong> تأكد أولًا من دخول المبلغ فعليًا في تطبيق البنك.</p>`,
+            'فتح لوحة المراجعة',
+            reviewUrl
+        )
     });
 }
 
@@ -1599,135 +1812,21 @@ async function shippingRequest(path, body, method = 'POST') {
                 raw?.slice(0, 500)
         });
 
-        throw new Error('SHIPPING_PROVIDER_ERROR');
+        const providerError = new Error('SHIPPING_PROVIDER_ERROR');
+        providerError.providerStatus = response.status;
+        providerError.providerMessage =
+            data.message ||
+            data.error ||
+            data.errorMsg ||
+            data.otoErrorMessage ||
+            raw?.slice(0, 500) ||
+            '';
+        providerError.providerData = data;
+
+        throw providerError;
     }
 
     return data;
-}
-
-/*
-|--------------------------------------------------------------------------
-| طلبات Paylink - خادم إلى خادم فقط
-|--------------------------------------------------------------------------
-*/
-
-async function getPaylinkAccessToken(forceRefresh = false) {
-    if (
-        !forceRefresh &&
-        paylinkAccessToken &&
-        Date.now() < paylinkAccessTokenExpiresAt
-    ) {
-        return paylinkAccessToken;
-    }
-
-    if (!paymentGatewayConfigured()) {
-        throw new Error('PAYMENT_CONFIGURATION_ERROR');
-    }
-
-    const response = await fetch(`${PAYLINK_BASE_URL}/api/auth`, {
-        method: 'POST',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            apiId: PAYLINK_API_ID,
-            secretKey: PAYLINK_SECRET_KEY,
-            persistToken: false
-        })
-    });
-    const raw = await response.text();
-    let data = {};
-
-    try {
-        data = raw ? JSON.parse(raw) : {};
-    } catch {
-        data = {};
-    }
-
-    if (!response.ok || !data.id_token) {
-        const error = new Error('PAYMENT_PROVIDER_ERROR');
-        error.providerStatus = response.status;
-        error.providerMessage =
-            data.detail ||
-            data.message ||
-            data.title ||
-            raw.slice(0, 500);
-        throw error;
-    }
-
-    paylinkAccessToken = data.id_token;
-    paylinkAccessTokenExpiresAt = Date.now() + (25 * 60 * 1000);
-
-    return paylinkAccessToken;
-}
-
-async function paylinkRequest(path, { method = 'GET', body } = {}) {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-        const token = await getPaylinkAccessToken(attempt > 0);
-        const response = await fetch(
-            `${PAYLINK_BASE_URL}/api/${path.replace(/^\//, '')}`,
-            {
-                method,
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body:
-                    method === 'GET'
-                        ? undefined
-                        : JSON.stringify(body)
-            }
-        );
-        const raw = await response.text();
-        let data = {};
-
-        try {
-            data = raw ? JSON.parse(raw) : {};
-        } catch {
-            data = {};
-        }
-
-        if (response.status === 401 && attempt === 0) {
-            paylinkAccessToken = '';
-            paylinkAccessTokenExpiresAt = 0;
-            continue;
-        }
-
-        if (!response.ok || data.success === false) {
-            const error = new Error('PAYMENT_PROVIDER_ERROR');
-            error.providerStatus = response.status;
-            error.providerMessage =
-                data.detail ||
-                data.message ||
-                data.title ||
-                raw.slice(0, 500);
-            throw error;
-        }
-
-        return data;
-    }
-
-    throw new Error('PAYMENT_PROVIDER_ERROR');
-}
-
-function paylinkWebhookAuthorized(req) {
-    if (!PAYLINK_WEBHOOK_SECRET) {
-        return true;
-    }
-
-    const expected = Buffer.from(
-        `Bearer ${PAYLINK_WEBHOOK_SECRET}`
-    );
-    const received = Buffer.from(
-        String(req.headers.authorization || '')
-    );
-
-    return (
-        expected.length === received.length &&
-        crypto.timingSafeEqual(expected, received)
-    );
 }
 
 function getDeliveryCompanies(data) {
@@ -2062,6 +2161,126 @@ async function getShipmentLabel(orderId) {
     }
 
     return '';
+}
+
+function shippingProviderNotFound(error) {
+    const message = String(error?.providerMessage || '').toLowerCase();
+
+    return (
+        error?.providerStatus === 404 ||
+        message.includes('not found') ||
+        message.includes('does not exist') ||
+        message.includes('غير موجود')
+    );
+}
+
+async function getProviderOrderDetails(orderId) {
+    try {
+        return await shippingRequest(
+            `orderDetails?orderId=${encodeURIComponent(orderId)}`,
+            undefined,
+            'GET'
+        );
+    } catch (error) {
+        if (shippingProviderNotFound(error)) {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
+function findProviderValue(source, expectedKeys, depth = 0, seen = new Set()) {
+    if (
+        source === null ||
+        source === undefined ||
+        typeof source !== 'object' ||
+        depth > 7 ||
+        seen.has(source)
+    ) {
+        return '';
+    }
+
+    seen.add(source);
+    const normalizedKeys = new Set(
+        expectedKeys.map((key) => String(key).toLowerCase())
+    );
+
+    for (const [key, value] of Object.entries(source)) {
+        if (
+            normalizedKeys.has(String(key).toLowerCase()) &&
+            value !== null &&
+            value !== undefined &&
+            String(value).trim()
+        ) {
+            return String(value).trim();
+        }
+    }
+
+    for (const value of Object.values(source)) {
+        const nested = findProviderValue(
+            value,
+            expectedKeys,
+            depth + 1,
+            seen
+        );
+
+        if (nested) {
+            return nested;
+        }
+    }
+
+    return '';
+}
+
+function providerShipmentSnapshot(source) {
+    return {
+        shipmentId: findProviderValue(source, [
+            'shipmentId',
+            'otoShipmentId'
+        ]),
+        trackingNumber: findProviderValue(source, [
+            'trackingNumber',
+            'trackingNo',
+            'awbNumber',
+            'waybillNumber'
+        ]),
+        labelUrl: findProviderValue(source, [
+            'printAWBURL',
+            'printAwbUrl',
+            'labelUrl',
+            'awbUrl'
+        ])
+    };
+}
+
+async function assertSufficientShippingBalance(requiredAmount) {
+    const accountInfo = await shippingRequest(
+        'accountInfo',
+        undefined,
+        'GET'
+    );
+    const remainingCredit = number(
+        accountInfo.remainingCredit ??
+        accountInfo.data?.remainingCredit,
+        NaN
+    );
+    const remainingFreeShipments = number(
+        accountInfo.remainingFreeShipments ??
+        accountInfo.data?.remainingFreeShipments,
+        0
+    );
+
+    if (!Number.isFinite(remainingCredit)) {
+        throw new Error('SHIPPING_BALANCE_UNAVAILABLE');
+    }
+
+    if (
+        remainingFreeShipments <= 0 &&
+        remainingCredit < number(requiredAmount)
+    ) {
+        throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
+    }
 }
 
 app.get('/api/shipment-label', async (req, res) => {
@@ -2941,30 +3160,33 @@ app.post('/api/shipping-rates', async (req, res) => {
 
 /*
 |--------------------------------------------------------------------------
-| الدفع ثم إنشاء الشحنة
+| التحويل البنكي ثم إنشاء الشحنة
 |--------------------------------------------------------------------------
 */
 
-function paymentRedirectUrl(state, orderNumber = '') {
-    const url = new URL('/index.html', PUBLIC_BASE_URL);
-    url.searchParams.set('payment', state);
-
-    if (orderNumber) {
-        url.searchParams.set('orderNumber', orderNumber);
-    }
-
-    return url.toString();
-}
-
-function paymentPublicState(payment, shipment = null) {
-    return {
+function bankTransferPublicState(
+    payment,
+    shipment = null,
+    { admin = false } = {}
+) {
+    const state = {
         success: true,
         orderNumber: payment.orderNumber,
         status: payment.status,
         amount: payment.amount,
         carrier: payment.carrier,
-        transactionNo: payment.transactionNo,
-        paymentMethod: payment.paymentMethod || '',
+        deliveryTime: payment.deliveryTime || '',
+        paymentMethod: 'bank_transfer',
+        bank: {
+            bankName: BANK_TRANSFER_BANK_NAME,
+            beneficiaryName: BANK_TRANSFER_BENEFICIARY_NAME,
+            iban: formatIban(BANK_TRANSFER_IBAN)
+        },
+        receiptUploaded: Boolean(payment.receiptObjectKey),
+        submittedAt: payment.submittedAt || null,
+        reviewedAt: payment.reviewedAt || null,
+        canUploadReceipt:
+            ['awaiting_transfer', 'rejected'].includes(payment.status),
         shipment: shipment
             ? {
                 orderId: shipment.otoOrderId,
@@ -2980,10 +3202,58 @@ function paymentPublicState(payment, shipment = null) {
             }
             : null
     };
+
+    if (payment.status === 'rejected') {
+        state.reviewNote = payment.reviewNote || '';
+    }
+
+    if (
+        ['issuance_failed', 'paid_hold'].includes(payment.status)
+    ) {
+        state.failureCode = payment.failureReason || '';
+    }
+
+    if (admin) {
+        state.customerEmail = payment.customerEmail;
+        state.createdAt = payment.createdAt || null;
+        state.reviewNote = payment.reviewNote || '';
+        state.issuanceAttempts = number(payment.issuanceAttempts);
+        state.receiptUrl = payment.receiptObjectKey
+            ? `/api/admin/bank-transfers/${encodeURIComponent(payment.orderNumber)}/receipt`
+            : '';
+        state.canRetryIssuance =
+            ['issuance_failed', 'paid_hold'].includes(payment.status);
+    }
+
+    return state;
 }
 
 async function createPaidShipment(payment) {
     if (payment.status === 'shipment_created') {
+        return Payment.findById(payment._id);
+    }
+
+    const existingShipment = await Shipment.findOne({
+        otoOrderId: payment.orderNumber
+    });
+
+    if (existingShipment) {
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: 'shipment_created',
+                    shipmentId: existingShipment._id,
+                    fulfilledAt:
+                        payment.fulfilledAt || new Date(),
+                    failureReason: ''
+                },
+                $unset: {
+                    shipmentPayload: 1
+                }
+            }
+        );
+
         return Payment.findById(payment._id);
     }
 
@@ -3007,14 +3277,22 @@ async function createPaidShipment(payment) {
         {
             _id: payment._id,
             status: {
-                $in: ['creating', 'pending', 'paid']
+                $in: [
+                    'pending_review',
+                    'issuance_failed',
+                    'paid_hold'
+                ]
             }
         },
         {
             $set: {
                 status: 'processing',
                 paidAt: payment.paidAt || new Date(),
+                lastIssuanceAt: new Date(),
                 failureReason: ''
+            },
+            $inc: {
+                issuanceAttempts: 1
             }
         },
         {
@@ -3027,6 +3305,29 @@ async function createPaidShipment(payment) {
     }
 
     try {
+        const shipmentCreatedDuringLock = await Shipment.findOne({
+            otoOrderId: locked.orderNumber
+        });
+
+        if (shipmentCreatedDuringLock) {
+            await Payment.updateOne(
+                { _id: locked._id, status: 'processing' },
+                {
+                    $set: {
+                        status: 'shipment_created',
+                        shipmentId: shipmentCreatedDuringLock._id,
+                        fulfilledAt: new Date(),
+                        failureReason: ''
+                    },
+                    $unset: {
+                        shipmentPayload: 1
+                    }
+                }
+            );
+
+            return Payment.findById(locked._id);
+        }
+
         const payload = locked.shipmentPayload;
         const body = payload?.body;
         const senderAddress = payload?.senderAddress;
@@ -3036,91 +3337,221 @@ async function createPaidShipment(payment) {
             throw new Error('PAYMENT_PAYLOAD_MISSING');
         }
 
-        const accountInfo = await shippingRequest(
-            'accountInfo',
-            undefined,
-            'GET'
-        );
-        const remainingCredit = number(
-            accountInfo.remainingCredit ??
-            accountInfo.data?.remainingCredit,
-            NaN
-        );
-        const remainingFreeShipments = number(
-            accountInfo.remainingFreeShipments ??
-            accountInfo.data?.remainingFreeShipments,
-            0
+        const orderId = locked.orderNumber;
+        let providerOrder = await getProviderOrderDetails(orderId);
+        let providerSnapshot = providerShipmentSnapshot(providerOrder);
+        let providerOrderCreated = Boolean(
+            locked.providerOrderCreatedAt || providerOrder
         );
 
-        if (
-            Number.isFinite(remainingCredit) &&
-            remainingFreeShipments <= 0 &&
-            remainingCredit < locked.providerCost
-        ) {
-            throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
+        if (!providerOrderCreated) {
+            await assertSufficientShippingBalance(locked.providerCost);
+
+            const pickupLocationCode = await ensureSenderPickupLocation(
+                body,
+                senderAddress
+            );
+            const order = {
+                orderId,
+                pickupLocationCode,
+                createShipment: false,
+                deliveryOptionId: number(locked.deliveryOptionId),
+                storeName: 'SUMSN',
+                payment_method: 'paid',
+                amount: locked.amount,
+                amount_due: 0,
+                shippingAmount: locked.providerCost,
+                subtotal: locked.amount,
+                currency: 'SAR',
+                packageCount: 1,
+                packageWeight: number(body.weight),
+                boxLength: number(body.boxLength),
+                boxWidth: number(body.boxWidth),
+                boxHeight: number(body.boxHeight),
+                shippingNotes: body.contentsDescription,
+                item_description: body.contentsDescription,
+                customer: {
+                    name: body.receiverName.trim(),
+                    email: body.email.trim(),
+                    mobile: body.receiverPhone.trim(),
+                    country: 'SA',
+                    shortAddressCode: receiverAddress.shortCode,
+                    buildingNo: receiverAddress.buildingNo,
+                    secondaryAddressNumber:
+                        receiverAddress.secondaryNumber,
+                    state: receiverAddress.state,
+                    city: receiverAddress.city,
+                    district: receiverAddress.district,
+                    street: receiverAddress.street,
+                    postcode: receiverAddress.postcode,
+                    address: receiverAddress.addressLine,
+                    lat: receiverAddress.lat,
+                    lon: receiverAddress.lon
+                }
+            };
+
+            try {
+                providerOrder = await shippingRequest('createOrder', order);
+                providerOrderCreated = true;
+            } catch (createOrderError) {
+                providerOrder = await getProviderOrderDetails(orderId);
+
+                if (!providerOrder) {
+                    throw createOrderError;
+                }
+
+                providerOrderCreated = true;
+            }
+
+            providerSnapshot = providerShipmentSnapshot(providerOrder);
+            await Payment.updateOne(
+                { _id: locked._id, status: 'processing' },
+                {
+                    $set: {
+                        providerOrderCreatedAt: new Date(),
+                        providerShipmentId:
+                            providerSnapshot.shipmentId || '',
+                        providerTrackingNumber:
+                            providerSnapshot.trackingNumber || '',
+                        providerLabelUrl:
+                            providerSnapshot.labelUrl || ''
+                    }
+                }
+            );
         }
 
-        const orderId = locked.orderNumber;
-        const pickupLocationCode = await ensureSenderPickupLocation(
-            body,
-            senderAddress
-        );
-        const order = {
-            orderId,
-            pickupLocationCode,
-            createShipment: false,
-            deliveryOptionId: number(locked.deliveryOptionId),
-            storeName: 'SUMSN',
-            payment_method: 'paid',
-            amount: locked.amount,
-            amount_due: 0,
-            shippingAmount: locked.providerCost,
-            subtotal: locked.amount,
-            currency: 'SAR',
-            packageCount: 1,
-            packageWeight: number(body.weight),
-            boxLength: number(body.boxLength),
-            boxWidth: number(body.boxWidth),
-            boxHeight: number(body.boxHeight),
-            shippingNotes: body.contentsDescription,
-            item_description: body.contentsDescription,
-            customer: {
-                name: body.receiverName.trim(),
-                email: body.email.trim(),
-                mobile: body.receiverPhone.trim(),
-                country: 'SA',
-                shortAddressCode: receiverAddress.shortCode,
-                buildingNo: receiverAddress.buildingNo,
-                secondaryAddressNumber:
-                    receiverAddress.secondaryNumber,
-                state: receiverAddress.state,
-                city: receiverAddress.city,
-                district: receiverAddress.district,
-                street: receiverAddress.street,
-                postcode: receiverAddress.postcode,
-                address: receiverAddress.addressLine,
-                lat: receiverAddress.lat,
-                lon: receiverAddress.lon
-            }
-        };
-
-        await shippingRequest('createOrder', order);
-
-        const shipmentResult = await createShipmentAfterAssignment(
-            orderId,
-            locked.deliveryOptionId
-        );
-        const providerShipmentId =
-            shipmentResult.shipmentId ||
-            shipmentResult.data?.shipmentId ||
-            shipmentResult.otoId ||
-            '';
-        const trackingNumber =
-            shipmentResult.trackingNumber ||
-            shipmentResult.data?.trackingNumber ||
+        let providerShipmentId =
+            locked.providerShipmentId || providerSnapshot.shipmentId || '';
+        let trackingNumber =
+            locked.providerTrackingNumber ||
+            providerSnapshot.trackingNumber ||
             providerShipmentId ||
             '';
-        const providerLabelUrl = await getShipmentLabel(orderId);
+        let providerLabelUrl =
+            locked.providerLabelUrl || providerSnapshot.labelUrl || '';
+
+        if (!providerLabelUrl) {
+            providerLabelUrl = await getShipmentLabel(orderId);
+        }
+
+        const providerShipmentCreated = Boolean(
+            locked.providerShipmentCreatedAt ||
+            providerShipmentId ||
+            trackingNumber ||
+            providerLabelUrl
+        );
+
+        if (!providerShipmentCreated) {
+            if (locked.providerShipmentRequestedAt) {
+                throw new Error('SHIPMENT_STATUS_UNCERTAIN');
+            }
+
+            await assertSufficientShippingBalance(locked.providerCost);
+
+            const shipmentRequestedAt = new Date();
+
+            await Payment.updateOne(
+                { _id: locked._id, status: 'processing' },
+                {
+                    $set: {
+                        providerShipmentRequestedAt: shipmentRequestedAt
+                    }
+                }
+            );
+
+            try {
+                const shipmentResult = await createShipmentAfterAssignment(
+                    orderId,
+                    locked.deliveryOptionId
+                );
+                const shipmentSnapshot = providerShipmentSnapshot(
+                    shipmentResult
+                );
+
+                providerShipmentId =
+                    shipmentSnapshot.shipmentId || providerShipmentId;
+                trackingNumber =
+                    shipmentSnapshot.trackingNumber ||
+                    trackingNumber ||
+                    providerShipmentId;
+                providerLabelUrl =
+                    shipmentSnapshot.labelUrl || providerLabelUrl;
+            } catch (createShipmentError) {
+                const currentOrder = await getProviderOrderDetails(orderId);
+                const currentSnapshot = providerShipmentSnapshot(currentOrder);
+
+                providerShipmentId =
+                    currentSnapshot.shipmentId || providerShipmentId;
+                trackingNumber =
+                    currentSnapshot.trackingNumber || trackingNumber;
+                providerLabelUrl =
+                    currentSnapshot.labelUrl ||
+                    await getShipmentLabel(orderId);
+
+                if (
+                    !providerShipmentId &&
+                    !trackingNumber &&
+                    !providerLabelUrl
+                ) {
+                    const responseStatus = number(
+                        createShipmentError?.response?.status
+                    );
+                    const statusIsAmbiguous =
+                        !responseStatus ||
+                        responseStatus >= 500 ||
+                        [408, 409, 425, 429].includes(responseStatus);
+
+                    if (!statusIsAmbiguous) {
+                        await Payment.updateOne(
+                            { _id: locked._id, status: 'processing' },
+                            {
+                                $unset: {
+                                    providerShipmentRequestedAt: 1
+                                }
+                            }
+                        );
+                        throw createShipmentError;
+                    }
+
+                    throw new Error('SHIPMENT_STATUS_UNCERTAIN');
+                }
+            }
+
+            await Payment.updateOne(
+                { _id: locked._id, status: 'processing' },
+                {
+                    $set: {
+                        providerShipmentCreatedAt: new Date(),
+                        providerShipmentId,
+                        providerTrackingNumber: trackingNumber,
+                        providerLabelUrl
+                    }
+                }
+            );
+        }
+
+        if (!providerLabelUrl) {
+            providerLabelUrl = await getShipmentLabel(orderId);
+        }
+
+        if (!providerLabelUrl) {
+            throw new Error('SHIPMENT_LABEL_NOT_READY');
+        }
+
+        await Payment.updateOne(
+            { _id: locked._id, status: 'processing' },
+            {
+                $set: {
+                    providerOrderCreatedAt:
+                        locked.providerOrderCreatedAt || new Date(),
+                    providerShipmentCreatedAt:
+                        locked.providerShipmentCreatedAt || new Date(),
+                    providerShipmentId,
+                    providerTrackingNumber: trackingNumber,
+                    providerLabelUrl
+                }
+            }
+        );
         let attachment = null;
         let labelStorage = {};
 
@@ -3239,10 +3670,7 @@ async function createPaidShipment(payment) {
 
         return Payment.findById(locked._id);
     } catch (error) {
-        console.error(
-            'دفعت العملية لكن تعذر إنشاء الشحنة:',
-            error
-        );
+        console.error('تعذر إصدار شحنة التحويل المعتمد:', error);
 
         await Payment.updateOne(
             {
@@ -3251,7 +3679,7 @@ async function createPaidShipment(payment) {
             },
             {
                 $set: {
-                    status: 'manual_review',
+                    status: 'issuance_failed',
                     failureReason:
                         String(error.message || 'FULFILLMENT_ERROR')
                             .slice(0, 200)
@@ -3261,139 +3689,6 @@ async function createPaidShipment(payment) {
 
         throw error;
     }
-}
-
-async function verifyPaylinkPayment({
-    orderNumber,
-    transactionNo
-}) {
-    await connectToDatabase();
-
-    const payment = await Payment.findOne({
-        ...(orderNumber ? { orderNumber } : {}),
-        ...(transactionNo ? { transactionNo } : {})
-    });
-
-    if (!payment) {
-        throw new Error('PAYMENT_NOT_FOUND');
-    }
-
-    const effectiveTransactionNo =
-        transactionNo || payment.transactionNo;
-
-    if (
-        !effectiveTransactionNo ||
-        (
-            payment.transactionNo &&
-            String(payment.transactionNo) !==
-                String(effectiveTransactionNo)
-        )
-    ) {
-        throw new Error('PAYMENT_TRANSACTION_MISMATCH');
-    }
-
-    const invoice = await paylinkRequest(
-        `getInvoice/${encodeURIComponent(effectiveTransactionNo)}`
-    );
-    const invoiceOrderNumber =
-        invoice.gatewayOrderRequest?.orderNumber ||
-        invoice.orderNumber ||
-        '';
-    const invoiceAmount = roundMoney(invoice.amount);
-    const status =
-        String(invoice.orderStatus || '').trim().toLowerCase();
-
-    if (
-        invoiceOrderNumber &&
-        String(invoiceOrderNumber) !== payment.orderNumber
-    ) {
-        await Payment.updateOne(
-            { _id: payment._id },
-            {
-                $set: {
-                    status: 'manual_review',
-                    failureReason: 'PAYMENT_ORDER_MISMATCH'
-                }
-            }
-        );
-        throw new Error('PAYMENT_ORDER_MISMATCH');
-    }
-
-    if (
-        Math.round(invoiceAmount * 100) !==
-        Math.round(payment.amount * 100)
-    ) {
-        await Payment.updateOne(
-            { _id: payment._id },
-            {
-                $set: {
-                    status: 'manual_review',
-                    failureReason: 'PAYMENT_AMOUNT_MISMATCH'
-                }
-            }
-        );
-        throw new Error('PAYMENT_AMOUNT_MISMATCH');
-    }
-
-    if (status === 'paid') {
-        if (
-            ![
-                'shipment_created',
-                'processing',
-                'manual_review',
-                'paid_hold'
-            ].includes(payment.status)
-        ) {
-            payment.status = 'paid';
-        }
-
-        payment.paidAt = payment.paidAt || new Date();
-        payment.paymentMethod =
-            invoice.paymentReceipt?.paymentMethod ||
-            invoice.paymentType ||
-            payment.paymentMethod ||
-            '';
-        await payment.save();
-
-        const completed = await createPaidShipment(payment);
-
-        return {
-            state:
-                completed.status === 'shipment_created'
-                    ? 'success'
-                    : (
-                        completed.status === 'paid_hold'
-                            ? 'review'
-                            : completed.status
-                    ),
-            payment: completed
-        };
-    }
-
-    if (status === 'canceled') {
-        payment.status = 'canceled';
-        await payment.save();
-
-        return {
-            state: 'canceled',
-            payment
-        };
-    }
-
-    if (
-        !['shipment_created', 'processing', 'manual_review']
-            .includes(payment.status)
-    ) {
-        payment.status = 'pending';
-        await payment.save();
-    }
-
-    return {
-        state: payment.status === 'manual_review'
-            ? 'review'
-            : 'pending',
-        payment
-    };
 }
 
 async function currentShipmentForPayment(payment) {
@@ -3507,7 +3802,7 @@ app.post('/api/create-shipment', async (req, res) => {
         if (!shipmentUser) {
             return res.status(401).json({
                 success: false,
-                message: 'سجّل الدخول أولًا لإتمام الدفع وحفظ بوليصتك.'
+                message: 'سجّل الدخول أولًا لإنشاء طلب التحويل وحفظ بوليصتك.'
             });
         }
 
@@ -3544,14 +3839,14 @@ app.post('/api/create-shipment', async (req, res) => {
     if (!ALLOW_LIVE_SHIPMENTS) {
         return res.status(403).json({
             success: false,
-            message: 'الدفع وإصدار الشحنات غير متاحين مؤقتًا أثناء الاختبار.'
+            message: 'إنشاء طلبات الشحن غير متاح مؤقتًا أثناء الاختبار.'
         });
     }
 
-    if (!paymentGatewayConfigured()) {
+    if (!bankTransferConfigured()) {
         return res.status(503).json({
             success: false,
-            message: 'بوابة الدفع غير جاهزة حاليًا.'
+            message: 'إعدادات التحويل البنكي غير مكتملة حاليًا.'
         });
     }
 
@@ -3562,7 +3857,7 @@ app.post('/api/create-shipment', async (req, res) => {
     ) {
         return res.status(403).json({
             success: false,
-            message: 'الدفع وإصدار الشحنات متاحان حاليًا لحساب الاختبار فقط.'
+            message: 'إنشاء طلبات الشحن متاح حاليًا لحساب الاختبار فقط.'
         });
     }
 
@@ -3632,31 +3927,46 @@ app.post('/api/create-shipment', async (req, res) => {
         });
 
         if (existing) {
-            if (
-                existing.paymentUrl &&
-                ['creating', 'pending'].includes(existing.status)
-            ) {
-                return res.json({
-                    success: true,
-                    paymentRequired: true,
-                    paymentUrl: existing.paymentUrl,
-                    orderNumber: existing.orderNumber,
-                    amount: existing.amount
-                });
-            }
-
             if (existing.status === 'shipment_created') {
                 const shipment =
                     await currentShipmentForPayment(existing);
 
                 return res.json(
-                    paymentPublicState(existing, shipment)
+                    bankTransferPublicState(existing, shipment)
                 );
+            }
+
+            if (
+                ['creating', 'pending', 'failed', 'canceled', 'manual_review']
+                    .includes(existing.status)
+            ) {
+                existing.status = 'awaiting_transfer';
+                existing.paymentMethod = 'bank_transfer';
+                existing.failureReason = '';
+                await existing.save();
+            }
+
+            if (
+                [
+                    'awaiting_transfer',
+                    'rejected',
+                    'pending_review',
+                    'processing',
+                    'issuance_failed',
+                    'paid_hold'
+                ].includes(existing.status)
+            ) {
+                return res.json({
+                    ...bankTransferPublicState(existing),
+                    bankTransferRequired: true,
+                    bankTransferUrl:
+                        `/bank-transfer.html?orderNumber=${encodeURIComponent(existing.orderNumber)}`
+                });
             }
 
             return res.status(409).json({
                 success: false,
-                message: 'هذه المحاولة مستخدمة سابقًا. أغلق النافذة واختر العرض مرة أخرى.'
+                message: 'هذه المحاولة مستخدمة سابقًا. افتح لوحة حسابك لمراجعة حالتها.'
             });
         }
 
@@ -3705,124 +4015,38 @@ app.post('/api/create-shipment', async (req, res) => {
             selected.estimatedDeliveryTime ||
             ''
         );
-        const accountInfo = await shippingRequest(
-            'accountInfo',
-            undefined,
-            'GET'
-        );
-        const remainingCredit = number(
-            accountInfo.remainingCredit ??
-            accountInfo.data?.remainingCredit,
-            NaN
-        );
-        const remainingFreeShipments = number(
-            accountInfo.remainingFreeShipments ??
-            accountInfo.data?.remainingFreeShipments,
-            0
-        );
-
-        if (
-            Number.isFinite(remainingCredit) &&
-            remainingFreeShipments <= 0 &&
-            remainingCredit < providerCost
-        ) {
-            throw new Error('INSUFFICIENT_SHIPPING_BALANCE');
-        }
+        await assertSufficientShippingBalance(providerCost);
 
         const payment = await Payment.create({
             userId: shipmentUser?._id || null,
             customerEmail: body.email,
             requestId: body.requestId,
             orderNumber,
-            status: 'creating',
+            status: 'awaiting_transfer',
             amount: finalPrice,
             providerCost,
             carrier: carrierName,
             deliveryOptionId:
                 String(body.deliveryOptionId),
             deliveryTime,
+            paymentMethod: 'bank_transfer',
             shipmentPayload: {
                 body,
                 senderAddress,
                 receiverAddress
             }
         });
-        const callbackUrl = new URL(
-            '/api/payments/paylink/callback',
-            PUBLIC_BASE_URL
-        ).toString();
-        const cancelUrl = new URL(
-            '/api/payments/paylink/cancel',
-            PUBLIC_BASE_URL
-        ).toString();
-        const invoice = await paylinkRequest(
-            'addInvoice',
-            {
-                method: 'POST',
-                body: {
-                    orderNumber,
-                    amount: finalPrice,
-                    callBackUrl: callbackUrl,
-                    cancelUrl,
-                    clientName: body.senderName,
-                    clientEmail: body.email,
-                    clientMobile: body.senderPhone,
-                    currency: 'SAR',
-                    note: `خدمة شحن SUMSN - ${carrierName}`,
-                    products: [
-                        {
-                            title: 'خدمة شحن',
-                            price: finalPrice,
-                            qty: 1,
-                            description:
-                                `${body.senderCity} إلى ${body.receiverCity}`,
-                            isDigital: false
-                        }
-                    ]
-                }
-            }
-        );
-        const transactionNo =
-            String(invoice.transactionNo || '');
-        const paymentUrl =
-            invoice.url || invoice.mobileUrl || '';
-
-        if (!transactionNo || !paymentUrl) {
-            throw new Error('PAYMENT_INVOICE_INVALID');
-        }
-
-        payment.transactionNo = transactionNo;
-        payment.paymentUrl = paymentUrl;
-        payment.checkUrl = invoice.checkUrl || '';
-        payment.status = 'pending';
-        await payment.save();
 
         res.json({
-            success: true,
-            paymentRequired: true,
-            paymentUrl,
-            orderNumber,
-            amount: finalPrice
+            ...bankTransferPublicState(payment),
+            bankTransferRequired: true,
+            bankTransferUrl:
+                `/bank-transfer.html?orderNumber=${encodeURIComponent(orderNumber)}`
         });
     } catch (error) {
-        console.error('تعذر بدء الدفع:', error);
+        console.error('تعذر إنشاء طلب التحويل:', error);
 
-        await Payment.updateOne(
-            {
-                orderNumber,
-                status: 'creating'
-            },
-            {
-                $set: {
-                    status: 'failed',
-                    failureReason:
-                        String(error.message || 'PAYMENT_START_ERROR')
-                            .slice(0, 200)
-                }
-            }
-        ).catch(() => {});
-
-        let message = 'تعذر فتح صفحة الدفع حاليًا. حاول مرة أخرى.';
+        let message = 'تعذر إنشاء طلب التحويل حاليًا. حاول مرة أخرى.';
 
         if (error.message === 'INVALID_NATIONAL_ADDRESS') {
             message = 'تعذر التحقق من أحد العنوانين المختصرين.';
@@ -3831,9 +4055,11 @@ app.post('/api/create-shipment', async (req, res) => {
         ) {
             message = 'رصيد حساب الشحن غير كافٍ لإصدار البوليصة.';
         } else if (
-            error.message === 'PAYMENT_CONFIGURATION_ERROR'
+            error.message === 'SHIPPING_BALANCE_UNAVAILABLE'
         ) {
-            message = 'بوابة الدفع غير جاهزة حاليًا.';
+            message = 'تعذر التحقق من رصيد حساب الشحن حاليًا؛ لم يُنشأ طلب تحويل.';
+        } else if (error.message === 'R2_CONFIGURATION_ERROR') {
+            message = 'خدمة حفظ الإيصالات غير جاهزة حاليًا.';
         }
 
         res.status(502).json({
@@ -3843,117 +4069,14 @@ app.post('/api/create-shipment', async (req, res) => {
     }
 });
 
-app.get('/api/payments/paylink/callback', async (req, res) => {
-    const orderNumber =
-        String(req.query.orderNumber || '').trim();
-    const transactionNo =
-        String(req.query.transactionNo || '').trim();
-
-    try {
-        const result = await verifyPaylinkPayment({
-            orderNumber,
-            transactionNo
-        });
-
-        res.redirect(
-            303,
-            paymentRedirectUrl(
-                result.state,
-                result.payment.orderNumber
-            )
-        );
-    } catch (error) {
-        console.error('تعذر تأكيد دفعة Paylink:', error);
-        res.redirect(
-            303,
-            paymentRedirectUrl('review', orderNumber)
-        );
-    }
-});
-
-app.get('/api/payments/paylink/cancel', async (req, res) => {
-    const orderNumber =
-        String(req.query.orderNumber || '').trim();
-    const transactionNo =
-        String(req.query.transactionNo || '').trim();
-
-    if (orderNumber || transactionNo) {
-        try {
-            await verifyPaylinkPayment({
-                orderNumber,
-                transactionNo
-            });
-        } catch (error) {
-            console.warn(
-                'تعذر تحديث حالة الفاتورة الملغاة:',
-                error.message
-            );
-        }
-    }
-
-    res.redirect(
-        303,
-        paymentRedirectUrl('canceled', orderNumber)
-    );
-});
-
-app.post('/api/payments/paylink/webhook', async (req, res) => {
-    if (!paylinkWebhookAuthorized(req)) {
-        return res.status(401).json({
-            success: false
-        });
-    }
-
-    const orderNumber =
-        String(
-            req.body.merchantOrderNumber ||
-            req.body.orderNumber ||
-            ''
-        ).trim();
-    const transactionNo =
-        String(req.body.transactionNo || '').trim();
-
-    const isSumsnOrder =
-        /^SUMSN-[A-F0-9]{16}$/.test(orderNumber);
-
-    // Paylink's portal sends a connectivity test without a real SUMSN
-    // invoice. Acknowledge that test, but never fulfill a shipment from it.
-    if (
-        (!orderNumber && !transactionNo) ||
-        (orderNumber && !isSumsnOrder)
-    ) {
-        return res.status(200).json({
-            success: true,
-            test: true
-        });
-    }
-
-    try {
-        const result = await verifyPaylinkPayment({
-            orderNumber,
-            transactionNo
-        });
-
-        res.status(200).json({
-            success: true,
-            status: result.payment.status
-        });
-    } catch (error) {
-        console.error('خطأ إشعار Paylink:', error);
-        res.status(500).json({
-            success: false
-        });
-    }
-});
-
-app.get('/api/payments/:orderNumber', async (req, res) => {
+app.get('/api/bank-transfers/:orderNumber', async (req, res) => {
     try {
         const user = await authenticatedUser(req);
 
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'سجّل الدخول لعرض حالة العملية.'
+                message: 'سجّل الدخول لعرض طلب التحويل.'
             });
         }
 
@@ -3968,19 +4091,488 @@ app.get('/api/payments/:orderNumber', async (req, res) => {
         if (!payment) {
             return res.status(404).json({
                 success: false,
-                message: 'لم يتم العثور على عملية الدفع.'
+                message: 'لم يتم العثور على طلب التحويل.'
             });
         }
 
         const shipment =
             await currentShipmentForPayment(payment);
 
-        res.json(paymentPublicState(payment, shipment));
+        res.json(bankTransferPublicState(payment, shipment));
     } catch (error) {
-        console.error('تعذر جلب حالة الدفع:', error);
+        console.error('تعذر جلب طلب التحويل:', error);
         res.status(500).json({
             success: false,
-            message: 'تعذر جلب حالة العملية حاليًا.'
+            message: 'تعذر جلب طلب التحويل حاليًا.'
+        });
+    }
+});
+
+app.post('/api/bank-transfers/:orderNumber/receipt', async (req, res) => {
+    if (!sameOriginRequest(req)) {
+        return res.status(403).json({
+            success: false,
+            message: 'تعذر التحقق من مصدر الطلب.'
+        });
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'سجّل الدخول أولًا لرفع الإيصال.'
+            });
+        }
+
+        if (authRateLimited(req, 'bank-receipt', 10, 60 * 60 * 1000)) {
+            return res.status(429).json({
+                success: false,
+                message: 'تم تجاوز عدد محاولات الرفع. حاول لاحقًا.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const orderNumber =
+            String(req.params.orderNumber || '').trim();
+        const payment = await Payment.findOne({
+            orderNumber,
+            userId: user._id,
+            status: { $in: ['awaiting_transfer', 'rejected'] }
+        });
+
+        if (!payment) {
+            return res.status(409).json({
+                success: false,
+                message: 'لا يمكن رفع إيصال لهذا الطلب في حالته الحالية.'
+            });
+        }
+
+        const receipt = parseReceiptDataUrl(req.body?.receiptDataUrl);
+        const objectKey = transferReceiptObjectKey(
+            user._id,
+            orderNumber,
+            receipt.extension
+        );
+
+        await saveTransferReceiptToR2({
+            objectKey,
+            content: receipt.content,
+            contentType: receipt.contentType
+        });
+
+        const updated = await Payment.findOneAndUpdate(
+            {
+                _id: payment._id,
+                userId: user._id,
+                status: { $in: ['awaiting_transfer', 'rejected'] }
+            },
+            {
+                $set: {
+                    status: 'pending_review',
+                    paymentMethod: 'bank_transfer',
+                    receiptObjectKey: objectKey,
+                    receiptContentType: receipt.contentType,
+                    receiptSize: receipt.content.length,
+                    receiptUploadedAt: new Date(),
+                    submittedAt: new Date(),
+                    reviewNote: '',
+                    failureReason: ''
+                },
+                $unset: {
+                    reviewedAt: 1,
+                    reviewedBy: 1,
+                    paidAt: 1
+                }
+            },
+            { new: true }
+        );
+
+        if (!updated) {
+            return res.status(409).json({
+                success: false,
+                message: 'تغيرت حالة الطلب. حدّث الصفحة قبل المحاولة.'
+            });
+        }
+
+        try {
+            await sendTransferSubmittedEmail(updated);
+        } catch (emailError) {
+            console.error(
+                'تعذر إرسال تنبيه التحويل للإدارة:',
+                emailError.message
+            );
+        }
+
+        res.json(bankTransferPublicState(updated));
+    } catch (error) {
+        console.error('تعذر رفع إيصال التحويل:', error);
+
+        let message = 'تعذر رفع الإيصال حاليًا.';
+
+        if (error.message === 'RECEIPT_TYPE_INVALID') {
+            message = 'ارفع الإيصال بصيغة PDF أو PNG أو JPG فقط.';
+        } else if (error.message === 'RECEIPT_TOO_LARGE') {
+            message = 'حجم الإيصال أكبر من الحد المسموح.';
+        } else if (
+            ['RECEIPT_EMPTY', 'RECEIPT_CONTENT_INVALID'].includes(error.message)
+        ) {
+            message = 'ملف الإيصال غير صالح.';
+        }
+
+        res.status(400).json({ success: false, message });
+    }
+});
+
+app.get('/api/admin/bank-transfers', async (req, res) => {
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!isBankTransferAdmin(user)) {
+            return res.status(403).json({
+                success: false,
+                message: 'هذه الصفحة مخصصة للإدارة.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const payments = await Payment.find({
+            paymentMethod: 'bank_transfer',
+            status: {
+                $in: [
+                    'awaiting_transfer',
+                    'pending_review',
+                    'rejected',
+                    'processing',
+                    'issuance_failed',
+                    'paid_hold',
+                    'shipment_created'
+                ]
+            }
+        })
+            .sort({ updatedAt: -1 })
+            .limit(100);
+
+        const items = await Promise.all(
+            payments.map(async (payment) => {
+                const shipment = await currentShipmentForPayment(payment);
+                return bankTransferPublicState(
+                    payment,
+                    shipment,
+                    { admin: true }
+                );
+            })
+        );
+
+        res.json({ success: true, items });
+    } catch (error) {
+        console.error('تعذر جلب تحويلات الإدارة:', error);
+        res.status(500).json({
+            success: false,
+            message: 'تعذر جلب طلبات التحويل حاليًا.'
+        });
+    }
+});
+
+app.get('/api/admin/bank-transfers/:orderNumber/receipt', async (req, res) => {
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!isBankTransferAdmin(user)) {
+            return res.status(403).json({
+                success: false,
+                message: 'هذه الصفحة مخصصة للإدارة.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const payment = await Payment.findOne({
+            orderNumber: String(req.params.orderNumber || '').trim(),
+            paymentMethod: 'bank_transfer'
+        });
+
+        if (!payment?.receiptObjectKey) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على الإيصال.'
+            });
+        }
+
+        const receipt = await readTransferReceiptFromR2(
+            payment.receiptObjectKey
+        );
+
+        if (!receipt) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على الإيصال.'
+            });
+        }
+
+        const extension =
+            receipt.contentType === 'application/pdf'
+                ? 'pdf'
+                : (receipt.contentType === 'image/png' ? 'png' : 'jpg');
+
+        res.set({
+            'Content-Type': receipt.contentType,
+            'Content-Length': String(receipt.content.length),
+            'Content-Disposition':
+                `inline; filename="receipt-${payment.orderNumber}.${extension}"`,
+            'Cache-Control': 'private, no-store',
+            'X-Content-Type-Options': 'nosniff'
+        });
+        res.send(receipt.content);
+    } catch (error) {
+        console.error('تعذر فتح إيصال التحويل:', error);
+        res.status(500).json({
+            success: false,
+            message: 'تعذر فتح الإيصال حاليًا.'
+        });
+    }
+});
+
+app.post('/api/admin/bank-transfers/:orderNumber/approve', async (req, res) => {
+    if (!sameOriginRequest(req)) {
+        return res.status(403).json({
+            success: false,
+            message: 'تعذر التحقق من مصدر الطلب.'
+        });
+    }
+
+    if (req.body?.bankDepositConfirmed !== true) {
+        return res.status(400).json({
+            success: false,
+            message:
+                'يجب تأكيد وصول المبلغ إلى الحساب البنكي قبل إصدار البوليصة.'
+        });
+    }
+
+    let payment = null;
+
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!isBankTransferAdmin(user)) {
+            return res.status(403).json({
+                success: false,
+                message: 'هذه العملية مخصصة للإدارة.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const orderNumber =
+            String(req.params.orderNumber || '').trim();
+        payment = await Payment.findOne({
+            orderNumber,
+            paymentMethod: 'bank_transfer'
+        }).select('+shipmentPayload');
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على الطلب.'
+            });
+        }
+
+        if (payment.status === 'shipment_created') {
+            const shipment = await currentShipmentForPayment(payment);
+            return res.json(
+                bankTransferPublicState(payment, shipment, { admin: true })
+            );
+        }
+
+        if (payment.status === 'processing') {
+            const lastIssuanceAt = payment.lastIssuanceAt
+                ? new Date(payment.lastIssuanceAt).getTime()
+                : 0;
+            const processingIsFresh =
+                lastIssuanceAt > 0 &&
+                Date.now() - lastIssuanceAt <
+                    BANK_TRANSFER_PROCESSING_TIMEOUT_MS;
+
+            if (processingIsFresh) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'إصدار البوليصة جارٍ بالفعل.'
+                });
+            }
+
+            const recoveredPayment = await Payment.findOneAndUpdate(
+                {
+                    _id: payment._id,
+                    status: 'processing',
+                    lastIssuanceAt: payment.lastIssuanceAt || null
+                },
+                {
+                    $set: {
+                        status: 'issuance_failed',
+                        failureReason: 'PROCESSING_INTERRUPTED'
+                    }
+                },
+                { new: true }
+            ).select('+shipmentPayload');
+
+            if (!recoveredPayment) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'تغيرت حالة الطلب. حدّث الصفحة ثم حاول مجددًا.'
+                });
+            }
+
+            payment = recoveredPayment;
+        }
+
+        if (
+            !['pending_review', 'issuance_failed', 'paid_hold']
+                .includes(payment.status)
+        ) {
+            return res.status(409).json({
+                success: false,
+                message: 'لا يمكن اعتماد الطلب في حالته الحالية.'
+            });
+        }
+
+        if (payment.status === 'pending_review' && !payment.receiptObjectKey) {
+            return res.status(409).json({
+                success: false,
+                message: 'لا يوجد إيصال مرفوع لهذا الطلب.'
+            });
+        }
+
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    reviewedAt: new Date(),
+                    reviewedBy: user._id,
+                    reviewNote: '',
+                    paidAt: payment.paidAt || new Date()
+                }
+            }
+        );
+
+        payment = await Payment.findById(payment._id)
+            .select('+shipmentPayload');
+        const result = await createPaidShipment(payment);
+        const shipment = await currentShipmentForPayment(result);
+
+        if (result.status !== 'shipment_created') {
+            return res.status(409).json({
+                ...bankTransferPublicState(result, shipment, { admin: true }),
+                success: false,
+                message: 'لم تصدر البوليصة بعد. راجع حالة الطلب.'
+            });
+        }
+
+        res.json(
+            bankTransferPublicState(result, shipment, { admin: true })
+        );
+    } catch (error) {
+        console.error('تعذر اعتماد التحويل وإصدار البوليصة:', error);
+
+        let message = 'تم حفظ الاعتماد، لكن تعذر إصدار البوليصة. يمكنك إعادة المحاولة.';
+
+        if (error.message === 'INSUFFICIENT_SHIPPING_BALANCE') {
+            message = 'رصيد OTO غير كافٍ. لم تصدر البوليصة؛ اشحن الرصيد ثم أعد المحاولة.';
+        } else if (error.message === 'SHIPPING_BALANCE_UNAVAILABLE') {
+            message = 'تعذر التحقق من رصيد OTO حاليًا. لم تصدر البوليصة؛ أعد المحاولة لاحقًا.';
+        } else if (error.message === 'SHIPMENT_LABEL_NOT_READY') {
+            message = 'أنشئت الشحنة لدى شركة الشحن لكن ملف البوليصة لم يجهز بعد. انتظر قليلًا ثم أعد المحاولة؛ لن تُنشأ شحنة مكررة.';
+        } else if (error.message === 'SHIPMENT_STATUS_UNCERTAIN') {
+            message = 'تم إرسال طلب الإصدار إلى OTO لكن تعذر تأكيد نتيجته. لن يكرر الموقع الطلب تلقائيًا لحمايتك من الخصم المزدوج. راجع الطلب في OTO ثم أعد التحقق.';
+        } else if (!ALLOW_LIVE_SHIPMENTS) {
+            message = 'إصدار الشحنات الفعلية متوقف حاليًا. لم تصدر البوليصة.';
+        }
+
+        let state = null;
+
+        if (payment?._id) {
+            try {
+                const latest = await Payment.findById(payment._id);
+                const shipment = latest
+                    ? await currentShipmentForPayment(latest)
+                    : null;
+                state = latest
+                    ? bankTransferPublicState(latest, shipment, { admin: true })
+                    : null;
+            } catch (stateError) {
+                console.error(
+                    'تعذر قراءة حالة التحويل بعد فشل الإصدار:',
+                    stateError
+                );
+            }
+        }
+
+        res.status(502).json({
+            ...(state || {}),
+            success: false,
+            message
+        });
+    }
+});
+
+app.post('/api/admin/bank-transfers/:orderNumber/reject', async (req, res) => {
+    if (!sameOriginRequest(req)) {
+        return res.status(403).json({
+            success: false,
+            message: 'تعذر التحقق من مصدر الطلب.'
+        });
+    }
+
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!isBankTransferAdmin(user)) {
+            return res.status(403).json({
+                success: false,
+                message: 'هذه العملية مخصصة للإدارة.'
+            });
+        }
+
+        await connectToDatabase();
+
+        const reviewNote =
+            String(req.body?.note || 'تعذر مطابقة التحويل مع الحساب البنكي.')
+                .trim()
+                .slice(0, 300);
+        const payment = await Payment.findOneAndUpdate(
+            {
+                orderNumber: String(req.params.orderNumber || '').trim(),
+                paymentMethod: 'bank_transfer',
+                status: 'pending_review'
+            },
+            {
+                $set: {
+                    status: 'rejected',
+                    reviewedAt: new Date(),
+                    reviewedBy: user._id,
+                    reviewNote,
+                    failureReason: ''
+                },
+                $unset: { paidAt: 1 }
+            },
+            { new: true }
+        );
+
+        if (!payment) {
+            return res.status(409).json({
+                success: false,
+                message: 'لا يمكن رفض الطلب في حالته الحالية.'
+            });
+        }
+
+        res.json(bankTransferPublicState(payment, null, { admin: true }));
+    } catch (error) {
+        console.error('تعذر رفض التحويل:', error);
+        res.status(500).json({
+            success: false,
+            message: 'تعذر تحديث الطلب حاليًا.'
         });
     }
 });
