@@ -138,6 +138,7 @@ const BANK_TRANSFER_ADMIN_EMAIL =
 const MAX_RECEIPT_BYTES =
     Number(process.env.MAX_RECEIPT_MB || 5) * 1024 * 1024;
 const BANK_TRANSFER_PROCESSING_TIMEOUT_MS = 10 * 60 * 1000;
+const SHIPPING_RECONCILIATION_GRACE_MS = 10 * 60 * 1000;
 
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
@@ -2174,6 +2175,42 @@ function shippingProviderNotFound(error) {
     );
 }
 
+function shippingProviderStatus(error) {
+    return number(
+        error?.providerStatus ??
+        error?.response?.status,
+        0
+    );
+}
+
+function shippingProviderOutcomeIsAmbiguous(error) {
+    const status = shippingProviderStatus(error);
+
+    return (
+        !status ||
+        status >= 500 ||
+        [408, 409, 425, 429].includes(status)
+    );
+}
+
+function shippingCheckpointIsPastGrace(payment) {
+    const checkpointTimes = [
+        payment?.providerOrderCreatedAt,
+        payment?.providerShipmentRequestedAt
+    ]
+        .map((value) => value ? new Date(value).getTime() : 0)
+        .filter((value) => Number.isFinite(value) && value > 0);
+
+    if (!checkpointTimes.length) {
+        return false;
+    }
+
+    return (
+        Date.now() - Math.max(...checkpointTimes) >=
+        SHIPPING_RECONCILIATION_GRACE_MS
+    );
+}
+
 async function getProviderOrderDetails(orderId) {
     try {
         return await shippingRequest(
@@ -3340,6 +3377,41 @@ async function createPaidShipment(payment) {
         const orderId = locked.orderNumber;
         let providerOrder = await getProviderOrderDetails(orderId);
         let providerSnapshot = providerShipmentSnapshot(providerOrder);
+        const hasProviderCheckpoint = Boolean(
+            locked.providerOrderCreatedAt ||
+            locked.providerShipmentRequestedAt
+        );
+
+        if (!providerOrder && hasProviderCheckpoint) {
+            if (!shippingCheckpointIsPastGrace(locked)) {
+                throw new Error('SHIPMENT_STATUS_UNCERTAIN');
+            }
+
+            // أكّد orderDetails بعد مهلة كافية أن الطلب غير موجود لدى المزود.
+            // لذلك يمكن إزالة نقاط التحقق القديمة وإعادة المحاولة دون خطر التكرار.
+            await Payment.updateOne(
+                { _id: locked._id, status: 'processing' },
+                {
+                    $unset: {
+                        providerOrderCreatedAt: 1,
+                        providerShipmentRequestedAt: 1,
+                        providerShipmentCreatedAt: 1,
+                        providerShipmentId: 1,
+                        providerTrackingNumber: 1,
+                        providerLabelUrl: 1
+                    }
+                }
+            );
+
+            locked.providerOrderCreatedAt = undefined;
+            locked.providerShipmentRequestedAt = undefined;
+            locked.providerShipmentCreatedAt = undefined;
+            locked.providerShipmentId = '';
+            locked.providerTrackingNumber = '';
+            locked.providerLabelUrl = '';
+            providerSnapshot = providerShipmentSnapshot(null);
+        }
+
         let providerOrderCreated = Boolean(
             locked.providerOrderCreatedAt || providerOrder
         );
@@ -3493,15 +3565,9 @@ async function createPaidShipment(payment) {
                     !trackingNumber &&
                     !providerLabelUrl
                 ) {
-                    const responseStatus = number(
-                        createShipmentError?.response?.status
-                    );
-                    const statusIsAmbiguous =
-                        !responseStatus ||
-                        responseStatus >= 500 ||
-                        [408, 409, 425, 429].includes(responseStatus);
-
-                    if (!statusIsAmbiguous) {
+                    if (!shippingProviderOutcomeIsAmbiguous(
+                        createShipmentError
+                    )) {
                         await Payment.updateOne(
                             { _id: locked._id, status: 'processing' },
                             {
@@ -4486,6 +4552,18 @@ app.post('/api/admin/bank-transfers/:orderNumber/approve', async (req, res) => {
             message = 'أنشئت الشحنة لدى شركة الشحن لكن ملف البوليصة لم يجهز بعد. انتظر قليلًا ثم أعد المحاولة؛ لن تُنشأ شحنة مكررة.';
         } else if (error.message === 'SHIPMENT_STATUS_UNCERTAIN') {
             message = 'تم إرسال طلب الإصدار إلى OTO لكن تعذر تأكيد نتيجته. لن يكرر الموقع الطلب تلقائيًا لحمايتك من الخصم المزدوج. راجع الطلب في OTO ثم أعد التحقق.';
+        } else if (error.message === 'SHIPPING_PROVIDER_ERROR') {
+            const providerStatus = shippingProviderStatus(error);
+            const providerMessage = cleanPublicText(error.providerMessage)
+                .slice(0, 240);
+            const statusText = providerStatus
+                ? ` (رمز ${providerStatus})`
+                : '';
+            const details = providerMessage
+                ? `: ${providerMessage}`
+                : '.';
+
+            message = `رفض مزود الشحن طلب الإصدار${statusText}${details} لم يُخصم رصيد إصدار ناجح؛ صحح السبب ثم أعد المحاولة.`;
         } else if (!ALLOW_LIVE_SHIPMENTS) {
             message = 'إصدار الشحنات الفعلية متوقف حاليًا. لم تصدر البوليصة.';
         }
@@ -4586,3 +4664,4 @@ app.post('/api/admin/bank-transfers/:orderNumber/reject', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`السيرفر يعمل على http://localhost:${PORT}`);
 });
+
