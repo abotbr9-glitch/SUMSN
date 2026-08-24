@@ -2122,8 +2122,17 @@ async function createShipmentAfterAssignment(orderId, deliveryOptionId) {
         } catch (error) {
             lastError = error;
             const message = String(error.providerMessage || '').toLowerCase();
+            const providerCode = String(
+                error.providerData?.otoErrorCode || ''
+            ).toUpperCase();
+            const orderIsStillPropagating =
+                providerCode === 'OTO1001' ||
+                message.includes('invalid or missing order id');
 
-            if (!message.includes('not assigned yet')) {
+            if (
+                !message.includes('not assigned yet') &&
+                !orderIsStillPropagating
+            ) {
                 throw error;
             }
         }
@@ -2175,6 +2184,25 @@ function shippingProviderNotFound(error) {
     );
 }
 
+function providerOrderResponseMatches(source, expectedOrderId) {
+    const expected = String(expectedOrderId || '').trim().toUpperCase();
+
+    if (!expected || !source || source.success === false) {
+        return false;
+    }
+
+    const returnedOrderId = findProviderValue(source, [
+        'orderId',
+        'order_id',
+        'orderNumber',
+        'order_number',
+        'incrementId',
+        'increment_id'
+    ]);
+
+    return String(returnedOrderId || '').trim().toUpperCase() === expected;
+}
+
 function shippingProviderStatus(error) {
     return number(
         error?.providerStatus ??
@@ -2213,11 +2241,17 @@ function shippingCheckpointIsPastGrace(payment) {
 
 async function getProviderOrderDetails(orderId) {
     try {
-        return await shippingRequest(
+        const response = await shippingRequest(
             `orderDetails?orderId=${encodeURIComponent(orderId)}`,
             undefined,
             'GET'
         );
+
+        // OTO may return HTTP 200 with an empty body when an order is absent.
+        // Only a response containing this exact merchant order ID proves it exists.
+        return providerOrderResponseMatches(response, orderId)
+            ? response
+            : null;
     } catch (error) {
         if (shippingProviderNotFound(error)) {
             return null;
@@ -2225,6 +2259,22 @@ async function getProviderOrderDetails(orderId) {
 
         throw error;
     }
+}
+
+async function waitForProviderOrder(orderId) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        if (attempt > 0) {
+            await wait(1000 * attempt);
+        }
+
+        const order = await getProviderOrderDetails(orderId);
+
+        if (order) {
+            return order;
+        }
+    }
+
+    return null;
 }
 
 function findProviderValue(source, expectedKeys, depth = 0, seen = new Set()) {
@@ -3463,10 +3513,16 @@ async function createPaidShipment(payment) {
             };
 
             try {
-                providerOrder = await shippingRequest('createOrder', order);
+                const createdOrder = await shippingRequest(
+                    'createOrder',
+                    order
+                );
                 providerOrderCreated = true;
+                providerOrder =
+                    await waitForProviderOrder(orderId) ||
+                    createdOrder;
             } catch (createOrderError) {
-                providerOrder = await getProviderOrderDetails(orderId);
+                providerOrder = await waitForProviderOrder(orderId);
 
                 if (!providerOrder) {
                     throw createOrderError;
@@ -4664,4 +4720,3 @@ app.post('/api/admin/bank-transfers/:orderNumber/reject', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`السيرفر يعمل على http://localhost:${PORT}`);
 });
-
