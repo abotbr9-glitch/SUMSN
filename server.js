@@ -1971,8 +1971,6 @@ async function getNationalAddress(shortCode) {
     return normalizeNationalAddress(result, shortCode);
 }
 
-const pickupLocationCodeCache = new Set();
-
 function normalizedPhoneDigits(value) {
     const digits = String(value || '').replace(/\D/g, '');
 
@@ -2004,45 +2002,127 @@ function senderPickupLocationCode(body, senderAddress) {
 }
 
 function pickupLocationsFromResponse(result) {
-    const sources = [result, result?.data];
+    const locations = [];
+    const visited = new Set();
 
-    return sources.flatMap((source) => [
-        ...(Array.isArray(source?.warehouses)
-            ? source.warehouses
-            : []),
-        ...(Array.isArray(source?.branches)
-            ? source.branches
-            : [])
-    ]);
+    function collect(value) {
+        if (!value || typeof value !== 'object' || visited.has(value)) {
+            return;
+        }
+
+        visited.add(value);
+
+        if (Array.isArray(value)) {
+            value.forEach(collect);
+            return;
+        }
+
+        const code = String(
+            value.code ||
+            value.pickupLocationCode ||
+            value.locationCode ||
+            ''
+        ).trim();
+
+        if (code) {
+            locations.push(value);
+        }
+
+        [
+            'data',
+            'warehouses',
+            'branches',
+            'locations',
+            'pickupLocations',
+            'results',
+            'items'
+        ].forEach((key) => collect(value[key]));
+    }
+
+    collect(result);
+    return locations;
 }
 
-async function pickupLocationExists(code) {
+function pickupLocationCode(location) {
+    return String(
+        location?.code ||
+        location?.pickupLocationCode ||
+        location?.locationCode ||
+        ''
+    ).trim();
+}
+
+function pickupLocationIsActive(location) {
+    const activeValues = [
+        location?.active,
+        location?.isActive,
+        location?.enabled,
+        location?.isEnabled
+    ].filter((value) => value !== undefined && value !== null);
+
+    if (activeValues.some((value) =>
+        value === false ||
+        value === 0 ||
+        ['false', '0', 'inactive', 'disabled'].includes(
+            String(value).trim().toLowerCase()
+        )
+    )) {
+        return false;
+    }
+
+    const status = String(
+        location?.status ||
+        location?.state ||
+        location?.activationStatus ||
+        ''
+    ).trim().toLowerCase();
+
+    if (!status) {
+        return true;
+    }
+
+    return ![
+        'inactive',
+        'disabled',
+        'deactivated',
+        'not_active',
+        'not active',
+        'false',
+        '0'
+    ].includes(status);
+}
+
+async function getPickupLocations() {
     const result = await shippingRequest(
         'getPickupLocationList',
         undefined,
         'GET'
     );
 
-    return pickupLocationsFromResponse(result).some(
-        (location) =>
-            String(location?.code || location?.pickupLocationCode || '')
-                .trim()
-                .toUpperCase() === code.toUpperCase()
-    );
+    return pickupLocationsFromResponse(result);
 }
 
-async function ensureSenderPickupLocation(body, senderAddress) {
-    const code = senderPickupLocationCode(body, senderAddress);
+function activePickupLocationForCode(locations, baseCode) {
+    const normalizedBase = baseCode.toUpperCase();
+    const matches = locations.filter((location) => {
+        const code = pickupLocationCode(location).toUpperCase();
 
-    if (pickupLocationCodeCache.has(code)) {
-        return code;
-    }
+        return pickupLocationIsActive(location) && (
+            code === normalizedBase ||
+            code.startsWith(`${normalizedBase}-R`)
+        );
+    });
 
-    if (await pickupLocationExists(code)) {
-        pickupLocationCodeCache.add(code);
-        return code;
-    }
+    // Prefer the latest replacement over the original code. OTO can leave an
+    // inactive location in the list without exposing a reliable status field.
+    return matches.sort((left, right) =>
+        pickupLocationCode(right).localeCompare(
+            pickupLocationCode(left)
+        )
+    )[0];
+}
 
+function senderPickupLocationPayload(body, senderAddress, code) {
     const pickupLocation = {
         type: 'warehouse',
         code,
@@ -2074,6 +2154,39 @@ async function ensureSenderPickupLocation(body, senderAddress) {
         pickupLocation.lon = lon;
     }
 
+    return pickupLocation;
+}
+
+async function ensureSenderPickupLocation(
+    body,
+    senderAddress,
+    { forceNew = false } = {}
+) {
+    const baseCode = senderPickupLocationCode(body, senderAddress);
+    const existingLocations = await getPickupLocations();
+    const activeLocation = activePickupLocationForCode(
+        existingLocations,
+        baseCode
+    );
+
+    if (activeLocation && !forceNew) {
+        return pickupLocationCode(activeLocation);
+    }
+
+    const exactLocationExists = existingLocations.some(
+        (location) =>
+            pickupLocationCode(location).toUpperCase() ===
+            baseCode.toUpperCase()
+    );
+    const code = forceNew || exactLocationExists
+        ? `${baseCode}-R${Date.now().toString(36).toUpperCase()}`
+        : baseCode;
+    const pickupLocation = senderPickupLocationPayload(
+        body,
+        senderAddress,
+        code
+    );
+
     try {
         const created = await shippingRequest(
             'createPickupLocation',
@@ -2082,17 +2195,24 @@ async function ensureSenderPickupLocation(body, senderAddress) {
         const createdCode = String(
             created.pickupLocationCode ||
             created.data?.pickupLocationCode ||
+            created.code ||
+            created.data?.code ||
             code
         ).trim();
-
-        pickupLocationCodeCache.add(createdCode);
         return createdCode;
     } catch (error) {
         // إذا وصل طلبان للمرسل نفسه معًا فقد ينجح الإنشاء الأول فقط.
         // نعيد قراءة المواقع حتى نستخدم الكود الذي أُنشئ بدل الفشل.
-        if (await pickupLocationExists(code)) {
-            pickupLocationCodeCache.add(code);
-            return code;
+        const refreshedLocations = await getPickupLocations();
+        const refreshedLocation = refreshedLocations.find(
+            (location) =>
+                pickupLocationIsActive(location) &&
+                pickupLocationCode(location).toUpperCase() ===
+                    code.toUpperCase()
+        );
+
+        if (refreshedLocation) {
+            return pickupLocationCode(refreshedLocation);
         }
 
         throw error;
@@ -2103,7 +2223,22 @@ function wait(milliseconds) {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function createShipmentAfterAssignment(orderId, deliveryOptionId) {
+function pickupLocationProviderError(error) {
+    const message = String(error?.providerMessage || '').toLowerCase();
+
+    return message.includes('pickup location') && (
+        message.includes('missing') ||
+        message.includes('invalid') ||
+        message.includes('not active') ||
+        message.includes('not found')
+    );
+}
+
+async function createShipmentAfterAssignment(
+    orderId,
+    deliveryOptionId,
+    { retryPickupLocation = false } = {}
+) {
     let lastError;
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -2128,10 +2263,25 @@ async function createShipmentAfterAssignment(orderId, deliveryOptionId) {
             const orderIsStillPropagating =
                 providerCode === 'OTO1001' ||
                 message.includes('invalid or missing order id');
+            const pickupLocationIsStillPropagating =
+                pickupLocationProviderError(error);
+
+            // Give the freshly updated order one brief propagation retry.
+            // If OTO still rejects its pickup location, return control to the
+            // repair path so it can create a replacement instead of waiting
+            // through the full assignment retry window.
+            if (
+                pickupLocationIsStillPropagating &&
+                !retryPickupLocation &&
+                attempt >= 1
+            ) {
+                throw error;
+            }
 
             if (
                 !message.includes('not assigned yet') &&
-                !orderIsStillPropagating
+                !orderIsStillPropagating &&
+                !pickupLocationIsStillPropagating
             ) {
                 throw error;
             }
@@ -2259,6 +2409,50 @@ async function getProviderOrderDetails(orderId) {
 
         throw error;
     }
+}
+
+function buildProviderOrder(
+    payment,
+    body,
+    receiverAddress,
+    pickupLocationCode
+) {
+    return {
+        orderId: payment.orderNumber,
+        pickupLocationCode,
+        deliveryOptionId: number(payment.deliveryOptionId),
+        storeName: 'SUMSN',
+        payment_method: 'paid',
+        amount: payment.amount,
+        amount_due: 0,
+        shippingAmount: payment.providerCost,
+        subtotal: payment.amount,
+        currency: 'SAR',
+        packageCount: 1,
+        packageWeight: number(body.weight),
+        boxLength: number(body.boxLength),
+        boxWidth: number(body.boxWidth),
+        boxHeight: number(body.boxHeight),
+        shippingNotes: body.contentsDescription,
+        item_description: body.contentsDescription,
+        customer: {
+            name: body.receiverName.trim(),
+            email: body.email.trim(),
+            mobile: body.receiverPhone.trim(),
+            country: 'SA',
+            shortAddressCode: receiverAddress.shortCode,
+            buildingNo: receiverAddress.buildingNo,
+            secondaryAddressNumber: receiverAddress.secondaryNumber,
+            state: receiverAddress.state,
+            city: receiverAddress.city,
+            district: receiverAddress.district,
+            street: receiverAddress.street,
+            postcode: receiverAddress.postcode,
+            address: receiverAddress.addressLine,
+            lat: receiverAddress.lat,
+            lon: receiverAddress.lon
+        }
+    };
 }
 
 async function waitForProviderOrder(orderId) {
@@ -3465,57 +3659,39 @@ async function createPaidShipment(payment) {
         let providerOrderCreated = Boolean(
             locked.providerOrderCreatedAt || providerOrder
         );
+        let providerOrderPayload;
+
+        async function currentProviderOrderPayload(forceNewPickup = false) {
+            if (!providerOrderPayload || forceNewPickup) {
+                const pickupLocationCode =
+                    await ensureSenderPickupLocation(
+                        body,
+                        senderAddress,
+                        { forceNew: forceNewPickup }
+                    );
+
+                providerOrderPayload = buildProviderOrder(
+                    locked,
+                    body,
+                    receiverAddress,
+                    pickupLocationCode
+                );
+            }
+
+            return providerOrderPayload;
+        }
 
         if (!providerOrderCreated) {
             await assertSufficientShippingBalance(locked.providerCost);
-
-            const pickupLocationCode = await ensureSenderPickupLocation(
-                body,
-                senderAddress
-            );
-            const order = {
-                orderId,
-                pickupLocationCode,
-                createShipment: false,
-                deliveryOptionId: number(locked.deliveryOptionId),
-                storeName: 'SUMSN',
-                payment_method: 'paid',
-                amount: locked.amount,
-                amount_due: 0,
-                shippingAmount: locked.providerCost,
-                subtotal: locked.amount,
-                currency: 'SAR',
-                packageCount: 1,
-                packageWeight: number(body.weight),
-                boxLength: number(body.boxLength),
-                boxWidth: number(body.boxWidth),
-                boxHeight: number(body.boxHeight),
-                shippingNotes: body.contentsDescription,
-                item_description: body.contentsDescription,
-                customer: {
-                    name: body.receiverName.trim(),
-                    email: body.email.trim(),
-                    mobile: body.receiverPhone.trim(),
-                    country: 'SA',
-                    shortAddressCode: receiverAddress.shortCode,
-                    buildingNo: receiverAddress.buildingNo,
-                    secondaryAddressNumber:
-                        receiverAddress.secondaryNumber,
-                    state: receiverAddress.state,
-                    city: receiverAddress.city,
-                    district: receiverAddress.district,
-                    street: receiverAddress.street,
-                    postcode: receiverAddress.postcode,
-                    address: receiverAddress.addressLine,
-                    lat: receiverAddress.lat,
-                    lon: receiverAddress.lon
-                }
-            };
+            const order = await currentProviderOrderPayload();
 
             try {
                 const createdOrder = await shippingRequest(
                     'createOrder',
-                    order
+                    {
+                        ...order,
+                        createShipment: false
+                    }
                 );
                 providerOrderCreated = true;
                 providerOrder =
@@ -3576,6 +3752,14 @@ async function createPaidShipment(payment) {
 
             await assertSufficientShippingBalance(locked.providerCost);
 
+            // OTO permits changing the pickup location before shipment
+            // creation. Refresh it here so retries repair an order that
+            // still points at an inactive or deleted pickup location.
+            await shippingRequest(
+                'updateOrder',
+                await currentProviderOrderPayload()
+            );
+
             const shipmentRequestedAt = new Date();
 
             await Payment.updateOne(
@@ -3604,38 +3788,82 @@ async function createPaidShipment(payment) {
                     providerShipmentId;
                 providerLabelUrl =
                     shipmentSnapshot.labelUrl || providerLabelUrl;
-            } catch (createShipmentError) {
-                const currentOrder = await getProviderOrderDetails(orderId);
-                const currentSnapshot = providerShipmentSnapshot(currentOrder);
+            } catch (initialShipmentError) {
+                let createShipmentError = initialShipmentError;
 
-                providerShipmentId =
-                    currentSnapshot.shipmentId || providerShipmentId;
-                trackingNumber =
-                    currentSnapshot.trackingNumber || trackingNumber;
-                providerLabelUrl =
-                    currentSnapshot.labelUrl ||
-                    await getShipmentLabel(orderId);
-
-                if (
-                    !providerShipmentId &&
-                    !trackingNumber &&
-                    !providerLabelUrl
-                ) {
-                    if (!shippingProviderOutcomeIsAmbiguous(
-                        createShipmentError
-                    )) {
-                        await Payment.updateOne(
-                            { _id: locked._id, status: 'processing' },
-                            {
-                                $unset: {
-                                    providerShipmentRequestedAt: 1
-                                }
-                            }
+                // Some OTO accounts return an inactive pickup location in
+                // getPickupLocationList without a dependable status flag. If
+                // createShipment identifies that case, create a fresh active
+                // replacement, update the same order, and retry. This never
+                // creates a second order and the rejected 400 did not create
+                // a successful shipment charge.
+                if (pickupLocationProviderError(createShipmentError)) {
+                    try {
+                        await shippingRequest(
+                            'updateOrder',
+                            await currentProviderOrderPayload(true)
                         );
-                        throw createShipmentError;
-                    }
 
-                    throw new Error('SHIPMENT_STATUS_UNCERTAIN');
+                        const repairedShipment =
+                            await createShipmentAfterAssignment(
+                                orderId,
+                                locked.deliveryOptionId,
+                                { retryPickupLocation: true }
+                            );
+                        const repairedSnapshot =
+                            providerShipmentSnapshot(repairedShipment);
+
+                        providerShipmentId =
+                            repairedSnapshot.shipmentId ||
+                            providerShipmentId;
+                        trackingNumber =
+                            repairedSnapshot.trackingNumber ||
+                            trackingNumber ||
+                            providerShipmentId;
+                        providerLabelUrl =
+                            repairedSnapshot.labelUrl ||
+                            providerLabelUrl;
+                        createShipmentError = null;
+                    } catch (repairError) {
+                        createShipmentError = repairError;
+                    }
+                }
+
+                if (createShipmentError) {
+                    const currentOrder =
+                        await getProviderOrderDetails(orderId);
+                    const currentSnapshot =
+                        providerShipmentSnapshot(currentOrder);
+
+                    providerShipmentId =
+                        currentSnapshot.shipmentId || providerShipmentId;
+                    trackingNumber =
+                        currentSnapshot.trackingNumber || trackingNumber;
+                    providerLabelUrl =
+                        currentSnapshot.labelUrl ||
+                        await getShipmentLabel(orderId);
+
+                    if (
+                        !providerShipmentId &&
+                        !trackingNumber &&
+                        !providerLabelUrl
+                    ) {
+                        if (!shippingProviderOutcomeIsAmbiguous(
+                            createShipmentError
+                        )) {
+                            await Payment.updateOne(
+                                { _id: locked._id, status: 'processing' },
+                                {
+                                    $unset: {
+                                        providerShipmentRequestedAt: 1
+                                    }
+                                }
+                            );
+                            throw createShipmentError;
+                        }
+
+                        throw new Error('SHIPMENT_STATUS_UNCERTAIN');
+                    }
                 }
             }
 
