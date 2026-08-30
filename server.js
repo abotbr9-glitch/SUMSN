@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const path = require('node:path');
 const {
     GetObjectCommand,
     PutObjectCommand,
@@ -15,11 +16,20 @@ const app = express();
 
 app.use(express.json({ limit: '7mb' }));
 app.use(express.urlencoded({ extended: true, limit: '7mb' }));
-app.use(express.static('public'));
+
+// Vercel applies the equivalent rules at the CDN through vercel.json.
+// Keep local Express routing consistent and preserve account/reset links.
+app.get('/index.html', (req, res) => {
+    const queryStart = req.originalUrl.indexOf('?');
+    const query = queryStart === -1 ? '' : req.originalUrl.slice(queryStart);
+    res.redirect(308, `/${query}`);
+});
 
 app.get('/', (req, res) => {
-    res.redirect('/index.html');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 /*
 |--------------------------------------------------------------------------
@@ -1234,7 +1244,7 @@ async function sendPasswordResetEmail(user, token) {
     const messageCode =
         crypto.randomBytes(3).toString('hex').toUpperCase();
     const link =
-        `${PUBLIC_BASE_URL}/index.html?resetToken=${encodeURIComponent(token)}`;
+        `${PUBLIC_BASE_URL}/?resetToken=${encodeURIComponent(token)}`;
 
     return sendBrandedEmail({
         to: user.email,
