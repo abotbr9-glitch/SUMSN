@@ -8,7 +8,8 @@ const { waitUntil } = require('@vercel/functions');
 const {
     liveTuwaiqPayPaymentUrl,
     normalizeSaudiMobile,
-    secureTextEquals
+    secureTextEquals,
+    tuwaiqPayPaymentCompleted
 } = require('./lib/tuwaiqpay-security');
 const {
     GetObjectCommand,
@@ -414,6 +415,14 @@ const paymentSchema = new mongoose.Schema(
         providerBillCreatedAt: Date,
         providerBillExpiresAt: Date,
         providerPaymentStatus: {
+            type: String,
+            default: ''
+        },
+        providerBillStatus: {
+            type: String,
+            default: ''
+        },
+        providerTransactionStatus: {
             type: String,
             default: ''
         },
@@ -3543,6 +3552,17 @@ app.get('/api/account/shipments', async (req, res) => {
             });
         }
 
+        // Continue confirmed electronic payments even if the customer closed
+        // the payment page before the shipping label finished.
+        try {
+            await continueTuwaiqPayFulfillmentForUser(user._id);
+        } catch (fulfillmentError) {
+            console.error(
+                'تعذر استكمال طلب طويق باي من لوحة العميل:',
+                fulfillmentError
+            );
+        }
+
         const shipments = await Shipment.find({
             userId: user._id
         })
@@ -3791,6 +3811,69 @@ function tuwaiqPayPublicState(payment, shipment = null) {
         fulfillmentIssue:
             ['issuance_failed', 'paid_hold'].includes(payment.status)
     };
+}
+
+function storedTuwaiqPayPaymentCompleted(payment) {
+    return tuwaiqPayPaymentCompleted(
+        payment?.providerBillStatus,
+        payment?.providerTransactionStatus ||
+            payment?.providerPaymentStatus
+    );
+}
+
+async function promoteStoredTuwaiqPayPayment(payment) {
+    if (
+        !payment ||
+        !['awaiting_payment', 'payment_failed'].includes(payment.status) ||
+        !storedTuwaiqPayPaymentCompleted(payment)
+    ) {
+        return payment;
+    }
+
+    const promoted = await Payment.findOneAndUpdate(
+        {
+            _id: payment._id,
+            status: {
+                $in: ['awaiting_payment', 'payment_failed']
+            }
+        },
+        {
+            $set: {
+                status: 'payment_confirmed',
+                paidAt: payment.paidAt || new Date(),
+                failureReason: ''
+            }
+        },
+        { new: true }
+    ).select('+shipmentPayload');
+
+    return promoted || Payment.findById(payment._id)
+        .select('+shipmentPayload');
+}
+
+async function continueTuwaiqPayFulfillmentForUser(userId) {
+    const payments = await Payment.find({
+        userId,
+        paymentMethod: 'tuwaiqpay',
+        status: {
+            $in: [
+                'awaiting_payment',
+                'payment_failed',
+                'payment_confirmed'
+            ]
+        }
+    })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select('+shipmentPayload');
+
+    for (let payment of payments) {
+        payment = await promoteStoredTuwaiqPayPayment(payment);
+
+        if (payment?.status === 'payment_confirmed') {
+            await createPaidShipment(payment);
+        }
+    }
 }
 
 function bankTransferPublicState(
@@ -4840,6 +4923,8 @@ app.get('/api/tuwaiqpay/payments/:orderNumber', async (req, res) => {
             });
         }
 
+        payment = await promoteStoredTuwaiqPayPayment(payment);
+
         if (payment.status === 'payment_confirmed') {
             try {
                 payment = await createPaidShipment(payment);
@@ -4950,16 +5035,26 @@ app.post('/api/webhooks/tuwaiqpay-payment', async (req, res) => {
         const billStatus = String(bill.status || '').toUpperCase();
         const transactionStatus =
             String(transaction.transactionStatus || '').toUpperCase();
-        const providerStatus = billStatus || transactionStatus || 'UNKNOWN';
+        const paymentCompleted = tuwaiqPayPaymentCompleted(
+            billStatus,
+            transactionStatus
+        );
+        const providerStatus =
+            transactionStatus || billStatus || 'UNKNOWN';
 
-        if (billStatus !== 'PAID') {
-            const failed = ['FAILED', 'CANCELED', 'CANCELLED']
-                .includes(providerStatus);
+        if (!paymentCompleted) {
+            const failed =
+                ['FAILED', 'CANCELED', 'CANCELLED']
+                    .includes(billStatus) ||
+                ['FAILED', 'CANCELED', 'CANCELLED']
+                    .includes(transactionStatus);
             await Payment.updateOne(
                 { _id: payment._id },
                 {
                     $set: {
                         providerPaymentStatus: providerStatus,
+                        providerBillStatus: billStatus,
+                        providerTransactionStatus: transactionStatus,
                         paymentWebhookReceivedAt: new Date(),
                         ...(failed &&
                             ['awaiting_payment', 'payment_failed']
@@ -5012,6 +5107,8 @@ app.post('/api/webhooks/tuwaiqpay-payment', async (req, res) => {
                             )
                             : (payment.paidAt || new Date()),
                     providerPaymentStatus: providerStatus,
+                    providerBillStatus: billStatus,
+                    providerTransactionStatus: transactionStatus,
                     paymentWebhookReceivedAt: new Date(),
                     failureReason: ''
                 }
