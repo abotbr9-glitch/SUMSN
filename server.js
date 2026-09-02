@@ -4,6 +4,12 @@ const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
 const path = require('node:path');
+const { waitUntil } = require('@vercel/functions');
+const {
+    liveTuwaiqPayPaymentUrl,
+    normalizeSaudiMobile,
+    secureTextEquals
+} = require('./lib/tuwaiqpay-security');
 const {
     GetObjectCommand,
     PutObjectCommand,
@@ -129,6 +135,36 @@ const MAX_LABEL_BYTES = 25 * 1024 * 1024;
 
 /*
 |--------------------------------------------------------------------------
+| TuwaiqPay - Production only
+|--------------------------------------------------------------------------
+*/
+
+// Intentionally hard-coded to the Production host so a UAT/Sandbox value
+// cannot accidentally be enabled through an environment variable.
+const TUWAIQPAY_BASE_URL =
+    'https://onboarding-prod.tuwaiqpay.com.sa';
+const TUWAIQPAY_USERNAME =
+    String(process.env.TUWAIQPAY_USERNAME || '').trim();
+const TUWAIQPAY_USERNAME_TYPE =
+    String(process.env.TUWAIQPAY_USERNAME_TYPE || '')
+        .trim()
+        .toUpperCase();
+const TUWAIQPAY_PASSWORD =
+    String(process.env.TUWAIQPAY_PASSWORD || '');
+const TUWAIQPAY_WEBHOOK_HEADER_NAME =
+    String(
+        process.env.TUWAIQPAY_WEBHOOK_HEADER_NAME ||
+        'x-sumsn-tuwaiq-signature'
+    )
+        .trim()
+        .toLowerCase();
+const TUWAIQPAY_WEBHOOK_HEADER_VALUE =
+    String(process.env.TUWAIQPAY_WEBHOOK_HEADER_VALUE || '');
+const TUWAIQPAY_REQUEST_TIMEOUT_MS = 20 * 1000;
+const TUWAIQPAY_TOKEN_CACHE_MS = 10 * 60 * 1000;
+
+/*
+|--------------------------------------------------------------------------
 | التحويل البنكي اليدوي - البيانات الحساسة تبقى في الخادم فقط
 |--------------------------------------------------------------------------
 */
@@ -147,11 +183,13 @@ const BANK_TRANSFER_ADMIN_EMAIL =
         .toLowerCase();
 const MAX_RECEIPT_BYTES =
     Number(process.env.MAX_RECEIPT_MB || 5) * 1024 * 1024;
-const BANK_TRANSFER_PROCESSING_TIMEOUT_MS = 10 * 60 * 1000;
+const PAYMENT_PROCESSING_TIMEOUT_MS = 10 * 60 * 1000;
 const SHIPPING_RECONCILIATION_GRACE_MS = 10 * 60 * 1000;
 
 let shippingAccessToken = '';
 let shippingAccessTokenExpiresAt = 0;
+let tuwaiqPayAccessToken = '';
+let tuwaiqPayAccessTokenExpiresAt = 0;
 let mongoConnectionPromise = null;
 let r2Client = null;
 
@@ -275,7 +313,7 @@ const Shipment =
 
 /*
 |--------------------------------------------------------------------------
-| طلبات التحويل البنكي
+| طلبات الدفع الإلكتروني وإصدار الشحنات
 |--------------------------------------------------------------------------
 */
 
@@ -305,7 +343,7 @@ const paymentSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            default: 'awaiting_transfer',
+            default: 'creating_payment',
             index: true
         },
         amount: {
@@ -340,8 +378,46 @@ const paymentSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            default: 'bank_transfer'
+            default: 'tuwaiqpay'
         },
+        providerPaymentLink: {
+            type: String,
+            default: ''
+        },
+        providerQrCode: {
+            type: String,
+            default: ''
+        },
+        providerTransactionId: {
+            type: String,
+            default: '',
+            index: true
+        },
+        providerTransactionDisplayId: {
+            type: String,
+            default: ''
+        },
+        providerMerchantTransactionId: {
+            type: String,
+            default: '',
+            index: true
+        },
+        providerNdc: {
+            type: String,
+            default: ''
+        },
+        providerBillId: {
+            type: String,
+            default: '',
+            index: true
+        },
+        providerBillCreatedAt: Date,
+        providerBillExpiresAt: Date,
+        providerPaymentStatus: {
+            type: String,
+            default: ''
+        },
+        paymentWebhookReceivedAt: Date,
         receiptObjectKey: {
             type: String,
             default: ''
@@ -1115,8 +1191,7 @@ function publicUser(user) {
         id: String(user._id),
         fullName: user.fullName,
         email: user.email,
-        emailVerified: Boolean(user.emailVerifiedAt),
-        isBankTransferAdmin: isBankTransferAdmin(user)
+        emailVerified: Boolean(user.emailVerifiedAt)
     };
 }
 
@@ -2242,6 +2317,220 @@ function pickupLocationProviderError(error) {
         message.includes('not active') ||
         message.includes('not found')
     );
+}
+
+function tuwaiqPayConfigured() {
+    const usernameType = tuwaiqPayUsernameType();
+
+    return Boolean(
+        TUWAIQPAY_USERNAME &&
+        TUWAIQPAY_PASSWORD &&
+        ['MOBILE', 'EMAIL'].includes(usernameType) &&
+        /^[a-z0-9-]{1,64}$/.test(TUWAIQPAY_WEBHOOK_HEADER_NAME) &&
+        TUWAIQPAY_WEBHOOK_HEADER_VALUE.length >= 32
+    );
+}
+
+function tuwaiqPayUsernameType() {
+    if (['MOBILE', 'EMAIL'].includes(TUWAIQPAY_USERNAME_TYPE)) {
+        return TUWAIQPAY_USERNAME_TYPE;
+    }
+
+    return TUWAIQPAY_USERNAME.includes('@') ? 'EMAIL' : 'MOBILE';
+}
+
+function tuwaiqPayWebhookAuthenticated(req) {
+    if (
+        !TUWAIQPAY_WEBHOOK_HEADER_NAME ||
+        !TUWAIQPAY_WEBHOOK_HEADER_VALUE
+    ) {
+        return false;
+    }
+
+    return secureTextEquals(
+        req.get(TUWAIQPAY_WEBHOOK_HEADER_NAME),
+        TUWAIQPAY_WEBHOOK_HEADER_VALUE
+    );
+}
+
+function validDateOr(value, fallback) {
+    const date = new Date(value);
+
+    return Number.isFinite(date.getTime()) ? date : fallback;
+}
+
+async function tuwaiqPayJsonRequest(path, {
+    accessToken = '',
+    body
+} = {}) {
+    let response;
+
+    try {
+        response = await fetch(`${TUWAIQPAY_BASE_URL}${path}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Language': 'ar',
+                ...(accessToken
+                    ? { Authorization: `Bearer ${accessToken}` }
+                    : {})
+            },
+            body: JSON.stringify(body || {}),
+            signal: AbortSignal.timeout(TUWAIQPAY_REQUEST_TIMEOUT_MS)
+        });
+    } catch (error) {
+        const requestError = new Error('TUWAIQPAY_NETWORK_ERROR');
+        requestError.cause = error;
+        throw requestError;
+    }
+
+    const responseText = await response.text();
+    let payload = {};
+
+    try {
+        payload = responseText ? JSON.parse(responseText) : {};
+    } catch {
+        payload = {};
+    }
+
+    if (!response.ok) {
+        const requestError = new Error('TUWAIQPAY_API_ERROR');
+        requestError.providerStatus = response.status;
+        requestError.providerMessage = String(
+            payload?.message ||
+            payload?.errors?.[0] ||
+            'TuwaiqPay request failed'
+        ).slice(0, 300);
+        throw requestError;
+    }
+
+    return payload;
+}
+
+async function getTuwaiqPayAccessToken({ forceRefresh = false } = {}) {
+    if (
+        !forceRefresh &&
+        tuwaiqPayAccessToken &&
+        tuwaiqPayAccessTokenExpiresAt > Date.now()
+    ) {
+        return tuwaiqPayAccessToken;
+    }
+
+    if (!tuwaiqPayConfigured()) {
+        throw new Error('TUWAIQPAY_CONFIGURATION_ERROR');
+    }
+
+    const response = await tuwaiqPayJsonRequest(
+        '/api/v1/auth/authenticate',
+        {
+            body: {
+                username: TUWAIQPAY_USERNAME,
+                userNameType: tuwaiqPayUsernameType(),
+                password: TUWAIQPAY_PASSWORD
+            }
+        }
+    );
+    const accessToken = String(
+        response?.data?.access_token || ''
+    ).trim();
+
+    if (!accessToken) {
+        throw new Error('TUWAIQPAY_AUTH_RESPONSE_INVALID');
+    }
+
+    tuwaiqPayAccessToken = accessToken;
+    tuwaiqPayAccessTokenExpiresAt =
+        Date.now() + TUWAIQPAY_TOKEN_CACHE_MS;
+
+    return accessToken;
+}
+
+async function createTuwaiqPayBill({ payment, body }) {
+    const customerMobilePhone = normalizeSaudiMobile(body.senderPhone);
+
+    if (!customerMobilePhone) {
+        throw new Error('TUWAIQPAY_CUSTOMER_MOBILE_INVALID');
+    }
+
+    const requestBody = {
+        actionDateInDays: 1,
+        amount: Number(number(payment.amount).toFixed(2)),
+        currencyId: 1,
+        supportedPaymentMethods: [
+            'VISA',
+            'MASTER',
+            'MADA',
+            'AMEX'
+        ],
+        description: `SUMSN shipping order ${payment.orderNumber}`,
+        customerName: String(body.senderName || '').trim().slice(0, 100),
+        customerMobilePhone,
+        includeVat: false,
+        continueWithMaxCharge: false
+    };
+    let accessToken = await getTuwaiqPayAccessToken();
+    let response;
+
+    try {
+        response = await tuwaiqPayJsonRequest(
+            '/api/v1/integration/bills',
+            { accessToken, body: requestBody }
+        );
+    } catch (error) {
+        if (error.providerStatus !== 401) {
+            throw error;
+        }
+
+        accessToken = await getTuwaiqPayAccessToken({
+            forceRefresh: true
+        });
+        response = await tuwaiqPayJsonRequest(
+            '/api/v1/integration/bills',
+            { accessToken, body: requestBody }
+        );
+    }
+
+    const data = response?.data || {};
+    const paymentLink = String(data.link || '').trim();
+    const transactionId = String(data.transactionId || '').trim();
+    const merchantTransactionId =
+        String(data.merchantTransactionId || '').trim();
+    const billId = String(data.billId || '').trim();
+    const returnedAmount = number(data.amount, NaN);
+    const requestedAmount = number(payment.amount);
+
+    if (!liveTuwaiqPayPaymentUrl(paymentLink)) {
+        throw new Error('TUWAIQPAY_NON_PRODUCTION_LINK');
+    }
+
+    if (
+        !transactionId ||
+        !merchantTransactionId ||
+        !billId ||
+        !Number.isFinite(returnedAmount) ||
+        Math.round(returnedAmount * 100) !==
+            Math.round(requestedAmount * 100)
+    ) {
+        throw new Error('TUWAIQPAY_BILL_RESPONSE_INVALID');
+    }
+
+    return {
+        paymentLink,
+        qrCode: String(data.qrCode || '').trim(),
+        transactionId,
+        transactionDisplayId:
+            String(data.transactionIdDisplay || '').trim(),
+        merchantTransactionId,
+        ndc: String(data.ndc || '').trim(),
+        billId,
+        createdAt: validDateOr(data.createdAt, new Date()),
+        expireDate: data.expireDate
+            ? validDateOr(
+                data.expireDate,
+                new Date(Date.now() + 24 * 60 * 60 * 1000)
+            )
+            : new Date(Date.now() + 24 * 60 * 60 * 1000)
+    };
 }
 
 async function createShipmentAfterAssignment(
@@ -3451,9 +3740,58 @@ app.post('/api/shipping-rates', async (req, res) => {
 
 /*
 |--------------------------------------------------------------------------
-| التحويل البنكي ثم إنشاء الشحنة
+| الدفع الإلكتروني ثم إنشاء الشحنة
 |--------------------------------------------------------------------------
 */
+
+function tuwaiqPayPublicState(payment, shipment = null) {
+    const canPay =
+        ['awaiting_payment', 'payment_failed'].includes(payment.status) &&
+        liveTuwaiqPayPaymentUrl(payment.providerPaymentLink) &&
+        (
+            !payment.providerBillExpiresAt ||
+            new Date(payment.providerBillExpiresAt).getTime() > Date.now()
+        );
+    const paymentConfirmed = [
+        'payment_confirmed',
+        'processing',
+        'issuance_failed',
+        'paid_hold',
+        'shipment_created'
+    ].includes(payment.status);
+
+    return {
+        success: true,
+        orderNumber: payment.orderNumber,
+        status: payment.status,
+        amount: payment.amount,
+        carrier: payment.carrier,
+        deliveryTime: payment.deliveryTime || '',
+        paymentMethod: 'tuwaiqpay',
+        paymentConfirmed,
+        canPay,
+        paymentUrl: canPay ? payment.providerPaymentLink : '',
+        paymentExpiresAt: payment.providerBillExpiresAt || null,
+        paymentReference:
+            payment.providerTransactionDisplayId || '',
+        shipment: shipment
+            ? {
+                orderId: shipment.otoOrderId,
+                shipmentId: shipment.otoShipmentId,
+                trackingNumber: shipment.trackingNumber,
+                carrier: shipment.carrier,
+                finalPrice: shipment.price,
+                emailSent:
+                    shipment.emailDeliveryStatus === 'sent',
+                labelUrl: shipment.otoOrderId
+                    ? `/api/shipment-label?orderId=${encodeURIComponent(shipment.otoOrderId)}`
+                    : ''
+            }
+            : null,
+        fulfillmentIssue:
+            ['issuance_failed', 'paid_hold'].includes(payment.status)
+    };
+}
 
 function bankTransferPublicState(
     payment,
@@ -3569,6 +3907,7 @@ async function createPaidShipment(payment) {
             _id: payment._id,
             status: {
                 $in: [
+                    'payment_confirmed',
                     'pending_review',
                     'issuance_failed',
                     'paid_hold'
@@ -4030,7 +4369,7 @@ async function createPaidShipment(payment) {
 
         return Payment.findById(locked._id);
     } catch (error) {
-        console.error('تعذر إصدار شحنة التحويل المعتمد:', error);
+        console.error('تعذر إصدار الشحنة بعد تأكيد الدفع:', error);
 
         await Payment.updateOne(
             {
@@ -4162,7 +4501,7 @@ app.post('/api/create-shipment', async (req, res) => {
         if (!shipmentUser) {
             return res.status(401).json({
                 success: false,
-                message: 'سجّل الدخول أولًا لإنشاء طلب التحويل وحفظ بوليصتك.'
+                message: 'سجّل الدخول أولًا للدفع وحفظ بوليصتك.'
             });
         }
 
@@ -4203,10 +4542,10 @@ app.post('/api/create-shipment', async (req, res) => {
         });
     }
 
-    if (!bankTransferConfigured()) {
+    if (!tuwaiqPayConfigured()) {
         return res.status(503).json({
             success: false,
-            message: 'إعدادات التحويل البنكي غير مكتملة حاليًا.'
+            message: 'بوابة الدفع الإلكتروني غير جاهزة حاليًا.'
         });
     }
 
@@ -4292,35 +4631,27 @@ app.post('/api/create-shipment', async (req, res) => {
                     await currentShipmentForPayment(existing);
 
                 return res.json(
-                    bankTransferPublicState(existing, shipment)
+                    tuwaiqPayPublicState(existing, shipment)
                 );
             }
 
             if (
-                ['creating', 'pending', 'failed', 'canceled', 'manual_review']
-                    .includes(existing.status)
-            ) {
-                existing.status = 'awaiting_transfer';
-                existing.paymentMethod = 'bank_transfer';
-                existing.failureReason = '';
-                await existing.save();
-            }
-
-            if (
+                existing.paymentMethod === 'tuwaiqpay' &&
                 [
-                    'awaiting_transfer',
-                    'rejected',
-                    'pending_review',
+                    'creating_payment',
+                    'awaiting_payment',
+                    'payment_failed',
+                    'payment_confirmed',
                     'processing',
                     'issuance_failed',
                     'paid_hold'
                 ].includes(existing.status)
             ) {
                 return res.json({
-                    ...bankTransferPublicState(existing),
-                    bankTransferRequired: true,
-                    bankTransferUrl:
-                        `/bank-transfer.html?orderNumber=${encodeURIComponent(existing.orderNumber)}`
+                    ...tuwaiqPayPublicState(existing),
+                    paymentRequired: true,
+                    paymentPageUrl:
+                        `/tuwaiq-payment.html?orderNumber=${encodeURIComponent(existing.orderNumber)}`
                 });
             }
 
@@ -4382,14 +4713,14 @@ app.post('/api/create-shipment', async (req, res) => {
             customerEmail: body.email,
             requestId: body.requestId,
             orderNumber,
-            status: 'awaiting_transfer',
+            status: 'creating_payment',
             amount: finalPrice,
             providerCost,
             carrier: carrierName,
             deliveryOptionId:
                 String(body.deliveryOptionId),
             deliveryTime,
-            paymentMethod: 'bank_transfer',
+            paymentMethod: 'tuwaiqpay',
             shipmentPayload: {
                 body,
                 senderAddress,
@@ -4397,16 +4728,49 @@ app.post('/api/create-shipment', async (req, res) => {
             }
         });
 
+        let bill;
+
+        try {
+            bill = await createTuwaiqPayBill({ payment, body });
+        } catch (paymentError) {
+            await Payment.updateOne(
+                { _id: payment._id, status: 'creating_payment' },
+                {
+                    $set: {
+                        status: 'payment_creation_failed',
+                        failureReason:
+                            String(paymentError.message || 'PAYMENT_ERROR')
+                                .slice(0, 200)
+                    }
+                }
+            );
+            throw paymentError;
+        }
+
+        payment.status = 'awaiting_payment';
+        payment.providerPaymentLink = bill.paymentLink;
+        payment.providerQrCode = bill.qrCode;
+        payment.providerTransactionId = bill.transactionId;
+        payment.providerTransactionDisplayId = bill.transactionDisplayId;
+        payment.providerMerchantTransactionId =
+            bill.merchantTransactionId;
+        payment.providerNdc = bill.ndc;
+        payment.providerBillId = bill.billId;
+        payment.providerBillCreatedAt = bill.createdAt;
+        payment.providerBillExpiresAt = bill.expireDate;
+        payment.providerPaymentStatus = 'PENDING';
+        await payment.save();
+
         res.json({
-            ...bankTransferPublicState(payment),
-            bankTransferRequired: true,
-            bankTransferUrl:
-                `/bank-transfer.html?orderNumber=${encodeURIComponent(orderNumber)}`
+            ...tuwaiqPayPublicState(payment),
+            paymentRequired: true,
+            paymentPageUrl:
+                `/tuwaiq-payment.html?orderNumber=${encodeURIComponent(orderNumber)}`
         });
     } catch (error) {
-        console.error('تعذر إنشاء طلب التحويل:', error);
+        console.error('تعذر إنشاء طلب الدفع:', error);
 
-        let message = 'تعذر إنشاء طلب التحويل حاليًا. حاول مرة أخرى.';
+        let message = 'تعذر إنشاء رابط الدفع حاليًا. حاول مرة أخرى.';
 
         if (error.message === 'INVALID_NATIONAL_ADDRESS') {
             message = 'تعذر التحقق من أحد العنوانين المختصرين.';
@@ -4417,9 +4781,30 @@ app.post('/api/create-shipment', async (req, res) => {
         } else if (
             error.message === 'SHIPPING_BALANCE_UNAVAILABLE'
         ) {
-            message = 'تعذر التحقق من رصيد حساب الشحن حاليًا؛ لم يُنشأ طلب تحويل.';
-        } else if (error.message === 'R2_CONFIGURATION_ERROR') {
-            message = 'خدمة حفظ الإيصالات غير جاهزة حاليًا.';
+            message = 'تعذر التحقق من رصيد حساب الشحن حاليًا؛ لم يتم إنشاء رابط دفع.';
+        } else if (
+            error.message === 'TUWAIQPAY_CUSTOMER_MOBILE_INVALID'
+        ) {
+            message = 'رقم جوال المرسل غير صحيح. أدخله بصيغة 05xxxxxxxx.';
+        } else if (
+            error.message === 'TUWAIQPAY_NON_PRODUCTION_LINK'
+        ) {
+            message = 'أوقِف الدفع حمايةً لك لأن البوابة أعادت رابطًا غير حي.';
+        } else if (
+            [
+                'TUWAIQPAY_CONFIGURATION_ERROR',
+                'TUWAIQPAY_AUTH_RESPONSE_INVALID'
+            ].includes(error.message)
+        ) {
+            message = 'تعذر الاتصال بحساب بوابة الدفع الحية حاليًا.';
+        } else if (
+            [
+                'TUWAIQPAY_API_ERROR',
+                'TUWAIQPAY_NETWORK_ERROR',
+                'TUWAIQPAY_BILL_RESPONSE_INVALID'
+            ].includes(error.message)
+        ) {
+            message = 'تعذر إنشاء فاتورة الدفع الآمنة حاليًا. لم يتم خصم أي مبلغ.';
         }
 
         res.status(502).json({
@@ -4428,6 +4813,254 @@ app.post('/api/create-shipment', async (req, res) => {
         });
     }
 });
+
+app.get('/api/tuwaiqpay/payments/:orderNumber', async (req, res) => {
+    try {
+        const user = await authenticatedUser(req);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'سجّل الدخول لعرض حالة الدفع.'
+            });
+        }
+
+        await connectToDatabase();
+
+        let payment = await Payment.findOne({
+            orderNumber: String(req.params.orderNumber || '').trim(),
+            userId: user._id,
+            paymentMethod: 'tuwaiqpay'
+        }).select('+shipmentPayload');
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'لم يتم العثور على طلب الدفع.'
+            });
+        }
+
+        if (payment.status === 'payment_confirmed') {
+            try {
+                payment = await createPaidShipment(payment);
+            } catch (fulfillmentError) {
+                console.error(
+                    'تعذر إكمال الشحنة أثناء متابعة الدفع:',
+                    fulfillmentError
+                );
+                payment = await Payment.findById(payment._id);
+            }
+        } else if (payment.status === 'processing') {
+            const lastIssuanceAt = payment.lastIssuanceAt
+                ? new Date(payment.lastIssuanceAt).getTime()
+                : 0;
+
+            if (
+                lastIssuanceAt > 0 &&
+                Date.now() - lastIssuanceAt >
+                    PAYMENT_PROCESSING_TIMEOUT_MS
+            ) {
+                await Payment.updateOne(
+                    {
+                        _id: payment._id,
+                        status: 'processing',
+                        lastIssuanceAt: payment.lastIssuanceAt
+                    },
+                    {
+                        $set: {
+                            status: 'payment_confirmed',
+                            failureReason: 'PROCESSING_INTERRUPTED'
+                        }
+                    }
+                );
+                payment = await Payment.findById(payment._id)
+                    .select('+shipmentPayload');
+            }
+        }
+
+        const shipment = await currentShipmentForPayment(payment);
+        res.set('Cache-Control', 'no-store');
+        res.json(tuwaiqPayPublicState(payment, shipment));
+    } catch (error) {
+        console.error('تعذر قراءة حالة دفع طويق باي:', error);
+        res.status(500).json({
+            success: false,
+            message: 'تعذر قراءة حالة الدفع حاليًا.'
+        });
+    }
+});
+
+app.post('/api/webhooks/tuwaiqpay-payment', async (req, res) => {
+    if (!tuwaiqPayWebhookAuthenticated(req)) {
+        return res.status(401).json({
+            success: false,
+            message: 'Unauthorized webhook'
+        });
+    }
+
+    try {
+        const transaction = req.body?.transactionDetails;
+        const bill = transaction?.bill;
+
+        if (!transaction || !bill) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid webhook payload'
+            });
+        }
+
+        const transactionId =
+            String(transaction.transactionId || '').trim();
+        const merchantTransactionId =
+            String(transaction.merchantTransactionId || '').trim();
+        const billId = String(bill.id || '').trim();
+        const billTransactionId =
+            String(bill.transactionId || '').trim();
+
+        if (!transactionId || !merchantTransactionId || !billId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment identifiers are missing'
+            });
+        }
+
+        if (billTransactionId && billTransactionId !== transactionId) {
+            return res.status(409).json({
+                success: false,
+                message: 'Payment identifiers do not match'
+            });
+        }
+
+        await connectToDatabase();
+
+        const payment = await Payment.findOne({
+            paymentMethod: 'tuwaiqpay',
+            providerTransactionId: transactionId,
+            providerMerchantTransactionId: merchantTransactionId,
+            providerBillId: billId
+        });
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Payment was not found'
+            });
+        }
+
+        const billStatus = String(bill.status || '').toUpperCase();
+        const transactionStatus =
+            String(transaction.transactionStatus || '').toUpperCase();
+        const providerStatus = billStatus || transactionStatus || 'UNKNOWN';
+
+        if (billStatus !== 'PAID') {
+            const failed = ['FAILED', 'CANCELED', 'CANCELLED']
+                .includes(providerStatus);
+            await Payment.updateOne(
+                { _id: payment._id },
+                {
+                    $set: {
+                        providerPaymentStatus: providerStatus,
+                        paymentWebhookReceivedAt: new Date(),
+                        ...(failed &&
+                            ['awaiting_payment', 'payment_failed']
+                                .includes(payment.status)
+                            ? { status: 'payment_failed' }
+                            : {})
+                    }
+                }
+            );
+
+            return res.status(200).json({ success: true });
+        }
+
+        const paidAmount = number(bill.amount, NaN);
+        const expectedAmount = number(payment.amount);
+        const currency =
+            String(bill.currency?.code || '').toUpperCase();
+
+        if (
+            !Number.isFinite(paidAmount) ||
+            Math.round(paidAmount * 100) !==
+                Math.round(expectedAmount * 100) ||
+            currency !== 'SAR'
+        ) {
+            console.error(
+                'رفض إشعار طويق باي بسبب اختلاف المبلغ أو العملة:',
+                payment.orderNumber
+            );
+            return res.status(409).json({
+                success: false,
+                message: 'Payment amount or currency does not match'
+            });
+        }
+
+        const nextStatus =
+            ['awaiting_payment', 'payment_failed'].includes(payment.status)
+                ? 'payment_confirmed'
+                : payment.status;
+
+        await Payment.updateOne(
+            { _id: payment._id },
+            {
+                $set: {
+                    status: nextStatus,
+                    paidAt:
+                        transaction.paymentDate
+                            ? validDateOr(
+                                transaction.paymentDate,
+                                payment.paidAt || new Date()
+                            )
+                            : (payment.paidAt || new Date()),
+                    providerPaymentStatus: providerStatus,
+                    paymentWebhookReceivedAt: new Date(),
+                    failureReason: ''
+                }
+            }
+        );
+
+        if (nextStatus === 'payment_confirmed') {
+            const fulfillmentPromise = (async () => {
+                try {
+                    const confirmed = await Payment.findById(payment._id)
+                        .select('+shipmentPayload');
+
+                    if (confirmed?.status === 'payment_confirmed') {
+                        await createPaidShipment(confirmed);
+                    }
+                } catch (fulfillmentError) {
+                    console.error(
+                        'تعذر إصدار الشحنة بعد إشعار طويق باي:',
+                        fulfillmentError
+                    );
+                }
+            })();
+
+            waitUntil(fulfillmentPromise);
+        }
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('تعذر معالجة إشعار طويق باي:', error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: 'Webhook processing failed'
+            });
+        }
+    }
+});
+
+// The previous manual bank-transfer flow is permanently disabled. The
+// historical records remain in MongoDB for audit purposes only.
+app.use(
+    ['/api/bank-transfers', '/api/admin/bank-transfers'],
+    (req, res) => {
+        res.status(410).json({
+            success: false,
+            message: 'طريقة التحويل البنكي لم تعد متاحة.'
+        });
+    }
+);
 
 app.get('/api/bank-transfers/:orderNumber', async (req, res) => {
     try {

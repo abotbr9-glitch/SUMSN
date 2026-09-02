@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="robots" content="noindex,nofollow">
+  <title>الدفع الآمن | SUMSN</title>
+  <style>
+    :root{--ink:#101828;--muted:#667085;--line:#e5eaf2;--soft:#f5f8fc;--blue:#1769ff;--navy:#0b1f41;--green:#079b6c;--red:#c8323c;--amber:#b86b08}
+    *{box-sizing:border-box}body{margin:0;min-height:100dvh;background:linear-gradient(180deg,#f7faff,#fff 42%);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif}.shell{width:min(680px,calc(100% - 28px));margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 0}.brand{color:var(--navy);font-size:23px;font-weight:950;letter-spacing:1.5px;text-decoration:none}.back{padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:#344054;text-decoration:none;font-size:12px;font-weight:800}.card{margin:22px 0;padding:24px;border:1px solid var(--line);border-radius:25px;background:#fff;box-shadow:0 20px 55px rgba(16,24,40,.09)}.secure{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#eafaf4;color:#087b59;font-size:11px;font-weight:900}.secure i{width:8px;height:8px;border-radius:50%;background:var(--green)}h1{margin:15px 0 7px;color:var(--navy);font-size:27px}.lead{margin:0;color:var(--muted);font-size:13px;line-height:1.8}.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}.item{padding:13px;border-radius:14px;background:var(--soft)}.item span{display:block;color:var(--muted);font-size:10px}.item b{display:block;margin-top:4px;color:var(--navy);font-size:14px;overflow-wrap:anywhere}.item.amount b{color:var(--blue);font-size:21px}.status{margin:18px 0;padding:15px;border:1px solid #d8e5fa;border-radius:15px;background:#f4f8ff;color:#315078;font-size:13px;line-height:1.8}.status.good{border-color:#bee7d7;background:#effbf7;color:#087b59}.status.error{border-color:#f1c7ca;background:#fff4f5;color:#9f2630}.status.wait{border-color:#f1dbb9;background:#fff9ef;color:#85500c}.pay,.label{display:flex;align-items:center;justify-content:center;width:100%;height:56px;border:0;border-radius:15px;background:linear-gradient(135deg,var(--blue),#315eea);box-shadow:0 13px 28px rgba(23,105,255,.24);color:#fff;text-decoration:none;font-weight:900}.pay[hidden],.label[hidden]{display:none}.pay.disabled{pointer-events:none;opacity:.55}.label{background:linear-gradient(135deg,#079b6c,#08b783)}.methods{display:flex;justify-content:center;gap:8px;margin:14px 0 2px;color:#667085;font-size:11px;font-weight:800}.methods span{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}.note{margin:16px 0 0;color:var(--muted);font-size:11px;line-height:1.8;text-align:center}.spinner{display:inline-block;width:15px;height:15px;margin-left:7px;border:2px solid rgba(49,80,120,.25);border-top-color:#315078;border-radius:50%;vertical-align:middle;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:470px){.card{padding:19px}.summary{grid-template-columns:1fr}.item.amount{grid-column:1/-1}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top"><a class="brand" href="/">SUMSN</a><a class="back" href="/">العودة للرئيسية</a></header>
+    <main class="card">
+      <span class="secure"><i></i> دفع إلكتروني آمن عبر طويق باي</span>
+      <h1>إتمام دفع الشحنة</h1>
+      <p class="lead">راجع المبلغ ثم انتقل إلى صفحة الدفع. بعد الدفع أغلق صفحة طويق باي وارجع إلى هذه الصفحة؛ ستتحدث حالة طلبك تلقائيًا.</p>
+      <section class="summary" aria-label="ملخص الطلب">
+        <div class="item amount"><span>المبلغ المطلوب</span><b id="amount">—</b></div>
+        <div class="item"><span>شركة الشحن</span><b id="carrier">—</b></div>
+        <div class="item"><span>رقم الطلب</span><b id="orderNumber">—</b></div>
+        <div class="item"><span>مرجع الدفع</span><b id="paymentReference">—</b></div>
+      </section>
+      <div class="status" id="status" role="status" aria-live="polite"><span class="spinner"></span> جارٍ تحميل حالة الدفع...</div>
+      <a class="pay" id="payButton" href="#" target="_blank" rel="noopener" hidden>الانتقال إلى صفحة الدفع الآمن</a>
+      <a class="label" id="labelButton" href="#" target="_blank" rel="noopener" hidden>فتح وتحميل البوليصة</a>
+      <div class="methods"><span>مدى</span><span>VISA</span><span>Mastercard</span><span>AMEX</span></div>
+      <p class="note">لا يحفظ SUMSN بيانات بطاقتك. لا تصدر البوليصة إلا بعد وصول تأكيد دفع صحيح من طويق باي ومطابقة المبلغ والطلب.</p>
+    </main>
+  </div>
+  <script>
+  (()=>{
+    'use strict';
+    const params=new URLSearchParams(location.search),orderNumber=params.get('orderNumber')||'';
+    const $=selector=>document.querySelector(selector);
+    const status=$('#status'),payButton=$('#payButton'),labelButton=$('#labelButton');
+    let timer=null,finished=false;
+    const money=value=>new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0)+' ر.س';
+    function setStatus(message,type=''){status.className='status'+(type?' '+type:'');status.textContent=message}
+    function schedule(){clearTimeout(timer);if(!finished)timer=setTimeout(load,4000)}
+    async function request(){const response=await fetch('/api/tuwaiqpay/payments/'+encodeURIComponent(orderNumber),{cache:'no-store'});let body={};try{body=await response.json()}catch{}if(response.status===401){location.assign('/?account=login');throw new Error('سجّل الدخول لمتابعة الدفع.')}if(!response.ok||body.success===false)throw new Error(body.message||'تعذر قراءة حالة الدفع.');return body}
+    function render(body){
+      $('#amount').textContent=money(body.amount);$('#carrier').textContent=body.carrier||'—';$('#orderNumber').textContent=body.orderNumber||orderNumber;$('#paymentReference').textContent=body.paymentReference||'—';
+      payButton.hidden=true;labelButton.hidden=true;
+      if(body.status==='shipment_created'&&body.shipment){finished=true;setStatus('تم الدفع وإصدار البوليصة بنجاح. ستجدها أيضًا في بريدك ولوحة حسابك.','good');if(body.shipment.labelUrl){labelButton.href=body.shipment.labelUrl;labelButton.hidden=false}return}
+      if(body.status==='payment_confirmed'||body.status==='processing'){setStatus('تم تأكيد الدفع. جارٍ إصدار البوليصة وحفظها في حسابك...','wait');return}
+      if(body.status==='issuance_failed'||body.status==='paid_hold'){finished=true;setStatus('تم تأكيد الدفع، لكن تعذر إصدار البوليصة آليًا. لن يُطلب منك دفع المبلغ مرة أخرى؛ تواصل مع دعم SUMSN لمراجعة الطلب.','error');return}
+      if(body.status==='payment_creation_failed'){finished=true;setStatus('تعذر إنشاء رابط الدفع. ارجع إلى الرئيسية وأنشئ طلبًا جديدًا؛ لم يتم خصم أي مبلغ.','error');return}
+      if(body.canPay&&body.paymentUrl){payButton.href=body.paymentUrl;payButton.hidden=false;setStatus(body.status==='payment_failed'?'لم تكتمل عملية الدفع. يمكنك فتح صفحة الدفع والمحاولة مرة أخرى.':'رابط الدفع الحي جاهز. اضغط الزر لإتمام العملية عبر طويق باي.',body.status==='payment_failed'?'error':'');return}
+      setStatus('رابط الدفع غير متاح أو انتهت صلاحيته. ارجع إلى الرئيسية وأنشئ طلبًا جديدًا.','error');finished=true
+    }
+    async function load(){if(!orderNumber){setStatus('رقم الطلب غير موجود في الرابط.','error');finished=true;return}try{render(await request())}catch(error){setStatus(error.message||'تعذر تحديث حالة الدفع.','error')}finally{schedule()}}
+    payButton.addEventListener('click',()=>{setStatus('أكمل الدفع في صفحة طويق باي التي فُتحت، ثم ارجع هنا.','wait');finished=false;schedule()});
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!finished)load()});
+    load();
+  })();
+  </script>
+</body>
+</html>
