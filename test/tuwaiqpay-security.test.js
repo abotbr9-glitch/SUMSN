@@ -5,7 +5,8 @@ const test = require('node:test');
 const {
     liveTuwaiqPayPaymentUrl,
     normalizeSaudiMobile,
-    secureTextEquals
+    secureTextEquals,
+    tuwaiqPayPaymentCompleted
 } = require('../lib/tuwaiqpay-security');
 
 const projectDir = path.resolve(__dirname, '..');
@@ -34,6 +35,17 @@ test('webhook secrets require an exact non-empty match', () => {
     assert.equal(secureTextEquals('secret-value', 'secret-Value'), false);
     assert.equal(secureTextEquals('', ''), false);
     assert.equal(secureTextEquals('short', 'longer'), false);
+});
+
+test('documented paid webhook states trigger fulfillment', () => {
+    assert.equal(tuwaiqPayPaymentCompleted('PAID', ''), true);
+    assert.equal(
+        tuwaiqPayPaymentCompleted('PENDING', 'PENDING_SETTLEMENT'),
+        true
+    );
+    assert.equal(tuwaiqPayPaymentCompleted('', 'PAID'), true);
+    assert.equal(tuwaiqPayPaymentCompleted('PENDING', 'PENDING'), false);
+    assert.equal(tuwaiqPayPaymentCompleted('FAILED', 'FAILED'), false);
 });
 
 test('only known live HTTPS payment hosts are accepted', () => {
@@ -69,6 +81,11 @@ test('the live API and webhook safety requirements are wired into the server', (
     assert.match(serverSource, /app\.post\('\/api\/webhooks\/tuwaiqpay-payment'/);
     assert.match(serverSource, /Math\.round\(paidAmount \* 100\)/);
     assert.match(serverSource, /currency !== 'SAR'/);
+    assert.match(serverSource, /tuwaiqPayPaymentCompleted\(/);
+    assert.match(
+        serverSource,
+        /continueTuwaiqPayFulfillmentForUser\(user\._id\)/
+    );
     assert.match(serverSource, /waitUntil\(fulfillmentPromise\)/);
 });
 
