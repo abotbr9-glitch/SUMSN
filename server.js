@@ -9,6 +9,7 @@ const {
     liveTuwaiqPayPaymentUrl,
     normalizeSaudiMobile,
     secureTextEquals,
+    tuwaiqPayBillCurrencyIsSar,
     tuwaiqPayPaymentCompleted
 } = require('./lib/tuwaiqpay-security');
 const {
@@ -5070,18 +5071,30 @@ app.post('/api/webhooks/tuwaiqpay-payment', async (req, res) => {
 
         const paidAmount = number(bill.amount, NaN);
         const expectedAmount = number(payment.amount);
-        const currency =
-            String(bill.currency?.code || '').toUpperCase();
+        const currencyCode = String(
+            bill.currency?.code || bill.currencyCode || ''
+        ).trim().toUpperCase();
+        const currencyId = String(
+            bill.currency?.id || bill.currencyId || ''
+        ).trim();
+        const currencyMatches = tuwaiqPayBillCurrencyIsSar(bill);
 
         if (
             !Number.isFinite(paidAmount) ||
             Math.round(paidAmount * 100) !==
                 Math.round(expectedAmount * 100) ||
-            currency !== 'SAR'
+            !currencyMatches
         ) {
             console.error(
                 'رفض إشعار طويق باي بسبب اختلاف المبلغ أو العملة:',
-                payment.orderNumber
+                {
+                    orderNumber: payment.orderNumber,
+                    expectedAmount,
+                    paidAmount:
+                        Number.isFinite(paidAmount) ? paidAmount : null,
+                    currencyCode: currencyCode || null,
+                    currencyId: currencyId || null
+                }
             );
             return res.status(409).json({
                 success: false,
@@ -5688,3 +5701,4 @@ app.post('/api/admin/bank-transfers/:orderNumber/reject', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`السيرفر يعمل على http://localhost:${PORT}`);
 });
+
