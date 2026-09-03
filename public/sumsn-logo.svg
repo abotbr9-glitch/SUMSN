@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">شعار SUMSN</title>
+  <desc id="desc">كرة أرضية زرقاء ترمز إلى خدمات الشحن</desc>
+  <defs>
+    <radialGradient id="g" cx="32%" cy="24%" r="78%">
+      <stop offset="0" stop-color="#79b7ff"/>
+      <stop offset=".48" stop-color="#1769ff"/>
+      <stop offset="1" stop-color="#0b42bd"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="244" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="218" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="8"/>
+  <g fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="256" cy="256" rx="100" ry="218"/>
+    <path d="M38 256h436M74 158h364M74 354h364"/>
+  </g>
+</svg>
+
