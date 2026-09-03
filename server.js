@@ -2726,17 +2726,21 @@ function buildProviderOrder(
     receiverAddress,
     pickupLocationCode
 ) {
+    const declaredValue = roundMoney(body.declaredValue);
+
     return {
         orderId: payment.orderNumber,
         pickupLocationCode,
         deliveryOptionId: number(payment.deliveryOptionId),
         storeName: 'SUMSN',
         payment_method: 'paid',
-        amount: payment.amount,
+        amount: declaredValue,
         amount_due: 0,
         shippingAmount: payment.providerCost,
-        subtotal: payment.amount,
+        subtotal: declaredValue,
         currency: 'SAR',
+        customsValue: String(declaredValue),
+        customsCurrency: 'SAR',
         packageCount: 1,
         packageWeight: number(body.weight),
         boxLength: number(body.boxLength),
@@ -4605,6 +4609,7 @@ app.post('/api/create-shipment', async (req, res) => {
         'receiverShortAddressCode',
         'deliveryOptionId',
         'weight',
+        'declaredValue',
         'boxLength',
         'boxWidth',
         'boxHeight',
@@ -4668,6 +4673,7 @@ app.post('/api/create-shipment', async (req, res) => {
                 .replace(/[^A-Za-z0-9-]/g, '')
                 .slice(0, 64),
         weight: number(req.body.weight),
+        declaredValue: roundMoney(req.body.declaredValue),
         boxLength: number(req.body.boxLength),
         boxWidth: number(req.body.boxWidth),
         boxHeight: number(req.body.boxHeight)
@@ -4679,6 +4685,7 @@ app.post('/api/create-shipment', async (req, res) => {
         !shortAddressPattern.test(body.senderShortAddressCode) ||
         !shortAddressPattern.test(body.receiverShortAddressCode) ||
         body.weight <= 0 ||
+        body.declaredValue <= 0 ||
         body.boxLength <= 0 ||
         body.boxWidth <= 0 ||
         body.boxHeight <= 0 ||
@@ -4686,7 +4693,7 @@ app.post('/api/create-shipment', async (req, res) => {
     ) {
         return res.status(400).json({
             success: false,
-            message: 'تحقق من البريد والعنوانين المختصرين والوزن والأبعاد.'
+            message: 'تحقق من البريد والعنوانين المختصرين والوزن والأبعاد والقيمة المعلنة.'
         });
     }
 
@@ -4778,6 +4785,18 @@ app.post('/api/create-shipment', async (req, res) => {
             return res.status(409).json({
                 success: false,
                 message: 'خيار الشحن تغير. أعد جلب الأسعار واختر من جديد.'
+            });
+        }
+
+        const maxOrderValue = number(selected.maxOrderValue);
+
+        if (
+            maxOrderValue > 0 &&
+            body.declaredValue > maxOrderValue
+        ) {
+            return res.status(409).json({
+                success: false,
+                message: `القيمة المعلنة تتجاوز حد شركة الشحن المختارة (${maxOrderValue} ريال). اختر شركة أخرى أو صحح القيمة.`
             });
         }
 
