@@ -6,6 +6,7 @@ const {
     liveTuwaiqPayPaymentUrl,
     normalizeSaudiMobile,
     secureTextEquals,
+    tuwaiqPayBillCurrencyIsSar,
     tuwaiqPayPaymentCompleted
 } = require('../lib/tuwaiqpay-security');
 
@@ -48,6 +49,23 @@ test('documented paid webhook states trigger fulfillment', () => {
     assert.equal(tuwaiqPayPaymentCompleted('FAILED', 'FAILED'), false);
 });
 
+test('SAR webhook currency variants are accepted safely', () => {
+    assert.equal(
+        tuwaiqPayBillCurrencyIsSar({ currency: { code: 'SAR' } }),
+        true
+    );
+    assert.equal(
+        tuwaiqPayBillCurrencyIsSar({ currencyId: 1 }),
+        true
+    );
+    assert.equal(tuwaiqPayBillCurrencyIsSar({ amount: 25 }), true);
+    assert.equal(
+        tuwaiqPayBillCurrencyIsSar({ currency: { code: 'USD' } }),
+        false
+    );
+    assert.equal(tuwaiqPayBillCurrencyIsSar(null), false);
+});
+
 test('only known live HTTPS payment hosts are accepted', () => {
     for (const value of [
         'https://payment.tuwaiqpay.com.sa/pay/abc',
@@ -80,7 +98,7 @@ test('the live API and webhook safety requirements are wired into the server', (
     assert.match(serverSource, /TUWAIQPAY_WEBHOOK_HEADER_VALUE\.length >= 32/);
     assert.match(serverSource, /app\.post\('\/api\/webhooks\/tuwaiqpay-payment'/);
     assert.match(serverSource, /Math\.round\(paidAmount \* 100\)/);
-    assert.match(serverSource, /currency !== 'SAR'/);
+    assert.match(serverSource, /tuwaiqPayBillCurrencyIsSar\(bill\)/);
     assert.match(serverSource, /tuwaiqPayPaymentCompleted\(/);
     assert.match(
         serverSource,
@@ -103,3 +121,4 @@ test('the manual bank-transfer customer flow is removed', () => {
     assert.match(paymentPage, /دفع إلكتروني آمن عبر طويق باي/);
     assert.doesNotMatch(paymentPage, /index\.html\?account=login/);
 });
+
