@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar-SA" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -7,6 +7,7 @@
   <meta name="description" content="قارن أسعار شركات الشحن في السعودية، اختر العرض الأنسب، وأصدر بوليصة الشحن بسهولة عبر SUMSN مع حفظ البوالص في حسابك.">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <link rel="canonical" href="https://sumsn.com/">
+  <link rel="icon" type="image/svg+xml" href="/sumsn-logo.svg">
   <meta property="og:locale" content="ar_SA">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="SUMSN">
@@ -26,7 +27,13 @@
         "@id": "https://sumsn.com/#organization",
         "name": "SUMSN",
         "url": "https://sumsn.com/",
-        "email": "support@sumsn.com"
+        "email": "support@sumsn.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://sumsn.com/sumsn-logo.svg",
+          "width": 512,
+          "height": 512
+        }
       },
       {
         "@type": "WebSite",
@@ -37,6 +44,15 @@
         "description": "منصة لمقارنة أسعار شركات الشحن وإصدار بوليصات الشحن في السعودية.",
         "inLanguage": "ar-SA",
         "publisher": {"@id": "https://sumsn.com/#organization"}
+      },
+      {
+        "@type": "Service",
+        "@id": "https://sumsn.com/#shipping-service",
+        "name": "مقارنة أسعار الشحن وإصدار بوليصات الشحن",
+        "serviceType": "مقارنة عروض شركات الشحن وإصدار بوليصة شحن إلكترونية",
+        "url": "https://sumsn.com/",
+        "areaServed": {"@type": "Country", "name": "المملكة العربية السعودية"},
+        "provider": {"@id": "https://sumsn.com/#organization"}
       }
     ]
   }
@@ -50,6 +66,7 @@
     .quote-card{position:relative;margin:18px auto 30px;padding:20px;border:1px solid var(--line);border-radius:28px;background:#fff;box-shadow:var(--shadow)}.quote-card:before{content:"";position:absolute;z-index:-1;inset:-30px;background:radial-gradient(circle at 20% 10%,rgba(23,105,255,.11),transparent 48%)}.card-title{display:flex;align-items:center;gap:12px;margin-bottom:18px}.card-icon{display:grid;place-items:center;flex:0 0 44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#edf5ff,#e4edff);color:var(--blue)}.card-icon svg{width:23px}.card-title h2{margin:0;font-size:19px}.card-title p{margin:4px 0 0;color:var(--muted);font-size:12px}.form-grid{display:grid;gap:13px}.field{min-width:0}.field label{display:block;margin:0 3px 7px;font-size:12px;font-weight:800;color:#344054}.control{position:relative}.control svg{position:absolute;right:13px;top:50%;width:19px;color:#98a2b3;transform:translateY(-50%);pointer-events:none}.control input,.control select,.control textarea{width:100%;height:54px;padding:0 43px 0 13px;border:1px solid #dfe6ef;border-radius:15px;outline:0;background:#fbfcfe;color:var(--ink);transition:.2s}.control input:focus,.control select:focus,.control textarea:focus{border-color:#7eabff;background:#fff;box-shadow:0 0 0 4px rgba(23,105,255,.1)}.control textarea{height:120px;padding:14px;resize:vertical;line-height:1.7}.numeric-input{direction:ltr;text-align:left;font-variant-numeric:tabular-nums}.measurements{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}.submit{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:56px;margin-top:4px;border:0;border-radius:16px;background:linear-gradient(135deg,var(--blue),#315eea);box-shadow:0 13px 26px rgba(23,105,255,.25);color:white;font-weight:900;transition:.2s}.submit:hover{transform:translateY(-1px);box-shadow:0 16px 30px rgba(23,105,255,.3)}.submit:disabled{cursor:wait;opacity:.72;transform:none}.submit svg{width:20px}.spinner{width:19px;height:19px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
     .results-section{display:none;padding:14px 0 48px}.results-section.show{display:block}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:15px}.section-head h2{margin:0;font-size:24px;color:var(--navy)}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.results-count{flex:none;padding:7px 10px;border-radius:999px;background:#edf5ff;color:#1458ca;font-size:11px;font-weight:800}.results{display:grid;gap:12px}.rate{position:relative;display:grid;grid-template-columns:auto 1fr;gap:14px;padding:17px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:0 7px 24px rgba(16,24,40,.045);overflow:hidden}.rate.best{border-color:#b7d2ff;background:linear-gradient(140deg,#fff,#f7faff)}.best-label{position:absolute;left:0;top:0;padding:6px 12px;border-radius:0 0 12px 0;background:#e7f0ff;color:#1559c7;font-size:10px;font-weight:900}.carrier-logo{display:grid;place-items:center;width:55px;height:55px;border-radius:16px;background:var(--carrier-bg,#f2f4f7);color:var(--carrier-color,#344054);font-weight:1000;font-size:13px;letter-spacing:-.5px}.rate-main{min-width:0}.rate-top{display:flex;align-items:start;justify-content:space-between;gap:7px}.carrier h3{margin:1px 0 5px;font-size:15px;color:var(--navy)}.service{display:inline-block;color:var(--muted);font-size:11px;overflow-wrap:anywhere}.price{direction:rtl;flex:none;color:var(--navy);font-size:21px;font-weight:950}.price small{font-size:10px;color:var(--muted);font-weight:700}.rate-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.chip{display:flex;align-items:center;gap:5px;padding:6px 8px;border-radius:9px;background:var(--soft);color:#475467;font-size:10px;font-weight:700}.chip svg{width:14px}.book{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;border:1px solid #d6e3fa;border-radius:13px;background:#f2f7ff;color:#1559c7;font-size:12px;font-weight:900}.book:hover{background:#e9f2ff}.book svg{width:16px}
     .empty{padding:35px 18px;text-align:center;border:1px dashed #d6dee9;border-radius:22px;background:#fafbfc;color:var(--muted)}.empty svg{width:48px;margin:0 auto 12px;color:#98a2b3}.empty strong{display:block;color:var(--navy);margin-bottom:7px}.skeleton{height:155px;border-radius:22px;background:linear-gradient(90deg,#f5f7fa 25%,#e9eef4 37%,#f5f7fa 63%);background-size:400% 100%;animation:shimmer 1.4s infinite}@keyframes shimmer{to{background-position:-100% 0}}
+    .seo-intro{padding:8px 0 46px}.seo-intro-card{padding:clamp(20px,4vw,34px);border:1px solid #dce8fb;border-radius:24px;background:linear-gradient(145deg,#f8fbff,#fff);box-shadow:0 10px 32px rgba(16,24,40,.05)}.seo-intro h2{margin:0 0 10px;color:var(--navy);font-size:clamp(21px,4vw,29px)}.seo-intro p{margin:0;color:#475467;font-size:14px;line-height:2}.seo-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.seo-links a{padding:10px 13px;border:1px solid #d3e2fb;border-radius:11px;background:#fff;color:#1559c7;font-size:12px;font-weight:900;text-decoration:none}.seo-links a:hover,.seo-links a:focus{border-color:#82afff;background:#f2f7ff}
     .carriers{padding:38px 0 52px;background:#fafbfd;border-top:1px solid var(--line)}.carriers h2{text-align:center;margin:0 0 8px;font-size:20px;color:var(--navy)}.carriers>div>p{text-align:center;margin:0 0 22px;color:var(--muted);font-size:12px}.carrier-strip{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.carrier-badge{display:flex;align-items:center;justify-content:center;min-width:0;height:62px;padding:8px;border:1px solid #edf0f4;border-radius:16px;background:#fff;box-shadow:0 5px 16px rgba(16,24,40,.035);font-size:14px;font-weight:900;color:var(--logo,#344054)}
     footer{padding:27px 0 calc(27px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}.foot{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--muted);font-size:11px;text-align:center}.foot-brand{font-size:16px;font-weight:950;color:var(--navy);letter-spacing:1px}.foot-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px}.foot-links a{color:#475467;font-weight:800;text-decoration:none}.foot-links a:hover,.foot-links a:focus{color:var(--blue);text-decoration:underline}
     .toast{position:fixed;z-index:100;right:16px;left:16px;bottom:18px;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:15px;background:#172033;color:#fff;box-shadow:0 18px 45px rgba(0,0,0,.23);font-size:12px;font-weight:700;opacity:0;pointer-events:none;transform:translateY(18px);transition:.25s}.toast.show{opacity:1;transform:none}.toast.error{background:#9f1d24}.toast svg{width:20px;flex:none}
@@ -66,7 +83,7 @@
 <div class="app">
   <header class="topbar"><div class="shell topbar-in">
     <a class="brand" href="#top" aria-label="SUMSN الرئيسية"><span class="brand-globe" aria-hidden="true"><svg class="world" viewBox="0 0 100 38"><path d="M5 14 13 8l11 1 5 7-4 5-8-2-4 8-7-3zm32-8 13-3 8 5-2 8 6 5-8 4-5-7-7 1-5-6zm35 6 9-5 13 5 3 8-8 3-5 10-9-4 3-8-7-4z"/><path d="M46 28 54 24l8 3-3 8-8 2z"/></svg></span><span class="brand-copy"><b class="brand-name">SUMSN</b><small class="brand-tag">الشحن حول العالم، ببساطة</small></span></a>
-    <nav class="nav"><a href="#quote">احسب التكلفة</a><a href="#results">العروض</a><a href="#carriers">شركاؤنا</a></nav>
+    <nav class="nav"><a href="#quote">احسب التكلفة</a><a href="#results">العروض</a><a href="#carriers">شركات الشحن</a><a href="/shipping-labels-saudi-arabia.html">دليل الشحن</a></nav>
     <div class="top-actions"><button class="account-action primary" id="accountButton" type="button" hidden>دخول / حساب جديد</button><button class="account-action primary" id="dashboardButton" type="button" hidden>لوحتي</button><button class="account-action" id="logoutButton" type="button" hidden>خروج</button><button class="support" id="supportButton" type="button" aria-label="تواصل مع الدعم"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg><span>تواصل معنا</span></button></div>
   </div></header>
 
@@ -93,9 +110,11 @@
 
     <section class="results-section shell" id="results"><div class="section-head"><div><h2>العروض المتاحة</h2><p id="routeText">اختر العرض الأنسب لشحنتك</p></div><span class="results-count" id="resultsCount">0 عروض</span></div><div class="results" id="resultsGrid"></div></section>
 
-    <section class="carriers" id="carriers"><div class="shell"><h2>نوصلك عبر شركات موثوقة</h2><p>مجموعة من أشهر شركات الشحن المحلية والعالمية</p><div class="carrier-strip"><span class="carrier-badge" style="--logo:#e2231a">SMSA</span><span class="carrier-badge" style="--logo:#e21c2a">Aramex</span><span class="carrier-badge" style="--logo:#007a3d">SPL</span><span class="carrier-badge" style="--logo:#e52636">RedBox</span><span class="carrier-badge" style="--logo:#d40511;background:#ffdf00">DHL</span><span class="carrier-badge" style="--logo:#742a81">Naqel</span><span class="carrier-badge" style="--logo:#f58220">iMile</span><span class="carrier-badge" style="--logo:#d71920">J&amp;T</span><span class="carrier-badge" style="--logo:#00a39b">Aymakan</span><span class="carrier-badge" style="--logo:#351c15">UPS</span></div></div></section>
+    <section class="seo-intro shell" aria-labelledby="shipping-guide-title"><div class="seo-intro-card"><h2 id="shipping-guide-title">قارن أسعار الشحن وأصدر بوليصتك من مكان واحد</h2><p>تساعدك SUMSN على مقارنة عروض الشحن المتاحة داخل المملكة بحسب مدينة الإرسال ومدينة الاستلام والوزن والأبعاد. تظهر لك الخيارات المتاحة من شركات مثل سمسا وأرامكس وسبل وغيرها بحسب المسار، ثم يمكنك اختيار العرض المناسب وإصدار بوليصة الشحن إلكترونيًا واستلامها في حسابك وبريدك.</p><div class="seo-links"><a href="/shipping-labels-saudi-arabia.html">طريقة إصدار بوليصة شحن</a><a href="/compare-shipping-prices.html">دليل مقارنة أسعار شركات الشحن</a></div></div></section>
+
+    <section class="carriers" id="carriers"><div class="shell"><h2>نوصلك عبر شركات شحن موثوقة</h2><p>تظهر الشركات والخدمات المتاحة فعليًا بحسب مدن الشحنة وبياناتها</p><div class="carrier-strip"><span class="carrier-badge" style="--logo:#e2231a">SMSA</span><span class="carrier-badge" style="--logo:#e21c2a">Aramex</span><span class="carrier-badge" style="--logo:#007a3d">SPL</span><span class="carrier-badge" style="--logo:#e52636">RedBox</span><span class="carrier-badge" style="--logo:#d40511;background:#ffdf00">DHL</span><span class="carrier-badge" style="--logo:#742a81">Naqel</span><span class="carrier-badge" style="--logo:#f58220">iMile</span><span class="carrier-badge" style="--logo:#d71920">J&amp;T</span><span class="carrier-badge" style="--logo:#00a39b">Aymakan</span><span class="carrier-badge" style="--logo:#351c15">UPS</span></div></div></section>
   </main>
-  <footer><div class="shell foot"><span class="foot-brand">SUMSN</span><span>© <span id="year"></span> جميع الحقوق محفوظة لمنصة SUMSN</span><span>شحن أسهل، أينما كنت</span><nav class="foot-links" aria-label="السياسات القانونية"><a href="/privacy-policy.html">سياسة الخصوصية</a><a href="/terms-and-conditions.html">الشروط والأحكام</a><a href="/refund-policy.html">سياسة الاسترجاع والاسترداد</a></nav></div></footer>
+  <footer><div class="shell foot"><span class="foot-brand">SUMSN</span><span>© <span id="year"></span> جميع الحقوق محفوظة لمنصة SUMSN</span><span>شحن أسهل، أينما كنت</span><nav class="foot-links" aria-label="روابط SUMSN"><a href="/shipping-labels-saudi-arabia.html">إصدار بوليصة شحن</a><a href="/compare-shipping-prices.html">مقارنة أسعار الشحن</a><a href="/privacy-policy.html">سياسة الخصوصية</a><a href="/terms-and-conditions.html">الشروط والأحكام</a><a href="/refund-policy.html">سياسة الاسترجاع والاسترداد</a></nav></div></footer>
 </div>
 
 <dialog id="contactDialog"><div class="modal-in account-modal"><div class="modal-head"><h2>تواصل مع SUMSN</h2><button type="button" class="close" id="closeContactDialog" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><form class="auth-form" id="contactForm"><div class="field"><label for="contactName">الاسم الكامل</label><div class="control"><input id="contactName" name="fullName" required autocomplete="name" minlength="2" maxlength="80"></div></div><div class="field"><label for="contactEmail">البريد الإلكتروني للرد عليك</label><div class="control"><input id="contactEmail" name="email" type="email" required autocomplete="email" placeholder="name@example.com"></div></div><div class="field"><label for="contactMessage">رسالتك</label><div class="control"><textarea id="contactMessage" name="message" required minlength="5" maxlength="2000" placeholder="كيف يمكننا مساعدتك؟"></textarea></div></div><input name="website" type="text" tabindex="-1" autocomplete="off" hidden><p class="auth-note">ستصل رسالتك مباشرة إلى support@sumsn.com</p><span class="auth-status" id="contactStatus"></span><button class="submit" id="contactSubmit" type="submit"><span>إرسال الرسالة</span></button></form></div></dialog>
@@ -231,3 +250,4 @@
 </script>
 </body>
 </html>
+
