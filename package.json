@@ -1,15 +1,16 @@
 {
+  "scripts": {
+    "check": "node --check server.js && node --test",
+    "test": "node --test"
+  },
   "engines": {
     "node": "24.x"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1110.0",
     "@vercel/functions": "^3.9.5",
-    "axios": "^1.19.0",
-    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongodb": "^7.5.0",
     "mongoose": "^9.9.1",
     "nodemailer": "^9.0.5"
   }

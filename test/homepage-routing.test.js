@@ -17,6 +17,9 @@ assert.ok(preambleEnd > 0);
 const context = {
     __dirname: projectDir,
     module: { exports: {} },
+    sameOriginRequest(req) {
+        return !req.headers.origin;
+    },
     require(name) {
         if (name === 'express') return express;
         if (name === 'dotenv') return { config() {} };
@@ -31,6 +34,14 @@ vm.runInNewContext(
 );
 const app = context.module.exports;
 app.post('/api/routing-test', (req, res) => res.json(req.body));
+app.use((error, req, res, next) => {
+    if (error?.type === 'entity.too.large') {
+        res.status(413).json({ success: false });
+        return;
+    }
+
+    next(error);
+});
 
 let server;
 let baseUrl;
@@ -96,10 +107,63 @@ test('API POST requests are not intercepted by homepage routing', async () => {
     assert.deepEqual(await response.json(), payload);
 });
 
+test('cross-site browser writes are rejected', async () => {
+    const response = await fetch(`${baseUrl}/api/routing-test`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Origin: 'https://attacker.example'
+        },
+        body: JSON.stringify({ routingTest: true })
+    });
+
+    assert.equal(response.status, 403);
+});
+
+test('security headers protect every response and Express is not advertised', async () => {
+    const response = await fetch(`${baseUrl}/`, { redirect: 'manual' });
+
+    assert.match(
+        response.headers.get('content-security-policy'),
+        /frame-ancestors 'none'/
+    );
+    assert.equal(response.headers.get('x-frame-options'), 'DENY');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(
+        response.headers.get('referrer-policy'),
+        'strict-origin-when-cross-origin'
+    );
+    assert.equal(
+        response.headers.get('strict-transport-security'),
+        'max-age=31536000; includeSubDomains'
+    );
+    assert.equal(response.headers.get('x-powered-by'), null);
+});
+
+test('oversized JSON bodies are rejected before reaching an API route', async () => {
+    const response = await fetch(`${baseUrl}/api/routing-test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: 'x'.repeat(70 * 1024) })
+    });
+
+    assert.equal(response.status, 413);
+});
+
 test('Vercel routes only the homepage and leaves APIs and other pages alone', () => {
     const config = JSON.parse(fs.readFileSync(path.join(projectDir, 'vercel.json'), 'utf8'));
-    assert.deepEqual(config.redirects, [{ source: '/index.html', destination: '/', permanent: true }]);
+    assert.deepEqual(config.redirects[1], {
+        source: '/index.html',
+        destination: '/',
+        permanent: true
+    });
+    assert.equal(config.redirects[0].has[0].value, 'www.sumsn.com');
+    assert.equal(config.redirects[0].destination, 'https://sumsn.com/:path*');
     assert.deepEqual(config.rewrites, [{ source: '/', destination: '/index.html' }]);
+    assert.ok(config.headers[0].headers.some(header =>
+        header.key === 'Content-Security-Policy' &&
+        header.value.includes("frame-ancestors 'none'")
+    ));
     assert.equal(config.cleanUrls, undefined);
 });
 
