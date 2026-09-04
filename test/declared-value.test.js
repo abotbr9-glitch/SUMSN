@@ -34,7 +34,10 @@ test('server validates the declared value before payment', () => {
         serverSource,
         /declaredValue: roundMoney\(req\.body\.declaredValue\)/
     );
-    assert.match(serverSource, /body\.declaredValue <= 0/);
+    assert.match(
+        serverSource,
+        /validPositiveNumber\(\s*body\.declaredValue,\s*MAX_DECLARED_VALUE_SAR\s*\)/
+    );
     assert.match(
         serverSource,
         /body\.declaredValue > maxOrderValue/

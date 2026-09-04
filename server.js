@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const dns = require('node:dns').promises;
+const net = require('node:net');
 const path = require('node:path');
 const { waitUntil } = require('@vercel/functions');
 const {
@@ -13,6 +15,11 @@ const {
     tuwaiqPayPaymentCompleted
 } = require('./lib/tuwaiqpay-security');
 const {
+    createPasswordRecord,
+    passwordMatches,
+    passwordNeedsUpgrade
+} = require('./lib/password-security');
+const {
     GetObjectCommand,
     PutObjectCommand,
     S3Client
@@ -22,8 +29,66 @@ dotenv.config();
 
 const app = express();
 
-app.use(express.json({ limit: '7mb' }));
-app.use(express.urlencoded({ extended: true, limit: '7mb' }));
+app.disable('x-powered-by');
+app.set('query parser', 'simple');
+app.use((req, res, next) => {
+    res.set({
+        'Content-Security-Policy': [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'none'",
+            "form-action 'self'",
+            "img-src 'self' data:",
+            "font-src 'self' data:",
+            "connect-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
+            'upgrade-insecure-requests'
+        ].join('; '),
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Permissions-Policy':
+            'camera=(), microphone=(), geolocation=(), payment=(self)',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Strict-Transport-Security':
+            'max-age=31536000; includeSubDomains',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY'
+    });
+    next();
+});
+app.use((req, res, next) => {
+    const changesState = ['POST', 'PUT', 'PATCH', 'DELETE']
+        .includes(req.method);
+    const providerWebhook =
+        req.path === '/api/webhooks/tuwaiqpay-payment';
+
+    if (
+        changesState &&
+        !providerWebhook &&
+        !sameOriginRequest(req)
+    ) {
+        res.status(403).json({
+            success: false,
+            message: 'تعذر التحقق من مصدر الطلب.'
+        });
+        return;
+    }
+
+    next();
+});
+app.use(express.json({
+    limit: '64kb',
+    strict: true,
+    type: 'application/json'
+}));
+app.use((req, res, next) => {
+    if (req.body === undefined) {
+        req.body = {};
+    }
+
+    next();
+});
 
 // Vercel applies the equivalent rules at the CDN through vercel.json.
 // Keep local Express routing consistent and preserve account/reset links.
@@ -79,6 +144,15 @@ const ENABLE_CUSTOMER_ACCOUNTS =
 const SESSION_COOKIE_NAME = 'sumsn_session';
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const SEARCH_LOG_RETENTION_DAYS = 90;
+const ABANDONED_PAYMENT_PAYLOAD_RETENTION_MS =
+    48 * 60 * 60 * 1000;
+const MAX_CITY_LENGTH = 80;
+const MAX_PERSON_NAME_LENGTH = 100;
+const MAX_CONTENTS_DESCRIPTION_LENGTH = 500;
+const MAX_WEIGHT_KG = 1000;
+const MAX_DIMENSION_CM = 500;
+const MAX_DECLARED_VALUE_SAR = 1000000;
+const LABEL_DOWNLOAD_TIMEOUT_MS = 20 * 1000;
 const MONGO_STORAGE_LIMIT_BYTES =
     Number(process.env.MONGO_STORAGE_LIMIT_MB || 512) *
     1024 *
@@ -194,6 +268,7 @@ let tuwaiqPayAccessToken = '';
 let tuwaiqPayAccessTokenExpiresAt = 0;
 let mongoConnectionPromise = null;
 let r2Client = null;
+let lastPaymentPayloadCleanupAt = 0;
 
 /*
 |--------------------------------------------------------------------------
@@ -563,6 +638,11 @@ const userSchema = new mongoose.Schema(
             required: true,
             select: false
         },
+        passwordParamsVersion: {
+            type: Number,
+            default: 1,
+            select: false
+        },
         emailVerifiedAt: {
             type: Date,
             default: null
@@ -600,6 +680,23 @@ const userSchema = new mongoose.Schema(
 const User =
     mongoose.models.User ||
     mongoose.model('User', userSchema);
+
+const rateLimitSchema = new mongoose.Schema({
+    _id: String,
+    count: {
+        type: Number,
+        default: 0
+    },
+    expiresAt: {
+        type: Date,
+        required: true,
+        expires: 0
+    }
+});
+
+const RateLimit =
+    mongoose.models.RateLimit ||
+    mongoose.model('RateLimit', rateLimitSchema);
 
 const platformStatSchema = new mongoose.Schema({
     _id: {
@@ -1001,50 +1098,6 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-function passwordDigest(password, salt) {
-    return new Promise((resolve, reject) => {
-        crypto.scrypt(
-            String(password),
-            salt,
-            64,
-            {
-                N: 16384,
-                r: 8,
-                p: 1,
-                maxmem: 64 * 1024 * 1024
-            },
-            (error, derivedKey) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-
-                resolve(derivedKey.toString('hex'));
-            }
-        );
-    });
-}
-
-async function createPasswordRecord(password) {
-    const salt = crypto.randomBytes(16).toString('hex');
-
-    return {
-        salt,
-        hash: await passwordDigest(password, salt)
-    };
-}
-
-async function passwordMatches(password, salt, expectedHash) {
-    const actualHash = await passwordDigest(password, salt);
-    const actual = Buffer.from(actualHash, 'hex');
-    const expected = Buffer.from(String(expectedHash || ''), 'hex');
-
-    return (
-        actual.length === expected.length &&
-        crypto.timingSafeEqual(actual, expected)
-    );
-}
-
 function createActionToken() {
     const token = crypto.randomBytes(32).toString('hex');
 
@@ -1205,6 +1258,137 @@ function publicUser(user) {
     };
 }
 
+function boundedText(value, maximumLength) {
+    const text = String(value || '').trim();
+
+    return text.length <= maximumLength ? text : '';
+}
+
+function validPositiveNumber(value, maximum) {
+    const parsed = number(value, NaN);
+
+    return Number.isFinite(parsed) && parsed > 0 && parsed <= maximum;
+}
+
+function privateNetworkAddress(address) {
+    const normalized = String(address || '').toLowerCase();
+
+    if (normalized.startsWith('::ffff:')) {
+        const mappedIpv4 = normalized.slice('::ffff:'.length);
+
+        if (net.isIPv4(mappedIpv4)) {
+            return privateNetworkAddress(mappedIpv4);
+        }
+    }
+
+    if (net.isIPv4(normalized)) {
+        const parts = normalized.split('.').map(Number);
+
+        return (
+            parts[0] === 0 ||
+            parts[0] === 10 ||
+            parts[0] === 127 ||
+            (parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127) ||
+            (parts[0] === 169 && parts[1] === 254) ||
+            (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+            (parts[0] === 192 && parts[1] === 168) ||
+            (parts[0] === 198 && [18, 19].includes(parts[1])) ||
+            parts[0] >= 224
+        );
+    }
+
+    if (net.isIPv6(normalized)) {
+        return (
+            normalized === '::' ||
+            normalized === '::1' ||
+            normalized.startsWith('fc') ||
+            normalized.startsWith('fd') ||
+            /^fe[89ab]/.test(normalized)
+        );
+    }
+
+    return false;
+}
+
+async function assertSafeExternalHttpsUrl(value) {
+    let url;
+
+    try {
+        url = new URL(String(value || '').trim());
+    } catch {
+        throw new Error('LABEL_URL_INVALID');
+    }
+
+    const hostname = url.hostname.toLowerCase();
+
+    if (
+        url.protocol !== 'https:' ||
+        url.username ||
+        url.password ||
+        (url.port && url.port !== '443') ||
+        hostname === 'localhost' ||
+        hostname.endsWith('.localhost') ||
+        hostname.endsWith('.local') ||
+        hostname.endsWith('.internal') ||
+        privateNetworkAddress(hostname)
+    ) {
+        throw new Error('LABEL_URL_INVALID');
+    }
+
+    const addresses = await dns.lookup(hostname, { all: true });
+
+    if (
+        !addresses.length ||
+        addresses.some(({ address }) => privateNetworkAddress(address))
+    ) {
+        throw new Error('LABEL_URL_INVALID');
+    }
+
+    return url;
+}
+
+async function limitedResponseBuffer(response, maximumBytes) {
+    const declaredLength = number(
+        response.headers.get('content-length'),
+        NaN
+    );
+
+    if (
+        Number.isFinite(declaredLength) &&
+        declaredLength > maximumBytes
+    ) {
+        throw new Error('LABEL_TOO_LARGE');
+    }
+
+    if (!response.body) {
+        return Buffer.alloc(0);
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    let total = 0;
+
+    while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+            break;
+        }
+
+        const chunk = Buffer.from(value);
+        total += chunk.length;
+
+        if (total > maximumBytes) {
+            await reader.cancel();
+            throw new Error('LABEL_TOO_LARGE');
+        }
+
+        chunks.push(chunk);
+    }
+
+    return Buffer.concat(chunks, total);
+}
+
 function brandedEmailHtml(title, bodyHtml, buttonText, buttonUrl) {
     const action = buttonUrl
         ? `<p style="margin:26px 0;text-align:center"><a href="${escapeHtml(buttonUrl)}" style="display:inline-block;padding:13px 24px;border-radius:12px;background:#1769ff;color:#fff;text-decoration:none;font-weight:800">${escapeHtml(buttonText)}</a></p>`
@@ -1352,24 +1536,55 @@ async function labelAttachment(providerLabelUrl, orderId) {
         return null;
     }
 
-    const response = await fetch(providerLabelUrl);
+    let currentUrl = await assertSafeExternalHttpsUrl(providerLabelUrl);
+    let response;
 
-    if (!response.ok) {
+    for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
+        response = await fetch(currentUrl, {
+            redirect: 'manual',
+            signal: AbortSignal.timeout(LABEL_DOWNLOAD_TIMEOUT_MS)
+        });
+
+        if (
+            [301, 302, 303, 307, 308].includes(response.status) &&
+            response.headers.get('location')
+        ) {
+            if (redirectCount === 3) {
+                throw new Error('LABEL_REDIRECT_LIMIT');
+            }
+
+            currentUrl = await assertSafeExternalHttpsUrl(
+                new URL(
+                    response.headers.get('location'),
+                    currentUrl
+                ).toString()
+            );
+            continue;
+        }
+
+        break;
+    }
+
+    if (!response?.ok) {
         throw new Error('LABEL_DOWNLOAD_ERROR');
     }
 
-    const content = Buffer.from(await response.arrayBuffer());
+    const content = await limitedResponseBuffer(
+        response,
+        MAX_LABEL_BYTES
+    );
 
-    if (content.length > MAX_LABEL_BYTES) {
-        throw new Error('LABEL_TOO_LARGE');
+    if (
+        content.length < 5 ||
+        content.subarray(0, 5).toString('ascii') !== '%PDF-'
+    ) {
+        throw new Error('LABEL_CONTENT_INVALID');
     }
 
     return {
         filename: `${orderId}.pdf`,
         content,
-        contentType:
-            response.headers.get('content-type') ||
-            'application/pdf'
+        contentType: 'application/pdf'
     };
 }
 
@@ -1438,15 +1653,19 @@ async function sendTransferSubmittedEmail(payment) {
 
 const authAttempts = new Map();
 
-function authRateLimited(req, action, maximum, windowMs) {
+function requestClientAddress(req) {
     const forwarded = String(req.headers['x-forwarded-for'] || '')
         .split(',')[0]
         .trim();
-    const address =
+
+    return (
         forwarded ||
         req.socket?.remoteAddress ||
-        'unknown';
-    const key = `${action}:${address}`;
+        'unknown'
+    ).slice(0, 128);
+}
+
+function memoryRateLimited(key, maximum, windowMs) {
     const now = Date.now();
     const current = authAttempts.get(key);
 
@@ -1461,6 +1680,57 @@ function authRateLimited(req, action, maximum, windowMs) {
     current.count += 1;
 
     return current.count > maximum;
+}
+
+async function authRateLimited(
+    req,
+    action,
+    maximum,
+    windowMs,
+    discriminator = ''
+) {
+    const scope = discriminator
+        ? `identity:${String(discriminator).slice(0, 128)}`
+        : `ip:${requestClientAddress(req)}`;
+    const windowNumber = Math.floor(Date.now() / windowMs);
+    const key = crypto
+        .createHash('sha256')
+        .update(`${action}:${scope}:${windowNumber}`)
+        .digest('hex');
+    const expiresAt = new Date(
+        (windowNumber + 1) * windowMs + 60 * 1000
+    );
+
+    try {
+        await connectToDatabase();
+
+        let record;
+
+        try {
+            record = await RateLimit.findOneAndUpdate(
+                { _id: key },
+                {
+                    $inc: { count: 1 },
+                    $setOnInsert: { expiresAt }
+                },
+                { upsert: true, new: true }
+            ).lean();
+        } catch (error) {
+            if (error?.code !== 11000) {
+                throw error;
+            }
+
+            record = await RateLimit.findOneAndUpdate(
+                { _id: key },
+                { $inc: { count: 1 } },
+                { new: true }
+            ).lean();
+        }
+
+        return number(record?.count) > maximum;
+    } catch {
+        return memoryRateLimited(key, maximum, windowMs);
+    }
 }
 
 async function initializePlatformStats() {
@@ -2136,6 +2406,58 @@ function pickupLocationsFromResponse(result) {
 
     collect(result);
     return locations;
+}
+
+async function cleanupExpiredSensitivePaymentPayloads() {
+    const now = Date.now();
+
+    if (
+        now - lastPaymentPayloadCleanupAt < 60 * 60 * 1000
+    ) {
+        return;
+    }
+
+    lastPaymentPayloadCleanupAt = now;
+
+    try {
+        await connectToDatabase();
+
+        const cutoff = new Date(
+            now - ABANDONED_PAYMENT_PAYLOAD_RETENTION_MS
+        );
+
+        await Payment.updateMany(
+            {
+                shipmentPayload: { $exists: true, $ne: null },
+                status: {
+                    $in: [
+                        'creating_payment',
+                        'payment_creation_failed',
+                        'awaiting_payment',
+                        'payment_failed'
+                    ]
+                },
+                $or: [
+                    { providerBillExpiresAt: { $lt: new Date(now) } },
+                    {
+                        providerBillExpiresAt: null,
+                        createdAt: { $lt: cutoff }
+                    },
+                    {
+                        providerBillExpiresAt: { $exists: false },
+                        createdAt: { $lt: cutoff }
+                    }
+                ]
+            },
+            { $unset: { shipmentPayload: 1 } }
+        );
+    } catch (error) {
+        lastPaymentPayloadCleanupAt = 0;
+        console.warn(
+            'تعذر تنظيف بيانات الطلبات المنتهية:',
+            error.message
+        );
+    }
 }
 
 function pickupLocationCode(location) {
@@ -2990,7 +3312,7 @@ app.post('/api/contact', async (req, res) => {
     }
 
     if (
-        authRateLimited(
+        await authRateLimited(
             req,
             'contact',
             5,
@@ -3138,7 +3460,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     if (
-        authRateLimited(
+        await authRateLimited(
             req,
             'register',
             8,
@@ -3183,7 +3505,7 @@ app.post('/api/auth/register', async (req, res) => {
         const existing = await User.findOne({
             email
         }).select(
-            '+passwordSalt +passwordHash +verificationTokenHash +verificationTokenExpiresAt'
+            '+passwordSalt +passwordHash +passwordParamsVersion +verificationTokenHash +verificationTokenExpiresAt'
         );
 
         if (existing?.emailVerifiedAt) {
@@ -3206,6 +3528,8 @@ app.post('/api/auth/register', async (req, res) => {
                 passwordRecord.salt;
             existing.passwordHash =
                 passwordRecord.hash;
+            existing.passwordParamsVersion =
+                passwordRecord.version;
             existing.verificationTokenHash =
                 verification.hash;
             existing.verificationTokenExpiresAt =
@@ -3219,6 +3543,8 @@ app.post('/api/auth/register', async (req, res) => {
                     passwordRecord.salt,
                 passwordHash:
                     passwordRecord.hash,
+                passwordParamsVersion:
+                    passwordRecord.version,
                 verificationTokenHash:
                     verification.hash,
                 verificationTokenExpiresAt:
@@ -3313,7 +3639,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     if (
-        authRateLimited(
+        await authRateLimited(
             req,
             'login',
             12,
@@ -3341,16 +3667,17 @@ app.post('/api/auth/login', async (req, res) => {
 
         const user = await User.findOne({
             email
-        }).select('+passwordSalt +passwordHash');
-
-        if (
-            !user ||
-            !await passwordMatches(
+        }).select('+passwordSalt +passwordHash +passwordParamsVersion');
+        const passwordValid = user
+            ? await passwordMatches(
                 password,
                 user.passwordSalt,
-                user.passwordHash
+                user.passwordHash,
+                user.passwordParamsVersion
             )
-        ) {
+            : false;
+
+        if (!user || !passwordValid) {
             return res.status(401).json({
                 success: false,
                 message: 'البريد أو كلمة المرور غير صحيحة.'
@@ -3362,6 +3689,14 @@ app.post('/api/auth/login', async (req, res) => {
                 success: false,
                 message: 'أكد بريدك الإلكتروني أولًا من الرسالة المرسلة إليك.'
             });
+        }
+
+        if (passwordNeedsUpgrade(user.passwordParamsVersion)) {
+            const upgraded = await createPasswordRecord(password);
+            user.passwordSalt = upgraded.salt;
+            user.passwordHash = upgraded.hash;
+            user.passwordParamsVersion = upgraded.version;
+            await user.save();
         }
 
         setSessionCookie(res, user);
@@ -3400,7 +3735,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     }
 
     if (
-        authRateLimited(
+        await authRateLimited(
             req,
             'forgot',
             6,
@@ -3500,7 +3835,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
                 $gt: new Date()
             }
         }).select(
-            '+passwordSalt +passwordHash +resetTokenHash +resetTokenExpiresAt'
+            '+passwordSalt +passwordHash +passwordParamsVersion +resetTokenHash +resetTokenExpiresAt'
         );
 
         if (!user) {
@@ -3514,6 +3849,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
             await createPasswordRecord(password);
         user.passwordSalt = passwordRecord.salt;
         user.passwordHash = passwordRecord.hash;
+        user.passwordParamsVersion = passwordRecord.version;
         user.resetTokenHash = '';
         user.resetTokenExpiresAt = null;
         user.sessionVersion =
@@ -3619,6 +3955,7 @@ app.get('/api/dashboard-stats', async (req, res) => {
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
         await connectToDatabase();
+        await cleanupExpiredSensitivePaymentPayloads();
         await initializePlatformStats();
 
         const stats =
@@ -3658,6 +3995,26 @@ app.get('/api/dashboard-stats', async (req, res) => {
 */
 
 app.post('/api/shipping-rates', async (req, res) => {
+    if (
+        await authRateLimited(
+            req,
+            'shipping-rates-short',
+            40,
+            15 * 60 * 1000
+        ) ||
+        await authRateLimited(
+            req,
+            'shipping-rates-daily',
+            300,
+            24 * 60 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم إرسال استعلامات كثيرة. حاول لاحقًا.'
+        });
+    }
+
     const {
         origin_city,
         destination_city,
@@ -3666,18 +4023,31 @@ app.post('/api/shipping-rates', async (req, res) => {
         boxWidth = 30,
         boxHeight = 30
     } = req.body;
+    const originCity = boundedText(origin_city, MAX_CITY_LENGTH);
+    const destinationCity = boundedText(
+        destination_city,
+        MAX_CITY_LENGTH
+    );
+    const shipmentWeight = number(weight, NaN);
+    const shipmentLength = number(boxLength, NaN);
+    const shipmentWidth = number(boxWidth, NaN);
+    const shipmentHeight = number(boxHeight, NaN);
 
-    if (!origin_city || !destination_city || number(weight) <= 0) {
+    if (
+        !originCity ||
+        !destinationCity ||
+        !validPositiveNumber(shipmentWeight, MAX_WEIGHT_KG)
+    ) {
         return res.status(400).json({
             success: false,
-            message: 'أدخل مدينتي الإرسال والوصول والوزن.'
+            message: 'أدخل مدينتي الإرسال والوصول ووزنًا صحيحًا.'
         });
     }
 
     if (
-        number(boxLength) <= 0 ||
-        number(boxWidth) <= 0 ||
-        number(boxHeight) <= 0
+        !validPositiveNumber(shipmentLength, MAX_DIMENSION_CM) ||
+        !validPositiveNumber(shipmentWidth, MAX_DIMENSION_CM) ||
+        !validPositiveNumber(shipmentHeight, MAX_DIMENSION_CM)
     ) {
         return res.status(400).json({
             success: false,
@@ -3689,12 +4059,12 @@ app.post('/api/shipping-rates', async (req, res) => {
         const providerResult = await shippingRequest(
             'checkOTODeliveryFee',
             quotePayload(
-                origin_city.trim(),
-                destination_city.trim(),
-                weight,
-                boxLength,
-                boxWidth,
-                boxHeight
+                originCity,
+                destinationCity,
+                shipmentWeight,
+                shipmentLength,
+                shipmentWidth,
+                shipmentHeight
             )
         );
 
@@ -3709,7 +4079,7 @@ app.post('/api/shipping-rates', async (req, res) => {
             .map((company) => ({
                 carrier: getCarrierDisplayName(company),
                 serviceMode: getDeliveryServiceLabel(company),
-                price: customerPrice(company.price, weight),
+                price: customerPrice(company.price, shipmentWeight),
                 deliveryTime: cleanPublicText(
                     company.avgDeliveryTime ||
                     company.estimatedDeliveryTime ||
@@ -3732,12 +4102,12 @@ app.post('/api/shipping-rates', async (req, res) => {
             await recordSearchStatistics(rates);
 
             await SearchLog.create({
-                fromCity: origin_city.trim(),
-                toCity: destination_city.trim(),
-                weight: number(weight),
-                boxLength: number(boxLength),
-                boxWidth: number(boxWidth),
-                boxHeight: number(boxHeight),
+                fromCity: originCity,
+                toCity: destinationCity,
+                weight: shipmentWeight,
+                boxLength: shipmentLength,
+                boxWidth: shipmentWidth,
+                boxHeight: shipmentHeight,
                 prices: rates.map((rate) => ({
                     carrier: rate.carrier,
                     price: rate.price,
@@ -4515,7 +4885,7 @@ app.post('/api/national-address', async (req, res) => {
     }
 
     if (
-        authRateLimited(
+        await authRateLimited(
             req,
             'national-address',
             20,
@@ -4596,6 +4966,30 @@ app.post('/api/create-shipment', async (req, res) => {
         req.body.email = shipmentUser.email;
     }
 
+    if (
+        await authRateLimited(
+            req,
+            'create-shipment-ip',
+            15,
+            60 * 60 * 1000
+        ) ||
+        (
+            shipmentUser &&
+            await authRateLimited(
+                req,
+                'create-shipment-user',
+                8,
+                60 * 60 * 1000,
+                shipmentUser._id
+            )
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم إنشاء محاولات دفع كثيرة. حاول لاحقًا أو تواصل مع الدعم.'
+        });
+    }
+
     const required = [
         'email',
         'contentsDescription',
@@ -4650,24 +5044,41 @@ app.post('/api/create-shipment', async (req, res) => {
     }
 
     const body = {
-        ...req.body,
         email: normalizeEmail(req.body.email),
-        contentsDescription:
-            String(req.body.contentsDescription || '').trim(),
-        senderName: String(req.body.senderName || '').trim(),
-        senderCity: String(req.body.senderCity || '').trim(),
-        senderPhone: String(req.body.senderPhone || '').trim(),
+        contentsDescription: boundedText(
+            req.body.contentsDescription,
+            MAX_CONTENTS_DESCRIPTION_LENGTH
+        ),
+        senderName: boundedText(
+            req.body.senderName,
+            MAX_PERSON_NAME_LENGTH
+        ),
+        senderCity: boundedText(
+            req.body.senderCity,
+            MAX_CITY_LENGTH
+        ),
+        senderPhone: boundedText(req.body.senderPhone, 24),
         senderShortAddressCode:
             String(req.body.senderShortAddressCode || '')
                 .trim()
                 .toUpperCase(),
-        receiverName: String(req.body.receiverName || '').trim(),
-        receiverCity: String(req.body.receiverCity || '').trim(),
-        receiverPhone: String(req.body.receiverPhone || '').trim(),
+        receiverName: boundedText(
+            req.body.receiverName,
+            MAX_PERSON_NAME_LENGTH
+        ),
+        receiverCity: boundedText(
+            req.body.receiverCity,
+            MAX_CITY_LENGTH
+        ),
+        receiverPhone: boundedText(req.body.receiverPhone, 24),
         receiverShortAddressCode:
             String(req.body.receiverShortAddressCode || '')
                 .trim()
                 .toUpperCase(),
+        deliveryOptionId: boundedText(
+            req.body.deliveryOptionId,
+            64
+        ),
         requestId:
             String(req.body.requestId || '')
                 .replace(/[^A-Za-z0-9-]/g, '')
@@ -4682,18 +5093,27 @@ app.post('/api/create-shipment', async (req, res) => {
 
     if (
         !validEmail(body.email) ||
+        body.contentsDescription.length < 2 ||
+        body.senderName.length < 2 ||
+        body.receiverName.length < 2 ||
+        !normalizeSaudiMobile(body.senderPhone) ||
+        !normalizeSaudiMobile(body.receiverPhone) ||
         !shortAddressPattern.test(body.senderShortAddressCode) ||
         !shortAddressPattern.test(body.receiverShortAddressCode) ||
-        body.weight <= 0 ||
-        body.declaredValue <= 0 ||
-        body.boxLength <= 0 ||
-        body.boxWidth <= 0 ||
-        body.boxHeight <= 0 ||
+        !body.deliveryOptionId ||
+        !validPositiveNumber(body.weight, MAX_WEIGHT_KG) ||
+        !validPositiveNumber(
+            body.declaredValue,
+            MAX_DECLARED_VALUE_SAR
+        ) ||
+        !validPositiveNumber(body.boxLength, MAX_DIMENSION_CM) ||
+        !validPositiveNumber(body.boxWidth, MAX_DIMENSION_CM) ||
+        !validPositiveNumber(body.boxHeight, MAX_DIMENSION_CM) ||
         !body.requestId
     ) {
         return res.status(400).json({
             success: false,
-            message: 'تحقق من البريد والعنوانين المختصرين والوزن والأبعاد والقيمة المعلنة.'
+            message: 'تحقق من الأسماء والجوالين والعنوانين والوزن والأبعاد والقيمة المعلنة.'
         });
     }
 
@@ -4844,7 +5264,8 @@ app.post('/api/create-shipment', async (req, res) => {
                         failureReason:
                             String(paymentError.message || 'PAYMENT_ERROR')
                                 .slice(0, 200)
-                    }
+                    },
+                    $unset: { shipmentPayload: 1 }
                 }
             );
             throw paymentError;
@@ -5248,7 +5669,7 @@ app.post('/api/bank-transfers/:orderNumber/receipt', async (req, res) => {
             });
         }
 
-        if (authRateLimited(req, 'bank-receipt', 10, 60 * 60 * 1000)) {
+        if (await authRateLimited(req, 'bank-receipt', 10, 60 * 60 * 1000)) {
             return res.status(429).json({
                 success: false,
                 message: 'تم تجاوز عدد محاولات الرفع. حاول لاحقًا.'
@@ -5709,6 +6130,41 @@ app.post('/api/admin/bank-transfers/:orderNumber/reject', async (req, res) => {
             message: 'تعذر تحديث الطلب حاليًا.'
         });
     }
+});
+
+app.use((error, req, res, next) => {
+    if (res.headersSent) {
+        next(error);
+        return;
+    }
+
+    if (error?.type === 'entity.too.large') {
+        res.status(413).json({
+            success: false,
+            message: 'حجم الطلب أكبر من الحد المسموح.'
+        });
+        return;
+    }
+
+    if (
+        error instanceof SyntaxError &&
+        Object.prototype.hasOwnProperty.call(error, 'body')
+    ) {
+        res.status(400).json({
+            success: false,
+            message: 'صيغة الطلب غير صحيحة.'
+        });
+        return;
+    }
+
+    console.error('خطأ خادم غير متوقع:', {
+        path: req.originalUrl,
+        message: String(error?.message || 'UNKNOWN_ERROR').slice(0, 200)
+    });
+    res.status(500).json({
+        success: false,
+        message: 'تعذر إكمال الطلب حاليًا.'
+    });
 });
 
 /*
