@@ -181,4 +181,3 @@ test('password-reset emails use the canonical homepage URL', () => {
     assert.ok(!source.includes('`${PUBLIC_BASE_URL}/index.html?resetToken='));
     assert.ok(homepage.includes('<link rel="canonical" href="https://sumsn.com/">'));
 });
-
