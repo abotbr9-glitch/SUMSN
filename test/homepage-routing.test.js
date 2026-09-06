@@ -152,13 +152,22 @@ test('oversized JSON bodies are rejected before reaching an API route', async ()
 
 test('Vercel routes only the homepage and leaves APIs and other pages alone', () => {
     const config = JSON.parse(fs.readFileSync(path.join(projectDir, 'vercel.json'), 'utf8'));
-    assert.deepEqual(config.redirects[1], {
+    assert.deepEqual(config.redirects[0], {
+        source: '/',
+        has: [{
+            type: 'host',
+            value: 'www.sumsn.com'
+        }],
+        destination: 'https://sumsn.com/',
+        permanent: true
+    });
+    assert.equal(config.redirects[1].has[0].value, 'www.sumsn.com');
+    assert.equal(config.redirects[1].destination, 'https://sumsn.com/:path*');
+    assert.deepEqual(config.redirects[2], {
         source: '/index.html',
         destination: '/',
         permanent: true
     });
-    assert.equal(config.redirects[0].has[0].value, 'www.sumsn.com');
-    assert.equal(config.redirects[0].destination, 'https://sumsn.com/:path*');
     assert.deepEqual(config.rewrites, [{ source: '/', destination: '/index.html' }]);
     assert.ok(config.headers[0].headers.some(header =>
         header.key === 'Content-Security-Policy' &&
@@ -172,3 +181,4 @@ test('password-reset emails use the canonical homepage URL', () => {
     assert.ok(!source.includes('`${PUBLIC_BASE_URL}/index.html?resetToken='));
     assert.ok(homepage.includes('<link rel="canonical" href="https://sumsn.com/">'));
 });
+
