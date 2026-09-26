@@ -19,6 +19,7 @@ const {
     passwordMatches,
     passwordNeedsUpgrade
 } = require('./lib/password-security');
+const { customerPrice } = require('./lib/shipping-pricing');
 const {
     GetObjectCommand,
     PutObjectCommand,
@@ -176,13 +177,6 @@ const SHIPPING_BASE_URL =
 | تسعير SUMSN
 |--------------------------------------------------------------------------
 */
-
-// التسعير ثابت هنا حتى لا تتغلب عليه قيم قديمة محفوظة في Vercel.
-// حتى 17 كجم: سعر الشركة + 4 ريالات.
-// فوق 17 كجم: يضاف 3 ريالات لكل كيلوجرام زائد عن 17.
-const SUMSN_MARKUP = 4;
-const INCLUDED_WEIGHT_KG = 17;
-const EXTRA_KG_PRICE = 3;
 
 // معطل افتراضيًا، ولا يعمل إلا عند تفعيل المفتاح صراحةً في بيئة الاستضافة.
 const ALLOW_LIVE_SHIPMENTS =
@@ -772,21 +766,6 @@ function number(value, fallback = 0) {
 
 function roundMoney(value) {
     return Number(number(value).toFixed(2));
-}
-
-function excessWeightFee(weight) {
-    return Math.max(
-        0,
-        number(weight) - INCLUDED_WEIGHT_KG
-    ) * EXTRA_KG_PRICE;
-}
-
-function customerPrice(providerPrice, weight) {
-    return roundMoney(
-        number(providerPrice) +
-        SUMSN_MARKUP +
-        excessWeightFee(weight)
-    );
 }
 
 function cleanPublicText(value) {
