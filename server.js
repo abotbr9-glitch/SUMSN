@@ -21,6 +21,7 @@ const {
 } = require('./lib/password-security');
 const { customerPrice } = require('./lib/shipping-pricing');
 const {
+    DeleteObjectsCommand,
     GetObjectCommand,
     PutObjectCommand,
     S3Client
@@ -202,6 +203,21 @@ const R2_ACCOUNT_ID =
 const R2_BUCKET_NAME =
     String(process.env.R2_BUCKET_NAME || '').trim();
 const MAX_LABEL_BYTES = 25 * 1024 * 1024;
+const ACCOUNT_DELETION_BLOCKING_PAYMENT_STATUSES = [
+    'pending_review',
+    'payment_confirmed',
+    'processing',
+    'issuance_failed',
+    'paid_hold'
+];
+const ACCOUNT_DELETION_CANCELLABLE_PAYMENT_STATUSES = [
+    'creating_payment',
+    'payment_creation_failed',
+    'awaiting_payment',
+    'payment_failed',
+    'awaiting_transfer',
+    'rejected'
+];
 
 /*
 |--------------------------------------------------------------------------
@@ -1235,6 +1251,41 @@ function publicUser(user) {
         email: user.email,
         emailVerified: Boolean(user.emailVerifiedAt)
     };
+}
+
+async function deletePrivateObjectsFromR2(objectKeys) {
+    const uniqueKeys = [
+        ...new Set(
+            objectKeys
+                .map((value) => String(value || '').trim())
+                .filter(Boolean)
+        )
+    ];
+
+    if (!uniqueKeys.length) {
+        return;
+    }
+
+    if (!r2StorageConfigured()) {
+        throw new Error('R2_CONFIGURATION_ERROR');
+    }
+
+    for (let index = 0; index < uniqueKeys.length; index += 1000) {
+        const batch = uniqueKeys.slice(index, index + 1000);
+        const result = await r2StorageClient().send(
+            new DeleteObjectsCommand({
+                Bucket: R2_BUCKET_NAME,
+                Delete: {
+                    Objects: batch.map((Key) => ({ Key })),
+                    Quiet: false
+                }
+            })
+        );
+
+        if (result.Errors?.length) {
+            throw new Error('R2_DELETE_FAILED');
+        }
+    }
 }
 
 function boundedText(value, maximumLength) {
@@ -3848,6 +3899,193 @@ app.post('/api/auth/reset-password', async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'تعذر تغيير كلمة المرور حاليًا.'
+        });
+    }
+});
+
+app.delete('/api/account', async (req, res) => {
+    if (!sameOriginRequest(req)) {
+        return res.status(403).json({
+            success: false,
+            message: 'تعذر التحقق من مصدر الطلب.'
+        });
+    }
+
+    if (!customerAccountsEnabled()) {
+        return res.status(503).json({
+            success: false,
+            message: 'إدارة الحساب غير متاحة مؤقتًا.'
+        });
+    }
+
+    if (
+        await authRateLimited(
+            req,
+            'delete-account',
+            5,
+            60 * 60 * 1000
+        )
+    ) {
+        return res.status(429).json({
+            success: false,
+            message: 'تم تجاوز عدد المحاولات. حاول بعد ساعة.'
+        });
+    }
+
+    const password = String(req.body?.password || '');
+    const confirmation = String(req.body?.confirmation || '').trim();
+
+    if (confirmation !== 'DELETE' || !password) {
+        return res.status(400).json({
+            success: false,
+            message: 'أكد الحذف واكتب كلمة المرور الحالية.'
+        });
+    }
+
+    try {
+        const sessionUser = await authenticatedUser(req);
+
+        if (!sessionUser) {
+            return res.status(401).json({
+                success: false,
+                message: 'سجّل الدخول أولًا لحذف حسابك.'
+            });
+        }
+
+        const user = await User.findById(sessionUser._id).select(
+            '+passwordSalt +passwordHash +passwordParamsVersion'
+        );
+        const passwordValid = user
+            ? await passwordMatches(
+                password,
+                user.passwordSalt,
+                user.passwordHash,
+                user.passwordParamsVersion
+            )
+            : false;
+
+        if (!user || !passwordValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'كلمة المرور الحالية غير صحيحة.'
+            });
+        }
+
+        const activePayment = await Payment.exists({
+            userId: user._id,
+            status: {
+                $in: ACCOUNT_DELETION_BLOCKING_PAYMENT_STATUSES
+            }
+        });
+
+        if (activePayment) {
+            return res.status(409).json({
+                success: false,
+                message: 'لديك طلب دفع أو بوليصة قيد التنفيذ. أكمل الطلب أو انتظر انتهاءه ثم أعد حذف الحساب.'
+            });
+        }
+
+        const [shipments, payments] = await Promise.all([
+            Shipment.find({ userId: user._id })
+                .select('labelObjectKey')
+                .lean(),
+            Payment.find({ userId: user._id })
+                .select('receiptObjectKey')
+                .lean()
+        ]);
+        const objectKeys = [
+            ...shipments.map((shipment) => shipment.labelObjectKey),
+            ...payments.map((payment) => payment.receiptObjectKey)
+        ];
+
+        await deletePrivateObjectsFromR2(objectKeys);
+
+        const mongoSession = await mongoose.startSession();
+
+        try {
+            await mongoSession.withTransaction(async () => {
+                const paymentBecameActive = await Payment.exists({
+                    userId: user._id,
+                    status: {
+                        $in: ACCOUNT_DELETION_BLOCKING_PAYMENT_STATUSES
+                    }
+                }).session(mongoSession);
+
+                if (paymentBecameActive) {
+                    const error = new Error('ACTIVE_PAYMENT_EXISTS');
+                    error.code = 'ACTIVE_PAYMENT_EXISTS';
+                    throw error;
+                }
+
+                await Payment.updateMany(
+                    {
+                        userId: user._id,
+                        status: {
+                            $in: ACCOUNT_DELETION_CANCELLABLE_PAYMENT_STATUSES
+                        }
+                    },
+                    {
+                        $set: {
+                            status: 'account_deleted',
+                            failureReason: 'ACCOUNT_DELETED'
+                        },
+                        $unset: {
+                            providerPaymentLink: 1,
+                            providerQrCode: 1
+                        }
+                    },
+                    { session: mongoSession }
+                );
+                await Payment.updateMany(
+                    { userId: user._id },
+                    {
+                        $set: {
+                            userId: null,
+                            customerEmail: ''
+                        },
+                        $unset: {
+                            shipmentPayload: 1,
+                            shipmentId: 1,
+                            receiptObjectKey: 1,
+                            receiptContentType: 1,
+                            receiptSize: 1,
+                            receiptUploadedAt: 1
+                        }
+                    },
+                    { session: mongoSession }
+                );
+                await Shipment.deleteMany(
+                    { userId: user._id },
+                    { session: mongoSession }
+                );
+                await User.deleteOne(
+                    { _id: user._id },
+                    { session: mongoSession }
+                );
+            });
+        } finally {
+            await mongoSession.endSession();
+        }
+
+        clearSessionCookie(res);
+
+        return res.json({
+            success: true,
+            message: 'تم حذف حسابك وبياناته الشخصية وملفاته الخاصة نهائيًا.'
+        });
+    } catch (error) {
+        if (error?.code === 'ACTIVE_PAYMENT_EXISTS') {
+            return res.status(409).json({
+                success: false,
+                message: 'بدأ طلب جديد أثناء الحذف. أكمله أو انتظر انتهاءه ثم أعد المحاولة.'
+            });
+        }
+
+        console.error('تعذر حذف حساب العميل:', error);
+
+        return res.status(502).json({
+            success: false,
+            message: 'تعذر حذف الحساب بأمان حاليًا. لم نحذف الحساب جزئيًا؛ حاول مرة أخرى أو تواصل مع الدعم.'
         });
     }
 });

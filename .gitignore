@@ -2,3 +2,5 @@ node_modules
 .npm-cache
 .env
 tmp/
+.vercel
+.env*
