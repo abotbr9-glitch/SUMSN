@@ -4163,50 +4163,6 @@ app.get('/api/account/shipments', async (req, res) => {
 
 /*
 |--------------------------------------------------------------------------
-| إحصائيات العدادات
-|--------------------------------------------------------------------------
-*/
-
-app.get('/api/dashboard-stats', async (req, res) => {
-    try {
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-
-        await connectToDatabase();
-        await cleanupExpiredSensitivePaymentPayloads();
-        await initializePlatformStats();
-
-        const stats =
-            await PlatformStat.findById('global').lean();
-        const avgCost =
-            number(stats?.priceCount) > 0
-                ? roundMoney(
-                    number(stats.priceSum) /
-                    number(stats.priceCount)
-                )
-                : 0;
-        const maxCost =
-            roundMoney(stats?.maxCost || 0);
-
-        void maybeAlertDatabaseStorage();
-
-        res.json({
-            success: true,
-            totalOperations:
-                number(stats?.totalOperations),
-            avgCost,
-            maxCost
-        });
-    } catch (error) {
-        console.error('خطأ في جلب الإحصائيات:', error);
-        res.status(500).json({
-            success: false,
-            message: 'تعذر جلب الإحصائيات حاليًا.'
-        });
-    }
-});
-
-/*
-|--------------------------------------------------------------------------
 | استعلام أسعار الشحن
 |--------------------------------------------------------------------------
 */
