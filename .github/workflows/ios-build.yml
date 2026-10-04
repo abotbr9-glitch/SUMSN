@@ -2,6 +2,9 @@ name: Verify SUMSN iOS
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/sumsn-ios-app-store
 
 permissions:
   contents: read
