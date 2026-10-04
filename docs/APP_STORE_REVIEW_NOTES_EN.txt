@@ -1,0 +1,30 @@
+SUMSN is a Saudi shipping comparison and label-purchase service.
+
+IMPORTANT PAYMENT CLASSIFICATION
+The customer payment is for a real-world shipping label and a physical logistics service consumed outside the app. It is not digital content, a subscription, virtual currency, or an app feature. The app therefore uses TuwaiqPay under App Review Guideline 3.1.3(e), which requires payment methods other than In-App Purchase for physical goods and services consumed outside the app. No digital entitlement is unlocked by this payment.
+
+REVIEW ACCOUNT
+Email: [REPLACE WITH VERIFIED REVIEW ACCOUNT EMAIL]
+Password: [REPLACE IN APP STORE CONNECT ONLY — DO NOT COMMIT]
+
+REVIEW STEPS
+1. Launch the app and sign in with the review account.
+2. On the home screen, enter two Saudi cities, parcel weight, declared value, and dimensions to retrieve live shipping quotations.
+3. Select a quotation. Shipment creation requires valid Saudi short addresses and phone numbers.
+4. The TuwaiqPay button opens only an approved live HTTPS TuwaiqPay/HypBill host inside an iOS SFSafariViewController. The reviewer does not need to complete a charge.
+5. Open the account dashboard. A pre-existing non-sensitive sample label should be available in the review account. Tap “Share or print label” to test the native iOS share sheet, Save to Files, and Print actions.
+6. Account deletion is available directly in the account dashboard under “Delete account and data”. A password and explicit confirmation are required.
+7. Password recovery and email verification use the customer email address.
+
+NATIVE FUNCTIONALITY
+- Native secure payment browser for the real-world shipping service.
+- Native PDF validation, protected temporary file handling, and iOS share/print sheet.
+- Native quote sharing and haptic feedback.
+- Offline connection screen.
+
+SUPPORT AND PRIVACY
+Support: https://sumsn.com/support.html
+Privacy: https://sumsn.com/privacy-policy.html
+Account deletion information: https://sumsn.com/account-deletion.html
+
+The service currently operates in Saudi Arabia. An internet connection is required for live carrier quotations, national-address validation, payment confirmation, and shipping-label issuance.

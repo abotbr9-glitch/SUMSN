@@ -1,0 +1,23 @@
+{
+  "name": "SUMSN — الشحن حول العالم، ببساطة",
+  "short_name": "SUMSN",
+  "description": "قارن أسعار الشحن، ادفع بأمان، وأصدر بوليصة شحنتك من مكان واحد.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7faff",
+  "theme_color": "#1769ff",
+  "lang": "ar-SA",
+  "dir": "rtl",
+  "categories": ["business", "utilities"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "احسب تكلفة الشحن", "short_name": "احسب السعر", "url": "/#quote" },
+    { "name": "لوحة حسابي", "short_name": "حسابي", "url": "/?account=dashboard" }
+  ]
+}
