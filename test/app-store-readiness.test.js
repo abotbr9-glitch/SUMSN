@@ -15,6 +15,7 @@ const infoPlist = read('ios', 'App', 'App', 'Info.plist');
 const privacyManifest = read('ios', 'App', 'App', 'PrivacyInfo.xcprivacy');
 const nativePlugin = read('ios', 'App', 'App', 'SumsnNativePlugin.swift');
 const xcodeProject = read('ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+const sceneDelegate = read('ios', 'App', 'App', 'SceneDelegate.swift');
 const reviewNotes = read('docs', 'APP_STORE_REVIEW_NOTES_EN.txt');
 
 test('the project has a reproducible Capacitor iOS shell for SUMSN', () => {
@@ -64,6 +65,7 @@ test('the iOS target includes the custom bridge and Apple privacy manifest', () 
     assert.match(xcodeProject, /MainViewController\.swift in Sources/);
     assert.match(xcodeProject, /SumsnNativePlugin\.swift in Sources/);
     assert.match(xcodeProject, /PrivacyInfo\.xcprivacy in Resources/);
+    assert.match(sceneDelegate, /rootViewController = MainViewController\(\)/);
     assert.match(infoPlist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
     assert.match(privacyManifest, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
     assert.match(privacyManifest, /NSPrivacyCollectedDataTypeEmailAddress/);
