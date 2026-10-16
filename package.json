@@ -20,7 +20,7 @@
     "nodemailer": "^10.0.14"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.2",
+    "@capacitor/cli": "^8.5.3",
     "typescript": "^5.9.3"
   }
 }
